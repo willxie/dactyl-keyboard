@@ -678,7 +678,7 @@ def left_key_position(row, direction):
     pos = np.array(
         key_position([-mount_width * 0.5, direction * mount_height * 0.5, 0], 0, row)
     )
-    return pos - np.array([left_wall_x_offset, 0, left_wall_z_offset])
+    return list(pos - np.array([left_wall_x_offset, 0, left_wall_z_offset]))
 
 
 def left_key_place(shape, row, direction):
@@ -1040,7 +1040,7 @@ def rj9_holder():
 
 
 usb_holder_position = key_position(
-    np.array(wall_locate2(0, 1)) + np.array([0, (mount_height / 2), 0]), 1, 0
+    list(np.array(wall_locate2(0, 1)) + np.array([0, (mount_height / 2), 0])), 1, 0
 )
 usb_holder_size = [6.5, 10.0, 13.6]
 usb_holder_thickness = 4
@@ -1147,13 +1147,13 @@ def screw_insert(column, row, bottom_radius, top_radius, height):
 
     if shift_up:
         position = key_position(
-            np.array(wall_locate2(0, 1)) + np.array([0, (mount_height / 2), 0]),
+            list(np.array(wall_locate2(0, 1)) + np.array([0, (mount_height / 2), 0])),
             column,
             row,
         )
     elif shift_down:
         position = key_position(
-            np.array(wall_locate2(0, -1)) - np.array([0, (mount_height / 2), 0]),
+            list(np.array(wall_locate2(0, -1)) - np.array([0, (mount_height / 2), 0])),
             column,
             row,
         )
@@ -1163,7 +1163,7 @@ def screw_insert(column, row, bottom_radius, top_radius, height):
         )
     else:
         position = key_position(
-            np.array(wall_locate2(1, 0)) + np.array([(mount_height / 2), 0, 0]),
+            list(np.array(wall_locate2(1, 0)) + np.array([(mount_height / 2), 0, 0])),
             column,
             row,
         )
