@@ -1,5 +1,11 @@
-# The Dactyl-ManuForm Keyboard
-This is a fork of the [Dactyl](https://github.com/adereth/dactyl-keyboard), a parameterized, split-hand, concave, columnar, ergonomic keyboard.
+# The Dactyl-ManuForm Keyboard - Python 3
+This is a fork of [Dactyl-Manuform](https://github.com/tshort/dactyl-keyboard) by Tom Short, which itself is a fork of [Dactyl](https://github.com/adereth/dactyl-keyboard) by Matthew Adereth, a parameterized, split-hand, concave, columnar, ergonomic keyboard.
+
+The major change is switching to a python based file generator.  Both predecessors were exceptional contributions to the ergo keyboard community by the authors but used a rather esoteric programming language, Clojure.  My hope is that by converting the code to Python, the community will have an easier time modifying and evolving this design.  I am planning to build this keyboard in the next several weeks and will update with my build information and BOM.
+
+I am also planning to create an entirely new object-oriented generator and will add a link when it is complete.  In the mean time wanted to add my contribution of a faithful translation of the existing code and general structure into Python.  The only geometry addition was an option to add the kalih hot-swap mounting through an STL file.
+
+**The majority of the the rest of the below content is as defined by previous authors, except where noted.**
 
 ![Imgur](http://i.imgur.com/LdjEhrR.jpg)
 
@@ -22,28 +28,28 @@ I built a 4x5 version (40% size) for myself. The default has a bit more tenting 
 
 ## Assembly
 
-### Generating a Design
+### Generating a Design - Modified for Python Implementation
 
-**Setting up the Clojure environment**
-* [Install the Clojure runtime](https://clojure.org)
-* [Install the Leiningen project manager](http://leiningen.org/)
+**Setting up the Python environment - NEW**
+* [Install Python 3.X](https://www.python.org/downloads/release/python-385/) or use your [favorite distro / platform (Anaconda)](https://www.anaconda.com/products/individual) 
+* It is advisable, but not necessary, to setup a virtual environment to prevent package/library incompatibility 
+* [Install SolidPython](https://pypi.org/project/solidpython/), easiest method is `pip install solidpython` or `pip3 install solidpython` on linux.
+* [Install Numpy](https://pypi.org/project/numpy/), easiest method is `pip install numpy` or `pip3 install numpy` on linux.
 * [Install OpenSCAD](http://www.openscad.org/)
 
-**Generating the design**
-* Run `lein repl`
-* Load the file `(load-file "src/dactyl_keyboard/dactyl.clj")`
+**Generating the design - NEW**
+* Run `python dactyl_manuform.py` or `python3 dactyl_manuform.py` 
 * This will regenerate the `things/*.scad` files
+    * `left_py.scad`
+    * `right_py.scad`
+    * `plate_py.scad`
 * Use OpenSCAD to open a `.scad` file.
-* Make changes to design, repeat `load-file`, OpenSCAD will watch for changes and rerender.
+* Make changes to design, repeat run step, OpenSCAD will watch for changes and re-render.
 * When done, use OpenSCAD to export STL files
-
-**Tips**
-* [Some other ways to evaluate the clojure design file](http://stackoverflow.com/a/28213489)
-* [Example designing with clojure](http://adereth.github.io/blog/2014/04/09/3d-printing-with-clojure/)
 
 
 ### Printing
-Pregenerated STL files are available in the [things/](things/) directory. 
+Pre-generated STL files are available in the [things/](things/) directory. 
 When a model is generated, it also generates a `.scad` model for a bottom plate. 
 This can be exported to a DXF file in OpenSCAD.
 The [things/](things/) directory also has DXF files for the bottom plate.
@@ -63,7 +69,7 @@ If printed at Shapeways or other professional shops, I would not expect such pro
 
 ### Wiring
 
-Here are materials I used for wiring.
+Here are materials I (tshort) used for wiring.
 
 * Two Arduino Pro Micros
 * [Heat-set inserts](https://www.mcmaster.com/#94180a331/=16yfrx1)
@@ -115,9 +121,9 @@ This is how the rows/columns wire to the keys and the ProMicro
 
 NOTE: you also make sure the firmware is set up correctly (ex: change row pins with col pins)
 
-![Left Wire Diagram](/resources/dactyl_manuform_left_wire_diagram.png)
+![Left Wire Diagram](./resources/dactyl_manuform_left_wire_diagram.png)
 
-![Left Wire Diagram](/resources/dactyl_manuform_right_wire_diagram.png)
+![Left Wire Diagram](./resources/dactyl_manuform_right_wire_diagram.png)
 
 
 ### Firmware
@@ -129,6 +135,6 @@ This site also shows connections for the Arduino Pro Micro controllers.
 
 ## License
 
-Copyright © 2015-2017 Matthew Adereth and Tom Short
+Copyright © 2015-2020 Matthew Adereth, Tom Short, and Joshua Shreve
 
 The source code for generating the models (everything excluding the [things/](things/) and [resources/](resources/) directories is distributed under the [GNU AFFERO GENERAL PUBLIC LICENSE Version 3](LICENSE).  The generated models and PCB designs are distributed under the [Creative Commons Attribution-NonCommercial-ShareAlike License Version 3.0](LICENSE-models).
