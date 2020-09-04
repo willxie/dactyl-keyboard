@@ -118,9 +118,7 @@ def single_plate(cylinder_segments=100):
     plate = plate_half1 + plate_half2
 
     if hot_swap:
-        hot_swap_socket = sl.import_(
-            path.join(r"..", "geometry", r"hot_swap_plate.stl")
-        )
+        hot_swap_socket = sl.import_(path.join("..", "src", r"hot_swap_plate.stl"))
         hot_swap_socket = sl.translate([0, 0, plate_thickness - 5.25])(hot_swap_socket)
 
         plate = sl.union()(plate, hot_swap_socket)
