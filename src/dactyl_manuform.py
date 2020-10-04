@@ -26,7 +26,6 @@ centerrow = nrows - 3  # controls front_back tilt
 centercol = 3  # controls left_right tilt / tenting (higher number is more tenting)
 tenting_angle = pi / 12.0  # or, change this for more precise tenting control
 
-hot_swap = False
 
 if nrows > 5:
     column_style = "orthographic"
@@ -88,6 +87,10 @@ plate_thickness = 4
 mount_width = keyswitch_width + 3
 mount_height = keyswitch_height + 3
 
+plate_file = None
+plate_offset = 0.0
+# plate_file = path.join("..", "src", r"hot_swap_plate.stl")
+# plate_offset = plate_thickness - 5.25
 
 def single_plate(cylinder_segments=100):
     top_wall = sl.cube([keyswitch_width + 3, 1.5, plate_thickness], center=True)
@@ -117,11 +120,11 @@ def single_plate(cylinder_segments=100):
 
     plate = plate_half1 + plate_half2
 
-    if hot_swap:
-        hot_swap_socket = sl.import_(path.join("..", "src", r"hot_swap_plate.stl"))
-        hot_swap_socket = sl.translate([0, 0, plate_thickness - 5.25])(hot_swap_socket)
+    if plate_file is not None:
+        socket = sl.import_(plate_file)
+        socket = sl.translate([0, 0, plate_offset])(socket)
 
-        plate = sl.union()(plate, hot_swap_socket)
+        plate = sl.union()(plate, socket)
 
     return plate
 
@@ -1032,7 +1035,7 @@ def rj9_holder():
         sl.translate([0, 2, 0])(sl.cube([10.78, 9, 18.38], center=True)),
         sl.translate([0, 0, 5])(sl.cube([10.78, 13, 5], center=True)),
     )
-    shape = sl.difference()(shape, rj9_cube())
+    shape = sl.difference()(rj9_cube(), shape)
     shape = sl.translate(rj9_position)(shape)
     return shape
 
