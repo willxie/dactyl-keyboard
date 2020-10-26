@@ -17,7 +17,7 @@ def rad2deg(rad: float) -> float:
 # ######################
 
 
-nrows = 5  # key rows
+nrows = 6  # key rows
 ncols = 6  # key columns
 
 alpha = pi / 12.0  # curvature of the columns
@@ -95,20 +95,20 @@ plate_offset = 0.0
 def single_plate(cylinder_segments=100):
     top_wall = sl.cube([keyswitch_width + 3, 1.5, plate_thickness], center=True)
     top_wall = sl.translate(
-        [0, (1.5 / 2) + (keyswitch_height / 2), plate_thickness / 2]
+        (0, (1.5 / 2) + (keyswitch_height / 2), plate_thickness / 2)
     )(top_wall)
 
     left_wall = sl.cube([1.5, keyswitch_height + 3, plate_thickness], center=True)
     left_wall = sl.translate(
-        [(1.5 / 2) + (keyswitch_width / 2), 0, plate_thickness / 2]
+        ((1.5 / 2) + (keyswitch_width / 2), 0, plate_thickness / 2)
     )(left_wall)
 
     side_nub = sl.cylinder(1, 2.75, segments=cylinder_segments, center=True)
     side_nub = sl.rotate(rad2deg(pi / 2), [1, 0, 0])(side_nub)
-    side_nub = sl.translate([keyswitch_width / 2, 0, 1])(side_nub)
+    side_nub = sl.translate((keyswitch_width / 2, 0, 1))(side_nub)
     nub_cube = sl.cube([1.5, 2.75, plate_thickness], center=True)
     nub_cube = sl.translate(
-        [(1.5 / 2) + (keyswitch_width / 2), 0, plate_thickness / 2]
+        ((1.5 / 2) + (keyswitch_width / 2), 0, plate_thickness / 2)
     )(nub_cube)
 
     side_nub = sl.hull()(side_nub, nub_cube)
@@ -1170,7 +1170,7 @@ def screw_insert(column, row, bottom_radius, top_radius, height):
         )
 
     shape = screw_insert_shape(bottom_radius, top_radius, height)
-    shape = sl.translate([position[0], position[1], height / 2])(shape)
+    shape = sl.translate((position[0], position[1], height / 2))(shape)
 
     return shape
 
