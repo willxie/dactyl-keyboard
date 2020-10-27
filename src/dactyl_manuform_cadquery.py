@@ -198,39 +198,6 @@ CLIP_UNDERCUT = 1.0
 UNDERCUT_TRANSITION = .2
 
 
-def single_plate1():
-    # print('single_plate()')
-
-    shape = cq.Workplane("XY").box(mount_width, mount_height, mount_thickness)
-    shape = shape.translate((0.0, 0.0, -mount_thickness / 2.0))
-
-    shape_cut = cq.Workplane("XY").box(SWITCH_WIDTH, SWITCH_HEIGHT, mount_thickness * 2)
-    shape_cut = shape_cut.translate((0.0, 0.0, -mount_thickness))
-
-    shape = shape.cut(shape_cut)
-
-    undercut = cq.Workplane("XY").box(
-        SWITCH_WIDTH + 2 * CLIP_UNDERCUT,
-        SWITCH_HEIGHT + 2 * CLIP_UNDERCUT,
-        mount_thickness
-    )
-
-    undercut = undercut.translate((
-        0.0,
-        0.0,
-        -CLIP_THICKNESS - mount_thickness / 2.0
-    ))
-
-    if UNDERCUT_TRANSITION > 0:
-        undercut = undercut.faces("+Z").chamfer(UNDERCUT_TRANSITION, CLIP_UNDERCUT)
-
-    shape = shape.cut(undercut)
-
-    shape = shape.translate((0, 0, plate_thickness))
-
-    return shape
-
-
 def single_plate(cylinder_segments=100):
     top_wall = cq.Workplane("XY").box(keyswitch_width + 3, 1.5, plate_thickness)
     top_wall = top_wall.translate((0, (1.5 / 2) + (keyswitch_height / 2), plate_thickness / 2))
