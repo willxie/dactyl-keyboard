@@ -6,6 +6,8 @@ While the code structure remains comparable to the original, Clojure and OpenSCA
 ## Updated Geometry Engine, now generating STEP files !!!
 As part of the effort to create a new engine I converted the code to cadquery/OpenCASCADE.  While OpenSCAD has provided an open source 3D engine that is extremely popular, it frankly creates barely passable STLs when you have complex geometry.  After being extremely frustrated trying to fix the mesh I realized it is just not a stable engine to create high quality files.  OpenCASCADE is extremely powerful but requires extensive detail to operate.  cadquery provided an excellent platform to run a stable geometry engine with a simplified interface API. 
 
+![STEP File in FreeCAD](./resources/FreeCAD_STEP_screen.png)
+
 ## Status / Future
 FWIW, the cadquery version is essentially a double translation and is now a bit of a mess.  I wanted to share with the community as the first version of dactyl-manuform that exports as a STEP file, allowing easier editing.  I am happy to maintain the code, but I am unlikely to spend much more time cleaning it up as I am working on an entirely new object-oriented generator in Python/cadquery.  This was my proof of concept for eliminating OpenSCAD from the workflow and I thought it worth giving back to the community. 
 
@@ -135,7 +137,7 @@ NOTE: you also make sure the firmware is set up correctly (ex: change row pins w
 
 ![Left Wire Diagram](./resources/dactyl_manuform_left_wire_diagram.png)
 
-![Left Wire Diagram](./resources/dactyl_manuform_right_wire_diagram.png)
+![Right Wire Diagram](./resources/dactyl_manuform_right_wire_diagram.png)
 
 
 ### Firmware
