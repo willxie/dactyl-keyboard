@@ -30,10 +30,75 @@ centerrow = nrows - 3  # controls front_back tilt
 centercol = 3  # controls left_right tilt / tenting (higher number is more tenting)
 tenting_angle = pi / 12.0  # or, change this for more precise tenting control
 
+#symmetry states if it is a symmetric or asymmetric build.  If asymmetric it doubles the generation time.
+symmetry = "symmetric" # "asymmetric" or "symmetric"
+
 if nrows > 5:
     column_style = "orthographic"
 else:
     column_style = "standard"  # options include :standard, :orthographic, and :fixed
+
+
+thumb_offsets = [6, -3, 7]
+keyboard_z_offset = (
+    9  # controls overall height# original=9 with centercol=3# use 16 for centercol=2
+)
+
+extra_width = 2.5  # extra space between the base of keys# original= 2
+extra_height = 1.0  # original= 0.5
+
+wall_z_offset = -15  # length of the first downward_sloping part of the wall (negative)
+wall_xy_offset = 5  # offset in the x and/or y direction for the first downward_sloping part of the wall (negative)
+wall_thickness = 2  # wall thickness parameter# originally 5
+
+## Settings for column_style == :fixed
+## The defaults roughly match Maltron settings
+##   http://patentimages.storage.googleapis.com/EP0219944A2/imgf0002.png
+## fixed_z overrides the z portion of the column ofsets above.
+## NOTE: THIS DOESN'T WORK QUITE LIKE I'D HOPED.
+fixed_angles = [deg2rad(10), deg2rad(10), 0, 0, 0, deg2rad(-15), deg2rad(-15)]
+fixed_x = [-41.5, -22.5, 0, 20.3, 41.4, 65.5, 89.6]  # relative to the middle finger
+fixed_z = [12.1, 8.3, 0, 5, 10.7, 14.5, 17.5]
+fixed_tenting = deg2rad(0)
+
+#######################
+## General variables ##
+#######################
+
+lastrow = nrows - 1
+cornerrow = lastrow - 1
+lastcol = ncols - 1
+
+#################
+## Switch Hole ##
+#################
+
+keyswitch_height = 14.4  ## Was 14.1, then 14.25
+keyswitch_width = 14.4
+
+sa_profile_key_height = 12.7
+
+plate_thickness = 4
+mount_width = keyswitch_width + 3
+mount_height = keyswitch_height + 3
+mount_thickness = plate_thickness
+
+SWITCH_WIDTH = 14
+SWITCH_HEIGHT = 14
+CLIP_THICKNESS = 1.4
+CLIP_UNDERCUT = 1.0
+UNDERCUT_TRANSITION = .2
+
+hot_swap = False
+
+plate_file = None
+plate_offset = 0.0
+
+if hot_swap:
+    symmetry = "asymmetric"
+    plate_file = path.join("..", "src", r"hot_swap_plate.step")
+    plate_offset = 0.0
+
 
 
 # column_style='fixed'
@@ -147,58 +212,7 @@ def column_offset(column: int) -> list:
         return [0, 0, 0]
 
 
-thumb_offsets = [6, -3, 7]
-keyboard_z_offset = (
-    9  # controls overall height# original=9 with centercol=3# use 16 for centercol=2
-)
-
-extra_width = 2.5  # extra space between the base of keys# original= 2
-extra_height = 1.0  # original= 0.5
-
-wall_z_offset = -15  # length of the first downward_sloping part of the wall (negative)
-wall_xy_offset = 5  # offset in the x and/or y direction for the first downward_sloping part of the wall (negative)
-wall_thickness = 2  # wall thickness parameter# originally 5
-
-## Settings for column_style == :fixed
-## The defaults roughly match Maltron settings
-##   http://patentimages.storage.googleapis.com/EP0219944A2/imgf0002.png
-## fixed_z overrides the z portion of the column ofsets above.
-## NOTE: THIS DOESN'T WORK QUITE LIKE I'D HOPED.
-fixed_angles = [deg2rad(10), deg2rad(10), 0, 0, 0, deg2rad(-15), deg2rad(-15)]
-fixed_x = [-41.5, -22.5, 0, 20.3, 41.4, 65.5, 89.6]  # relative to the middle finger
-fixed_z = [12.1, 8.3, 0, 5, 10.7, 14.5, 17.5]
-fixed_tenting = deg2rad(0)
-
-#######################
-## General variables ##
-#######################
-
-lastrow = nrows - 1
-cornerrow = lastrow - 1
-lastcol = ncols - 1
-
-#################
-## Switch Hole ##
-#################
-
-keyswitch_height = 14.4  ## Was 14.1, then 14.25
-keyswitch_width = 14.4
-
-sa_profile_key_height = 12.7
-
-plate_thickness = 4
-mount_width = keyswitch_width + 3
-mount_height = keyswitch_height + 3
-mount_thickness = plate_thickness
-
-SWITCH_WIDTH = 14
-SWITCH_HEIGHT = 14
-CLIP_THICKNESS = 1.4
-CLIP_UNDERCUT = 1.0
-UNDERCUT_TRANSITION = .2
-
-
-def single_plate(cylinder_segments=100):
+def single_plate(cylinder_segments=100, side="right"):
     top_wall = cq.Workplane("XY").box(keyswitch_width + 3, 1.5, plate_thickness)
     top_wall = top_wall.translate((0, (1.5 / 2) + (keyswitch_height / 2), plate_thickness / 2))
 
@@ -221,6 +235,16 @@ def single_plate(cylinder_segments=100):
     plate_half2 = mirror(plate_half2, 'YZ')
 
     plate = plate_half1.union(plate_half2)
+
+    if plate_file is not None:
+        socket = cq.Workplane('XY').add(cq.importers.importShape(
+            cq.exporters.ExportTypes.STEP,
+            plate_file))
+        socket = socket.translate([0, 0, plate_thickness + plate_offset])
+        plate = plate.union(socket)
+
+    if side == "left":
+        plate = plate.mirror('YZ')
 
     return plate
 
@@ -385,14 +409,14 @@ def key_position(position, column, row):
     )
 
 
-def key_holes():
+def key_holes(side="right"):
     print('key_holes()')
     # hole = single_plate()
     holes = []
     for column in range(ncols):
         for row in range(nrows):
             if (column in [2, 3]) or (not row == lastrow):
-                holes.append(key_place(single_plate(), column, row))
+                holes.append(key_place(single_plate(side=side), column, row))
 
     shape = union(holes)
 
@@ -602,10 +626,10 @@ def thumbcaps():
     return t1.add(t15)
 
 
-def thumb():
+def thumb(side="right"):
     print('thumb()')
-    shape = thumb_1x_layout(single_plate())
-    shape = shape.union(thumb_15x_layout(single_plate()))
+    shape = thumb_1x_layout(rotate(single_plate(side=side), (0, 0, -90)))
+    shape = shape.union(thumb_15x_layout(rotate(single_plate(side=side), (0, 0, -90))))
     shape = shape.union(thumb_15x_layout(double_plate()))
     return shape
 
@@ -1442,11 +1466,11 @@ def wire_posts():
     return shape
 
 
-def model_right():
+def model_side(side="right"):
     print('model_right()')
-    shape = cq.Workplane('XY').union(key_holes())
+    shape = cq.Workplane('XY').union(key_holes(side=side))
     shape = shape.union(connectors())
-    shape = shape.union(thumb())
+    shape = shape.union(thumb(side=side))
     shape = shape.union(thumb_connectors())
     s2 = cq.Workplane('XY').union(case_walls())
     s2 = union([s2, *screw_insert_outers])
@@ -1468,14 +1492,21 @@ def model_right():
         shape = shape.add(thumbcaps())
         shape = shape.add(caps())
 
+    if side == "left":
+        shape = shape.mirror('YZ')
+
     return shape
 
 
-mod_r = model_right()
-
+mod_r = model_side(side="right")
 cq.exporters.export(w=mod_r, fname=path.join(r"..", "things", r"right_og_py.step"), exportType='STEP')
 
-cq.exporters.export(w=mod_r.mirror('YZ'), fname=path.join(r"..", "things", r"left_og_py.step"), exportType='STEP')
+if symmetry == "asymmetric":
+    mod_l = model_side(side="left")
+    cq.exporters.export(w=mod_l, fname=path.join(r"..", "things", r"left_og_py.step"), exportType='STEP')
+
+else:
+    cq.exporters.export(w=mod_r.mirror('YZ'), fname=path.join(r"..", "things", r"left_og_py.step"), exportType='STEP')
 
 
 def baseplate():

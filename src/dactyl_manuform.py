@@ -26,6 +26,8 @@ centerrow = nrows - 3  # controls front_back tilt
 centercol = 3  # controls left_right tilt / tenting (higher number is more tenting)
 tenting_angle = pi / 12.0  # or, change this for more precise tenting control
 
+#symmetry states if it is a symmetric or asymmetric build.  If asymmetric it doubles the generation time.
+symmetry = "symmetric" # "asymmetric" or "symmetric"
 
 if nrows > 5:
     column_style = "orthographic"
@@ -87,12 +89,18 @@ plate_thickness = 4
 mount_width = keyswitch_width + 3
 mount_height = keyswitch_height + 3
 
+hot_swap = False
+
 plate_file = None
 plate_offset = 0.0
-# plate_file = path.join("..", "src", r"hot_swap_plate.stl")
-# plate_offset = plate_thickness - 5.25
 
-def single_plate(cylinder_segments=100):
+if hot_swap:
+    symmetry = "asymmetric"
+    plate_file = path.join("..", "src", r"hot_swap_plate.stl")
+    # plate_offset = plate_thickness - 5.25
+    plate_offset = 0.0
+
+def single_plate(cylinder_segments=100, side="right"):
     top_wall = sl.cube([keyswitch_width + 3, 1.5, plate_thickness], center=True)
     top_wall = sl.translate(
         (0, (1.5 / 2) + (keyswitch_height / 2), plate_thickness / 2)
@@ -122,9 +130,12 @@ def single_plate(cylinder_segments=100):
 
     if plate_file is not None:
         socket = sl.import_(plate_file)
-        socket = sl.translate([0, 0, plate_offset])(socket)
+        socket = sl.translate([0, 0, plate_thickness + plate_offset])(socket)
 
         plate = sl.union()(plate, socket)
+
+    if side == "left":
+        plate = sl.mirror([-1, 0, 0])(plate)
 
     return plate
 
@@ -164,7 +175,7 @@ def sa_cap(Usize=1):
     else:
         key_cap = sl.hull()(k1, k2)
 
-    key_cap = sl.translate([0, 0, 5 + plate_thickness])(key_cap)
+    # key_cap = sl.translate([0, 0, 5 + plate_thickness])(key_cap)
     key_cap = sl.color([220 / 255, 163 / 255, 163 / 255, 1])(key_cap)
 
     return key_cap
@@ -283,8 +294,8 @@ def key_position(position, column, row):
     )
 
 
-def key_holes():
-    hole = single_plate()
+def key_holes(side="right"):
+    hole = single_plate(side=side)
     holes = []
     for column in range(ncols):
         for row in range(nrows):
@@ -483,9 +494,13 @@ def thumbcaps():
     return t1 + t15
 
 
-def thumb():
-    shape = thumb_1x_layout(single_plate())
-    shape += thumb_15x_layout(single_plate())
+def thumb(side="right"):
+    # shape = thumb_1x_layout(single_plate(side=side))
+    # shape += thumb_15x_layout(single_plate(side=side))
+    # shape += thumb_15x_layout(double_plate())
+
+    shape = thumb_1x_layout(sl.rotate([0.0, 0.0, -90])(single_plate(side=side)))
+    shape += thumb_15x_layout(sl.rotate([0.0, 0.0, -90])(single_plate(side=side)))
     shape += thumb_15x_layout(double_plate())
     return shape
 
@@ -1241,8 +1256,8 @@ def wire_posts():
     return shape
 
 
-def model_right():
-    shape = sl.union()(key_holes(), connectors(), thumb(), thumb_connectors(),)
+def model_side(side="right"):
+    shape = sl.union()(key_holes(side=side), connectors(), thumb(side=side), thumb_connectors(),)
 
     s2 = sl.union()(case_walls(), screw_insert_outers(), teensy_holder(), usb_holder(),)
 
@@ -1251,14 +1266,25 @@ def model_right():
     shape = sl.union()(shape, s2, rj9_holder(), wire_posts(),)
 
     shape -= sl.translate([0, 0, -20])(sl.cube([350, 350, 40], center=True))
+
+    if side == "left":
+        shape = sl.mirror([-1, 0, 0])(shape)
+
     return shape
 
+mod_r = model_side(side="right")
 
-sl.scad_render_to_file(model_right(), path.join(r"..", "things", r"right_py.scad"))
+sl.scad_render_to_file(mod_r, path.join(r"..", "things", r"right_py.scad"))
 
-sl.scad_render_to_file(
-    sl.mirror([-1, 0, 0])(model_right()), path.join(r"..", "things", r"left_py.scad")
-)
+if symmetry == "asymmetric":
+    mod_l = model_side(side="left")
+    sl.scad_render_to_file(
+        mod_l, path.join(r"..", "things", r"left_py.scad")
+    )
+else:
+    sl.scad_render_to_file(
+        sl.mirror([-1, 0, 0])(mod_r), path.join(r"..", "things", r"left_py.scad")
+    )
 
 
 def baseplate():
