@@ -11,13 +11,23 @@ def deg2rad(degrees: float) -> float:
 def rad2deg(rad: float) -> float:
     return rad * 180 / pi
 
+####################################
+## START CONFIGURATION SECTION
+####################################
 
-# ######################
-# ## Shape parameters ##
-# ######################
+######################
+## Run parameters ##
+######################
 
+debug_exports = False
 
-nrows = 6  # key rows
+######################
+## Shape parameters ##
+######################
+
+show_caps = False
+
+nrows = 5  # key rows
 ncols = 6  # key columns
 
 alpha = pi / 12.0  # curvature of the columns
@@ -34,17 +44,6 @@ if nrows > 5:
 else:
     column_style = "standard"  # options include :standard, :orthographic, and :fixed
 
-# column_style='fixed'
-
-
-def column_offset(column: int) -> list:
-    if column == 2:
-        return [0, 2.82, -4.5]
-    elif column >= 4:
-        return [0, -12, 5.64]  # original [0 -5.8 5.64]
-    else:
-        return [0, 0, 0]
-
 
 thumb_offsets = [6, -3, 7]
 keyboard_z_offset = (
@@ -54,9 +53,16 @@ keyboard_z_offset = (
 extra_width = 2.5  # extra space between the base of keys# original= 2
 extra_height = 1.0  # original= 0.5
 
-wall_z_offset = -15  # length of the first downward_sloping part of the wall (negative)
-wall_xy_offset = 5  # offset in the x and/or y direction for the first downward_sloping part of the wall (negative)
-wall_thickness = 2  # wall thickness parameter# originally 5
+wall_z_offset = 15  # length of the first downward_sloping part of the wall
+wall_x_offset = 5  # offset in the x and/or y direction for the first downward_sloping part of the wall (negative)
+wall_y_offset = 6  # offset in the x and/or y direction for the first downward_sloping part of the wall (negative)
+left_wall_x_offset = 10 # specific values for the left side due to the minimal wall.
+left_wall_z_offset = 3 # specific values for the left side due to the minimal wall.
+wall_thickness = 4.5  # wall thickness parameter used on upper/mid stage of the wall
+wall_base_y_thickness = 4.5 # wall thickness at the lower stage
+wall_base_x_thickness = 4.5 # wall thickness at the lower stage
+
+wall_base_back_thickness = 4.5 # wall thickness at the lower stage in the specifically in back for interface.
 
 ## Settings for column_style == :fixed
 ## The defaults roughly match Maltron settings
@@ -80,53 +86,161 @@ lastcol = ncols - 1
 ## Switch Hole ##
 #################
 
-keyswitch_height = 14.4  ## Was 14.1, then 14.25
-keyswitch_width = 14.4
+#plate options are
+# 'HOLE' = a square hole.  Also useful for applying custom plate files.
+# 'NUB' = original side nubs.
+# 'UNDERCUT' = snap fit undercut.  May require CLIP_THICKNESS and possibly CLIP_UNDERCUT tweaking
+#       and/or filing to get proper snap.
+# 'HS_NUB' = hot swap underside with nubs.
+# 'HS_UNDERCUT' = hot swap underside with undercut. Does not generate properly.  Hot swap step needs to be modified.
+plate_style = 'UNDERCUT'
+
+hole_keyswitch_height = 14.0
+hole_keyswitch_width = 14.0
+
+nub_keyswitch_height = 14.4
+nub_keyswitch_width = 14.4
+
+undercut_keyswitch_height = 14.4
+undercut_keyswitch_width = 14.4
 
 sa_profile_key_height = 12.7
-
 plate_thickness = 4
-mount_width = keyswitch_width + 3
-mount_height = keyswitch_height + 3
 
-hot_swap = False
+# Undercut style dimensions
+clip_thickness = 1.4
+clip_undercut = 1.0
+undercut_transition = .2  # NOT FUNCTIONAL WITH OPENSCAD, ONLY WORKS WITH CADQUERY
 
+# Custom plate step file
 plate_file = None
 plate_offset = 0.0
 
-if hot_swap:
+
+web_thickness = 4.0
+post_size = 0.1
+# post_adj = post_size / 2
+post_adj = 0
+
+
+###################################
+## Controller Mount / Connectors ##
+###################################
+# connector options are
+# 'RJ9_USB_WALL' = Standard internal plate with RJ9 opening and square cutout for connection.
+# 'RJ9_USB_TEENSY' = Teensy holder
+# 'EXTERNAL' = square cutout for a holder such as the on from lolligagger.
+# controller_mount_type = 'RJ9_USB_WALL'
+# controller_mount_type = 'RJ9_USB_TEENSY'
+controller_mount_type = 'EXTERNAL'
+
+external_holder_height = 12.5
+external_holder_width = 28.75
+external_holder_xoffset = -5.0
+# Offset is from the top inner corner of the top inner key.
+
+
+
+###################################
+## COLUMN OFFSETS
+####################################
+
+def column_offset(column: int) -> list:
+    if column == 2:
+        return [0, 2.82, -4.5]
+    elif column >= 4:
+        return [0, -12, 5.64]  # original [0 -5.8 5.64]
+    else:
+        return [0, 0, 0]
+
+
+
+
+####################################
+## END CONFIGURATION SECTION
+####################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Derived values
+if plate_style in ['NUB', 'HS_NUB']:
+    keyswitch_height = nub_keyswitch_height
+    keyswitch_width = nub_keyswitch_width
+elif plate_style in ['UNDERCUT', 'HS_UNDERCUT']:
+    keyswitch_height = undercut_keyswitch_height
+    keyswitch_width = undercut_keyswitch_width
+else:
+    keyswitch_height = hole_keyswitch_height
+    keyswitch_width = hole_keyswitch_width
+
+if plate_style in ['HS_UNDERCUT', 'HS_NUB', 'HS_HOLE']:
     symmetry = "asymmetric"
-    plate_file = path.join("..", "src", r"hot_swap_plate.stl")
-    # plate_offset = plate_thickness - 5.25
+    plate_file = path.join("..", "src", r"hot_swap_plate.step")
     plate_offset = 0.0
 
+mount_width = keyswitch_width + 3
+mount_height = keyswitch_height + 3
+mount_thickness = plate_thickness
+
+
+
 def single_plate(cylinder_segments=100, side="right"):
-    top_wall = sl.cube([keyswitch_width + 3, 1.5, plate_thickness], center=True)
-    top_wall = sl.translate(
-        (0, (1.5 / 2) + (keyswitch_height / 2), plate_thickness / 2)
-    )(top_wall)
+    if plate_style in ['NUB', 'HS_NUB']:
+        top_wall = sl.cube([mount_width, 1.5, plate_thickness], center=True)
+        top_wall = sl.translate(
+            (0, (1.5 / 2) + (keyswitch_height / 2), plate_thickness / 2)
+        )(top_wall)
 
-    left_wall = sl.cube([1.5, keyswitch_height + 3, plate_thickness], center=True)
-    left_wall = sl.translate(
-        ((1.5 / 2) + (keyswitch_width / 2), 0, plate_thickness / 2)
-    )(left_wall)
+        left_wall = sl.cube([1.5, mount_height, plate_thickness], center=True)
+        left_wall = sl.translate(
+            ((1.5 / 2) + (keyswitch_width / 2), 0, plate_thickness / 2)
+        )(left_wall)
 
-    side_nub = sl.cylinder(1, 2.75, segments=cylinder_segments, center=True)
-    side_nub = sl.rotate(rad2deg(pi / 2), [1, 0, 0])(side_nub)
-    side_nub = sl.translate((keyswitch_width / 2, 0, 1))(side_nub)
-    nub_cube = sl.cube([1.5, 2.75, plate_thickness], center=True)
-    nub_cube = sl.translate(
-        ((1.5 / 2) + (keyswitch_width / 2), 0, plate_thickness / 2)
-    )(nub_cube)
+        side_nub = sl.cylinder(1, 2.75, segments=cylinder_segments, center=True)
+        side_nub = sl.rotate(rad2deg(pi / 2), [1, 0, 0])(side_nub)
+        side_nub = sl.translate((keyswitch_width / 2, 0, 1))(side_nub)
+        nub_cube = sl.cube([1.5, 2.75, plate_thickness], center=True)
+        nub_cube = sl.translate(
+            ((1.5 / 2) + (keyswitch_width / 2), 0, plate_thickness / 2)
+        )(nub_cube)
 
-    side_nub = sl.hull()(side_nub, nub_cube)
+        side_nub = sl.hull()(side_nub, nub_cube)
 
-    plate_half1 = top_wall + left_wall + side_nub
-    plate_half2 = plate_half1
-    plate_half2 = sl.mirror([0, 1, 0])(plate_half2)
-    plate_half2 = sl.mirror([1, 0, 0])(plate_half2)
+        plate_half1 = top_wall + left_wall + side_nub
+        plate_half2 = plate_half1
+        plate_half2 = sl.mirror([0, 1, 0])(plate_half2)
+        plate_half2 = sl.mirror([1, 0, 0])(plate_half2)
 
-    plate = plate_half1 + plate_half2
+        plate = plate_half1 + plate_half2
+
+
+    else:  # 'HOLE' or default, square cutout for non-nub designs.
+        plate = sl.cube([mount_width, mount_height, mount_thickness], center=True)
+        plate = sl.translate((0.0, 0.0, mount_thickness / 2.0))(plate)
+        shape_cut = sl.cube([keyswitch_width, keyswitch_height, mount_thickness*2], center=True)
+        shape_cut = sl.translate((0.0, 0.0, mount_thickness))(shape_cut)
+        plate = sl.difference()(plate, shape_cut)
+
+    if plate_style in ['UNDERCUT', 'HS_UNDERCUT']:
+        undercut = sl.cube([
+            keyswitch_width + 2 * clip_undercut,
+            keyswitch_height + 2 * clip_undercut,
+            mount_thickness
+        ], center=True)
+
+        undercut = sl.translate((0.0, 0.0, -clip_thickness + mount_thickness / 2.0))(undercut)
+
+        plate = sl.difference()(plate, undercut)
 
     if plate_file is not None:
         socket = sl.import_(plate_file)
@@ -318,9 +432,6 @@ def caps():
 ####################
 ## Web Connectors ##
 ####################
-
-web_thickness = 3.5
-post_size = 0.1
 
 
 def web_post():
@@ -686,10 +797,6 @@ def bottom_hull(p, height=0.001):
     return shape
 
 
-left_wall_x_offset = 10
-left_wall_z_offset = 3
-
-
 def left_key_position(row, direction):
     pos = np.array(
         key_position([-mount_width * 0.5, direction * mount_height * 0.5, 0], 0, row)
@@ -707,42 +814,49 @@ def wall_locate1(dx, dy):
 
 
 def wall_locate2(dx, dy):
-    return [dx * wall_xy_offset, dy * wall_xy_offset, wall_z_offset]
+    return [dx * wall_x_offset, dy * wall_y_offset, -wall_z_offset]
 
 
-def wall_locate3(dx, dy):
-    return [
-        dx * (wall_xy_offset + wall_thickness),
-        dy * (wall_xy_offset + wall_thickness),
-        wall_z_offset,
-    ]
+def wall_locate3(dx, dy, back=False):
+    if back:
+        return [
+            dx * (wall_x_offset + wall_base_x_thickness),
+            dy * (wall_y_offset + wall_base_back_thickness),
+            -wall_z_offset,
+        ]
+    else:
+        return [
+            dx * (wall_x_offset + wall_base_x_thickness),
+            dy * (wall_y_offset + wall_base_y_thickness),
+            -wall_z_offset,
+        ]
 
 
-def wall_brace(place1, dx1, dy1, post1, place2, dx2, dy2, post2):
+def wall_brace(place1, dx1, dy1, post1, place2, dx2, dy2, post2, back=False):
     hulls = []
 
     hulls.append(place1(post1))
     hulls.append(place1(sl.translate(wall_locate1(dx1, dy1))(post1)))
     hulls.append(place1(sl.translate(wall_locate2(dx1, dy1))(post1)))
-    hulls.append(place1(sl.translate(wall_locate3(dx1, dy1))(post1)))
+    hulls.append(place1(sl.translate(wall_locate3(dx1, dy1, back))(post1)))
 
     hulls.append(place2(post2))
     hulls.append(place2(sl.translate(wall_locate1(dx2, dy2))(post2)))
     hulls.append(place2(sl.translate(wall_locate2(dx2, dy2))(post2)))
-    hulls.append(place2(sl.translate(wall_locate3(dx2, dy2))(post2)))
+    hulls.append(place2(sl.translate(wall_locate3(dx2, dy2, back))(post2)))
     shape1 = sl.hull()(*hulls)
 
     hulls = []
     hulls.append(place1(sl.translate(wall_locate2(dx1, dy1))(post1)))
-    hulls.append(place1(sl.translate(wall_locate3(dx1, dy1))(post1)))
+    hulls.append(place1(sl.translate(wall_locate3(dx1, dy1, back))(post1)))
     hulls.append(place2(sl.translate(wall_locate2(dx2, dy2))(post2)))
-    hulls.append(place2(sl.translate(wall_locate3(dx2, dy2))(post2)))
+    hulls.append(place2(sl.translate(wall_locate3(dx2, dy2, back))(post2)))
     shape2 = bottom_hull(hulls)
 
     return shape1 + shape2
 
 
-def key_wall_brace(x1, y1, dx1, dy1, post1, x2, y2, dx2, dy2, post2):
+def key_wall_brace(x1, y1, dx1, dy1, post1, x2, y2, dx2, dy2, post2, back=False):
     return wall_brace(
         (lambda shape: key_place(shape, x1, y1)),
         dx1,
@@ -752,20 +866,21 @@ def key_wall_brace(x1, y1, dx1, dy1, post1, x2, y2, dx2, dy2, post2):
         dx2,
         dy2,
         post2,
+        back
     )
 
 
 def back_wall():
     x = 0
-    shape = key_wall_brace(x, 0, 0, 1, web_post_tl(), x, 0, 0, 1, web_post_tr())
+    shape = key_wall_brace(x, 0, 0, 1, web_post_tl(), x, 0, 0, 1, web_post_tr(), back=True)
     for i in range(ncols - 1):
         x = i + 1
-        shape += key_wall_brace(x, 0, 0, 1, web_post_tl(), x, 0, 0, 1, web_post_tr())
+        shape += key_wall_brace(x, 0, 0, 1, web_post_tl(), x, 0, 0, 1, web_post_tr(), back=True)
         shape += key_wall_brace(
-            x, 0, 0, 1, web_post_tl(), x - 1, 0, 0, 1, web_post_tr()
+            x, 0, 0, 1, web_post_tl(), x - 1, 0, 0, 1, web_post_tr(), back=True
         )
     shape += key_wall_brace(
-        lastcol, 0, 0, 1, web_post_tr(), lastcol, 0, 1, 0, web_post_tr()
+        lastcol, 0, 0, 1, web_post_tr(), lastcol, 0, 1, 0, web_post_tr(), back=True
     )
     return shape
 
@@ -778,11 +893,13 @@ def right_wall():
     for i in range(lastrow - 1):
         y = i + 1
         shape += key_wall_brace(
+            lastcol, y - 1, 1, 0, web_post_br(), lastcol, y, 1, 0, web_post_tr()
+        )
+
+        shape += key_wall_brace(
             lastcol, y, 1, 0, web_post_tr(), lastcol, y, 1, 0, web_post_br()
         )
-        shape += key_wall_brace(
-            lastcol, y, 1, 0, web_post_br(), lastcol, y - 1, 1, 0, web_post_tr()
-        )
+
     shape += key_wall_brace(
         lastcol,
         cornerrow,
@@ -1093,6 +1210,32 @@ def usb_holder_hole():
     return shape
 
 
+
+external_start = list(
+    np.array([external_holder_width/2, 0, 0])
+    + np.array(
+        key_position(
+            list(np.array(wall_locate3(0, 1)) + np.array([0, (mount_height / 2), 0])),
+            0,
+            0,
+        )
+    )
+)
+
+def external_mount_hole():
+    print('external_mount_hole()')
+    shape = sl.cube((external_holder_width, 20.0, external_holder_height), center=True)
+    shape = sl.translate(
+        (
+            external_start[0] + external_holder_xoffset,
+            external_start[1],
+            external_holder_height / 2
+        )
+    )(shape)
+    return shape
+
+
+
 teensy_width = 20
 teensy_height = 12
 teensy_length = 33
@@ -1184,8 +1327,9 @@ def screw_insert(column, row, bottom_radius, top_radius, height):
             row,
         )
 
-    shape = screw_insert_shape(bottom_radius, top_radius, height)
-    shape = sl.translate((position[0], position[1], height / 2))(shape)
+    # add z height below 0 due to 0 thickness skin covering the hole.
+    shape = screw_insert_shape(bottom_radius, top_radius, height + 5)
+    shape = sl.translate((position[0], position[1], height / 2 - 2.5))(shape)
 
     return shape
 
@@ -1258,14 +1402,32 @@ def wire_posts():
 
 def model_side(side="right"):
     shape = sl.union()(key_holes(side=side), connectors(), thumb(side=side), thumb_connectors(),)
+    pre_sub = []
+    adders = []
+    post_sub = [screw_insert_holes()]
 
-    s2 = sl.union()(case_walls(), screw_insert_outers(), teensy_holder(), usb_holder(),)
+    if controller_mount_type in ['RJ9_USB_TEENSY']:
+        adders.append(teensy_holder())
 
-    s2 = sl.difference()(s2, rj9_space(), usb_holder_hole(), screw_insert_holes())
+    if controller_mount_type in ['RJ9_USB_TEENSY', 'RJ9_USB_WALL']:
+        adders.append(usb_holder())
+        post_sub.append(usb_holder_hole())
 
-    shape = sl.union()(shape, s2, rj9_holder(), wire_posts(),)
+    if controller_mount_type in ['RJ9_USB_TEENSY', 'RJ9_USB_WALL']:
+        pre_sub.append(rj9_space())
+        adders.append(rj9_holder())
+
+    if controller_mount_type in ['EXTERNAL']:
+        post_sub.append(external_mount_hole())
+
+    s2 = sl.union()(case_walls(), screw_insert_outers())
+    s2 = sl.difference()(s2,*pre_sub)
+    s2 = sl.union()(s2, *adders)
+    shape = sl.union()(shape, s2)
 
     shape -= sl.translate([0, 0, -20])(sl.cube([350, 350, 40], center=True))
+
+    shape = sl.difference()(shape, *post_sub)
 
     if side == "left":
         shape = sl.mirror([-1, 0, 0])(shape)

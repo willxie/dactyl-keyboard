@@ -8,8 +8,16 @@ As part of the effort to create a new engine I converted the code to cadquery/Op
 
 ![STEP File in FreeCAD](./resources/FreeCAD_STEP_screen.png)
 
-## Added Feature
+## Added Features
+
+### Clippable switch mounting
+
+Tired of hot glue and constraining the socket with "nubs"?  I've added an adjustable undercut for using the clips on the sockets.  May require some tweaking and little filing, but I have my DM built without any glue and you can too.  Just use `plate_style = 'UNDERCUT'`.
+
+### Kailh Hotswap
 Added a new switch for hot swap and a way to include any additional geometry in the key plate by use of an imported file.  For hot swap just change the line to `hot_swap = True`.  To import an arbitrary geometry set the `plate_file = None` and `plate_offset = 0.0`.  The file must be .step for OpenCascade / cadquery and .stl for openSCAD / solid python.  The zero reference should be the key center (XY), and the top of the plate (Z).  Plate offset is a Z-axis translation for minor adjustments without modifying the geometry file.  If you don't want the "nubs" you have to modify the plate function.  It will propagate to all key plate usage.  
+
+Just use `plate_style = 'HS_HOLE'` or `plate_style = 'HS_NUB'`.
 
 **DISCLAIMER:  I have not built the hot swap version and cannot speak to the geometry.  I found it running around in various places and don't know the origin.**  
 
@@ -18,6 +26,22 @@ If you know the origin I would like to credit the originator.  If you test it I'
 Message me on Reddit u/j_oshreve if you are really stuck.  I don't have much time to help, but can answer the occasional question.  Also feel free to put in a pull request if you come up with something crafty and want to give others access to it.
 
 ![Hot Swap in OpenSCAD](./resources/OpenSCAD_hotswap.png)
+
+### Multiple Controller Mounts
+
+Added an external mount for a separate controller tray.  Looks to work with lolligag's controller trays / holders:
+
+- [Promicro V1](https://dactyl.siskam.link/loligagger-external-holder-promicro-v1.stl)
+- [Promicro V2](https://dactyl.siskam.link/loligagger-external-holder-promicro-v2.stl)
+- [Elite-C V1 ](https://dactyl.siskam.link/loligagger-external-holder-elite-c-v1.stl)
+
+Just use `controller_mount_type = 'EXTERNAL'`.
+
+This is a new feature so any feedback is appreciated.  If you have issued message me on Reddit and I will try to help correct them.
+
+### OLED Display Mount
+
+WIP - Adding OLED display mount for .91 inch 128 X 32 Display on inner wall structure. 
 
 ## Status / Future
 FWIW, the cadquery version is essentially a double translation and is now a bit of a mess.  I wanted to share with the community as the first version of dactyl-manuform that exports as a STEP file, allowing easier editing.  I am happy to maintain the code, but I am unlikely to spend much more time cleaning it up as I am working on an entirely new object-oriented generator in Python/cadquery.  This was my proof of concept for eliminating OpenSCAD from the workflow and I thought it worth giving back to the community. 
@@ -91,7 +115,9 @@ When laser cut, some of the inside cuts will need to be removed.
 
 ### Thingiverse
 
-[The 4x5 STL left/right pair](https://www.thingiverse.com/thing:2349390) from the [things/](things/) directory is in the thingiverse for public printing
+[The 4x5 STL left/right pair](https://www.thi
+![](resources/dactyl_manuform_left_wire_diagram.png)
+ngiverse.com/thing:2349390) from the [things/](things/) directory is in the thingiverse for public printing
 
 ### Wiring
 

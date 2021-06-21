@@ -14,12 +14,21 @@ def deg2rad(degrees: float) -> float:
 def rad2deg(rad: float) -> float:
     return rad * 180 / pi
 
+####################################
+## START CONFIGURATION SECTION
+####################################
 
-# ######################
-# ## Shape parameters ##
-# ######################
+######################
+## Run parameters ##
+######################
 
-show_caps = True
+debug_exports = False
+
+######################
+## Shape parameters ##
+######################
+
+show_caps = False
 
 nrows = 5  # key rows
 ncols = 6  # key columns
@@ -47,9 +56,16 @@ keyboard_z_offset = (
 extra_width = 2.5  # extra space between the base of keys# original= 2
 extra_height = 1.0  # original= 0.5
 
-wall_z_offset = -15  # length of the first downward_sloping part of the wall (negative)
-wall_xy_offset = 5  # offset in the x and/or y direction for the first downward_sloping part of the wall (negative)
-wall_thickness = 2  # wall thickness parameter# originally 5
+wall_z_offset = 15  # length of the first downward_sloping part of the wall
+wall_x_offset = 5  # offset in the x and/or y direction for the first downward_sloping part of the wall (negative)
+wall_y_offset = 6  # offset in the x and/or y direction for the first downward_sloping part of the wall (negative)
+left_wall_x_offset = 10 # specific values for the left side due to the minimal wall.
+left_wall_z_offset = 3 # specific values for the left side due to the minimal wall.
+wall_thickness = 4.5  # wall thickness parameter used on upper/mid stage of the wall
+wall_base_y_thickness = 4.5 # wall thickness at the lower stage
+wall_base_x_thickness = 4.5 # wall thickness at the lower stage
+
+wall_base_back_thickness = 4.5 # wall thickness at the lower stage in the specifically in back for interface.
 
 ## Settings for column_style == :fixed
 ## The defaults roughly match Maltron settings
@@ -73,31 +89,111 @@ lastcol = ncols - 1
 ## Switch Hole ##
 #################
 
-keyswitch_height = 14.4  ## Was 14.1, then 14.25
-keyswitch_width = 14.4
+#plate options are
+# 'HOLE' = a square hole.  Also useful for applying custom plate files.
+# 'NUB' = original side nubs.
+# 'UNDERCUT' = snap fit undercut.  May require CLIP_THICKNESS and possibly CLIP_UNDERCUT tweaking
+#       and/or filing to get proper snap.
+# 'HS_HOLE' = hot swap underside with square hole.
+# 'HS_NUB' = hot swap underside with nubs.
+# 'HS_UNDERCUT' = hot swap underside with undercut. Does not generate properly.  Hot swap step needs to be modified.
+plate_style = 'UNDERCUT'
+
+hole_keyswitch_height = 14.0
+hole_keyswitch_width = 14.0
+
+nub_keyswitch_height = 14.4
+nub_keyswitch_width = 14.4
+
+undercut_keyswitch_height = 14.4
+undercut_keyswitch_width = 14.4
 
 sa_profile_key_height = 12.7
-
 plate_thickness = 4
-mount_width = keyswitch_width + 3
-mount_height = keyswitch_height + 3
-mount_thickness = plate_thickness
 
-SWITCH_WIDTH = 14
-SWITCH_HEIGHT = 14
-CLIP_THICKNESS = 1.4
-CLIP_UNDERCUT = 1.0
-UNDERCUT_TRANSITION = .2
+# Undercut style dimensions
+clip_thickness = 1.4
+clip_undercut = 1.0
+undercut_transition = .2
 
-hot_swap = False
-
+# Custom plate step file
 plate_file = None
 plate_offset = 0.0
 
-if hot_swap:
+
+web_thickness = 4.0
+post_size = 0.1
+# post_adj = post_size / 2
+post_adj = 0
+
+
+###################################
+## Controller Mount / Connectors ##
+###################################
+# connector options are
+# 'RJ9_USB_WALL' = Standard internal plate with RJ9 opening and square cutout for connection.
+# 'RJ9_USB_TEENSY' = Teensy holder
+# 'EXTERNAL' = square cutout for a holder such as the on from lolligagger.
+# controller_mount_type = 'RJ9_USB_WALL'
+# controller_mount_type = 'RJ9_USB_TEENSY'
+controller_mount_type = 'EXTERNAL'
+
+external_holder_height = 12.5
+external_holder_width = 28.75
+external_holder_xoffset = -5.0
+# Offset is from the top inner corner of the top inner key.
+
+
+###################################
+## COLUMN OFFSETS
+####################################
+
+def column_offset(column: int) -> list:
+    # print('column_offset()')
+    if column == 2:
+        return [0, 2.82, -4.5]
+    elif column >= 4:
+        return [0, -12, 5.64]  # original [0 -5.8 5.64]
+    else:
+        return [0, 0, 0]
+
+
+####################################
+## END CONFIGURATION SECTION
+####################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Derived values
+if plate_style in ['NUB', 'HS_NUB']:
+    keyswitch_height = nub_keyswitch_height
+    keyswitch_width = nub_keyswitch_width
+elif plate_style in ['UNDERCUT', 'HS_UNDERCUT']:
+    keyswitch_height = undercut_keyswitch_height
+    keyswitch_width = undercut_keyswitch_width
+else:
+    keyswitch_height = hole_keyswitch_height
+    keyswitch_width = hole_keyswitch_width
+
+if plate_style in ['HS_UNDERCUT', 'HS_NUB', 'HS_HOLE']:
     symmetry = "asymmetric"
     plate_file = path.join("..", "src", r"hot_swap_plate.step")
     plate_offset = 0.0
+
+
+mount_width = keyswitch_width + 3
+mount_height = keyswitch_height + 3
+mount_thickness = plate_thickness
 
 
 
@@ -153,7 +249,7 @@ def face_from_points(points):
 
 
 def hull_from_points(points):
-    print('hull_from_points()')
+    # print('hull_from_points()')
     hull_calc = sphull(points)
     n_faces = len(hull_calc.simplices)
 
@@ -171,7 +267,7 @@ def hull_from_points(points):
 
 
 def hull_from_shapes(shapes, points=None):
-    print('hull_from_shapes()')
+    # print('hull_from_shapes()')
     vertices = []
     for shape in shapes:
         verts = shape.vertices()
@@ -202,39 +298,55 @@ def tess_hull(shapes, sl_tol=.5, sl_angTol=1):
     return shape
 
 
-def column_offset(column: int) -> list:
-    # print('column_offset()')
-    if column == 2:
-        return [0, 2.82, -4.5]
-    elif column >= 4:
-        return [0, -12, 5.64]  # original [0 -5.8 5.64]
-    else:
-        return [0, 0, 0]
 
 
 def single_plate(cylinder_segments=100, side="right"):
-    top_wall = cq.Workplane("XY").box(keyswitch_width + 3, 1.5, plate_thickness)
-    top_wall = top_wall.translate((0, (1.5 / 2) + (keyswitch_height / 2), plate_thickness / 2))
 
-    left_wall = cq.Workplane("XY").box(1.5, keyswitch_height + 3, plate_thickness)
-    left_wall = left_wall.translate(((1.5 / 2) + (keyswitch_width / 2), 0, plate_thickness / 2))
+    if plate_style in ['NUB', 'HS_NUB']:
+        top_wall = cq.Workplane("XY").box(mount_width, 1.5, plate_thickness)
+        top_wall = top_wall.translate((0, (1.5 / 2) + (keyswitch_height / 2), plate_thickness / 2))
 
-    side_nub = cq.Workplane("XY").union(cq.Solid.makeCylinder(radius=1, height=2.75))
-    side_nub = side_nub.translate((0, 0, -2.75 / 2.0))
-    side_nub = rotate(side_nub, (90, 0, 0))
-    side_nub = side_nub.translate((keyswitch_width / 2, 0, 1))
-    nub_cube = cq.Workplane("XY").box(1.5, 2.75, plate_thickness)
-    nub_cube = nub_cube.translate(((1.5 / 2) + (keyswitch_width / 2), 0, plate_thickness / 2))
+        left_wall = cq.Workplane("XY").box(1.5, mount_height, plate_thickness)
+        left_wall = left_wall.translate(((1.5 / 2) + (keyswitch_width / 2), 0, plate_thickness / 2))
 
-    side_nub2 = tess_hull(shapes=(side_nub, nub_cube))
-    side_nub2 = side_nub2.union(side_nub).union(nub_cube)
+        side_nub = cq.Workplane("XY").union(cq.Solid.makeCylinder(radius=1, height=2.75))
+        side_nub = side_nub.translate((0, 0, -2.75 / 2.0))
+        side_nub = rotate(side_nub, (90, 0, 0))
+        side_nub = side_nub.translate((keyswitch_width / 2, 0, 1))
+        nub_cube = cq.Workplane("XY").box(1.5, 2.75, plate_thickness)
+        nub_cube = nub_cube.translate(((1.5 / 2) + (keyswitch_width / 2), 0, plate_thickness / 2))
 
-    plate_half1 = top_wall.union(left_wall).union(side_nub2)
-    plate_half2 = plate_half1
-    plate_half2 = mirror(plate_half2, 'XZ')
-    plate_half2 = mirror(plate_half2, 'YZ')
+        side_nub2 = tess_hull(shapes=(side_nub, nub_cube))
+        side_nub2 = side_nub2.union(side_nub).union(nub_cube)
 
-    plate = plate_half1.union(plate_half2)
+        plate_half1 = top_wall.union(left_wall).union(side_nub2)
+        plate_half2 = plate_half1
+        plate_half2 = mirror(plate_half2, 'XZ')
+        plate_half2 = mirror(plate_half2, 'YZ')
+
+        plate = plate_half1.union(plate_half2)
+
+    else:  # 'HOLE' or default, square cutout for non-nub designs.
+        plate = cq.Workplane("XY").box(mount_width, mount_height, mount_thickness)
+        plate = plate.translate((0.0, 0.0, mount_thickness / 2.0))
+
+        shape_cut = cq.Workplane("XY").box(keyswitch_width, keyswitch_height, mount_thickness * 2)
+        shape_cut = shape_cut.translate((0.0, 0.0, mount_thickness))
+
+        plate = plate.cut(shape_cut)
+
+    if plate_style in ['UNDERCUT', 'HS_UNDERCUT']:
+        undercut = cq.Workplane("XY").box(
+            keyswitch_width + 2 * clip_undercut,
+            keyswitch_height + 2 * clip_undercut,
+            mount_thickness
+        )
+
+        undercut = undercut.translate((0.0, 0.0, -clip_thickness + mount_thickness / 2.0))
+        if undercut_transition > 0:
+            undercut = undercut.faces("+Z").chamfer(undercut_transition, clip_undercut)
+
+        plate = plate.cut(undercut)
 
     if plate_file is not None:
         socket = cq.Workplane('XY').add(cq.importers.importShape(
@@ -440,8 +552,10 @@ def caps():
 ## Web Connectors ##
 ####################
 
-web_thickness = 3.5 + .5
-post_size = 0.1
+web_thickness = 4.0
+post_size = 0.2
+post_adj = post_size / 2
+# post_adj = 0
 
 
 def web_post():
@@ -449,9 +563,6 @@ def web_post():
     post = cq.Workplane("XY").box(post_size, post_size, web_thickness)
     post = post.translate((0, 0, plate_thickness - (web_thickness / 2)))
     return post
-
-
-post_adj = post_size / 2
 
 
 def web_post_tr():
@@ -841,9 +952,6 @@ def bottom_hull(p, height=0.001):
     return shape
 
 
-left_wall_x_offset = 10
-left_wall_z_offset = 3
-
 
 def left_key_position(row, direction):
     print("left_key_position()")
@@ -866,45 +974,57 @@ def wall_locate1(dx, dy):
 
 def wall_locate2(dx, dy):
     print("wall_locate2()")
-    return [dx * wall_xy_offset, dy * wall_xy_offset, wall_z_offset]
+    return [dx * wall_x_offset, dy * wall_y_offset, -wall_z_offset]
 
 
-def wall_locate3(dx, dy):
+def wall_locate3(dx, dy, back=False):
     print("wall_locate3()")
-    return [
-        dx * (wall_xy_offset + wall_thickness),
-        dy * (wall_xy_offset + wall_thickness),
-        wall_z_offset,
-    ]
+    if back:
+        return [
+            dx * (wall_x_offset + wall_base_x_thickness),
+            dy * (wall_y_offset + wall_base_back_thickness),
+            -wall_z_offset,
+        ]
+    else:
+        return [
+            dx * (wall_x_offset + wall_base_x_thickness),
+            dy * (wall_y_offset + wall_base_y_thickness),
+            -wall_z_offset,
+        ]
+    # return [
+    #     dx * (wall_xy_offset + wall_thickness),
+    #     dy * (wall_xy_offset + wall_thickness),
+    #     -wall_z_offset,
+    # ]
 
 
-def wall_brace(place1, dx1, dy1, post1, place2, dx2, dy2, post2):
+def wall_brace(place1, dx1, dy1, post1, place2, dx2, dy2, post2, back=False):
     print("wall_brace()")
     hulls = []
 
     hulls.append(place1(post1))
     hulls.append(place1(translate(post1, wall_locate1(dx1, dy1))))
     hulls.append(place1(translate(post1, wall_locate2(dx1, dy1))))
-    hulls.append(place1(translate(post1, wall_locate3(dx1, dy1))))
+    hulls.append(place1(translate(post1, wall_locate3(dx1, dy1, back))))
 
     hulls.append(place2(post2))
     hulls.append(place2(translate(post2, wall_locate1(dx2, dy2))))
     hulls.append(place2(translate(post2, wall_locate2(dx2, dy2))))
-    hulls.append(place2(translate(post2, wall_locate3(dx2, dy2))))
+    hulls.append(place2(translate(post2, wall_locate3(dx2, dy2, back))))
     shape1 = hull_from_shapes(hulls)
 
     hulls = []
     hulls.append(place1(translate(post1, wall_locate2(dx1, dy1))))
-    hulls.append(place1(translate(post1, wall_locate3(dx1, dy1))))
+    hulls.append(place1(translate(post1, wall_locate3(dx1, dy1, back))))
     hulls.append(place2(translate(post2, wall_locate2(dx2, dy2))))
-    hulls.append(place2(translate(post2, wall_locate3(dx2, dy2))))
+    hulls.append(place2(translate(post2, wall_locate3(dx2, dy2, back))))
     shape2 = bottom_hull(hulls)
 
     return shape1.union(shape2)
     # return shape1
 
 
-def key_wall_brace(x1, y1, dx1, dy1, post1, x2, y2, dx2, dy2, post2):
+def key_wall_brace(x1, y1, dx1, dy1, post1, x2, y2, dx2, dy2, post2, back=False):
     print("key_wall_brace()")
     return wall_brace(
         (lambda shape: key_place(shape, x1, y1)),
@@ -915,6 +1035,7 @@ def key_wall_brace(x1, y1, dx1, dy1, post1, x2, y2, dx2, dy2, post2):
         dx2,
         dy2,
         post2,
+        back
     )
 
 
@@ -922,15 +1043,15 @@ def back_wall():
     print("back_wall()")
     x = 0
     shape = cq.Workplane('XY')
-    shape = shape.union(key_wall_brace(x, 0, 0, 1, web_post_tl(), x, 0, 0, 1, web_post_tr()))
+    shape = shape.union(key_wall_brace(x, 0, 0, 1, web_post_tl(), x, 0, 0, 1, web_post_tr(), back=True))
     for i in range(ncols - 1):
         x = i + 1
-        shape = shape.union(key_wall_brace(x, 0, 0, 1, web_post_tl(), x, 0, 0, 1, web_post_tr()))
+        shape = shape.union(key_wall_brace(x, 0, 0, 1, web_post_tl(), x, 0, 0, 1, web_post_tr(), back=True))
         shape = shape.union(key_wall_brace(
-            x, 0, 0, 1, web_post_tl(), x - 1, 0, 0, 1, web_post_tr()
+            x, 0, 0, 1, web_post_tl(), x - 1, 0, 0, 1, web_post_tr(), back=True
         ))
     shape = shape.union(key_wall_brace(
-        lastcol, 0, 0, 1, web_post_tr(), lastcol, 0, 1, 0, web_post_tr()
+        lastcol, 0, 0, 1, web_post_tr(), lastcol, 0, 1, 0, web_post_tr(), back=True
     ))
     return shape
 
@@ -944,14 +1065,18 @@ def right_wall():
             lastcol, y, 1, 0, web_post_tr(), lastcol, y, 1, 0, web_post_br()
         )
     )
+
     for i in range(lastrow - 1):
         y = i + 1
         shape = shape.union(key_wall_brace(
+            lastcol, y - 1, 1, 0, web_post_br(), lastcol, y, 1, 0, web_post_tr()
+        ))
+
+        shape = shape.union(key_wall_brace(
             lastcol, y, 1, 0, web_post_tr(), lastcol, y, 1, 0, web_post_br()
         ))
-        shape = shape.union(key_wall_brace(
-            lastcol, y, 1, 0, web_post_br(), lastcol, y - 1, 1, 0, web_post_tr()
-        ))
+        #STRANGE PARTIAL OFFSET
+
     shape = shape.union(key_wall_brace(
         lastcol,
         cornerrow,
@@ -1288,6 +1413,35 @@ def usb_holder_hole():
     return shape
 
 
+external_start = list(
+    # np.array([0, -3, 0])
+    np.array([external_holder_width / 2, 0, 0])
+    + np.array(
+        key_position(
+            list(np.array(wall_locate3(0, 1)) + np.array([0, (mount_height / 2), 0])),
+            0,
+            0,
+        )
+    )
+)
+
+def external_mount_hole():
+    print('external_mount_hole()')
+    shape = cq.Workplane("XY").box(external_holder_width, 20.0, external_holder_height)
+    shape = shape.translate(
+        (
+            external_start[0] + external_holder_xoffset,
+            external_start[1],
+            external_holder_height / 2,
+        )
+    )
+    return shape
+
+
+
+
+
+
 teensy_width = 20
 teensy_height = 12
 teensy_length = 33
@@ -1469,21 +1623,46 @@ def wire_posts():
 def model_side(side="right"):
     print('model_right()')
     shape = cq.Workplane('XY').union(key_holes(side=side))
-    shape = shape.union(connectors())
-    shape = shape.union(thumb(side=side))
-    shape = shape.union(thumb_connectors())
-    s2 = cq.Workplane('XY').union(case_walls())
+    if debug_exports:
+        cq.exporters.export(w=shape, fname=path.join(r"..", "things", r"debug_key_plates.step"), exportType='STEP')
+    connector_shape = connectors()
+    shape = shape.union(connector_shape)
+    if debug_exports:
+        cq.exporters.export(w=shape, fname=path.join(r"..", "things", r"debug_connector_shape.step"), exportType='STEP')
+    thumb_shape = thumb(side=side)
+    if debug_exports:
+        cq.exporters.export(w=thumb_shape, fname=path.join(r"..", "things", r"debug_thumb_shape.step"), exportType='STEP')
+    shape = shape.union(thumb_shape)
+    thumb_connector_shape = thumb_connectors()
+    shape = shape.union(thumb_connector_shape)
+    if debug_exports:
+        cq.exporters.export(w=shape, fname=path.join(r"..", "things", r"debug_thumb_connector_shape.step"), exportType='STEP')
+    walls_shape = case_walls()
+    if debug_exports:
+        cq.exporters.export(w=walls_shape, fname=path.join(r"..", "things", r"debug_walls_shape.step"), exportType='STEP')
+    s2 = cq.Workplane('XY').union(walls_shape)
     s2 = union([s2, *screw_insert_outers])
-    # s2 = s2.union(teensy_holder())
-    s2 = s2.union(usb_holder())
 
-    s2 = s2.cut(rj9_space())
-    s2 = s2.cut(usb_holder_hole())
+    if controller_mount_type in ['RJ9_USB_TEENSY']:
+        s2 = s2.union(teensy_holder())
+
+    if controller_mount_type in ['RJ9_USB_TEENSY', 'RJ9_USB_WALL']:
+        s2 = s2.union(usb_holder())
+        s2 = s2.cut(usb_holder_hole())
+
+    if controller_mount_type in ['RJ9_USB_TEENSY', 'RJ9_USB_WALL']:
+        s2 = s2.cut(rj9_space())
+
+    if controller_mount_type in ['EXTERNAL']:
+        s2 = s2.cut(external_mount_hole())
+
     s2 = s2.cut(union(screw_insert_holes))
+    shape = shape.union(s2)
+    # shape = shape.union(s2, tol=.01)
 
-    shape = shape.union(rj9_holder())
-    shape = shape.union(s2, tol=.01)
-    # shape = shape.union(wire_posts())
+    if controller_mount_type in ['RJ9_USB_TEENSY', 'RJ9_USB_WALL']:
+        shape = shape.union(rj9_holder())
+
     block = cq.Workplane("XY").box(350, 350, 40)
     block = block.translate((0, 0, -20))
     shape = shape.cut(block)
@@ -1496,6 +1675,8 @@ def model_side(side="right"):
         shape = shape.mirror('YZ')
 
     return shape
+
+
 
 
 mod_r = model_side(side="right")
