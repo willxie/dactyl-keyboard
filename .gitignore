@@ -9,3 +9,5 @@
 *.scad
 /target
 .idea/
+*.FCStd1
+debug_*
