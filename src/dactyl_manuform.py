@@ -236,6 +236,8 @@ def column_offset(column: int) -> list:
 ####################################
 
 
+
+
 # Derived values
 if plate_style in ['NUB', 'HS_NUB']:
     keyswitch_height = nub_keyswitch_height
@@ -249,7 +251,7 @@ else:
 
 if plate_style in ['HS_UNDERCUT', 'HS_NUB', 'HS_HOLE']:
     symmetry = "asymmetric"
-    plate_file = path.join("..", "src", r"hot_swap_plate.step")
+    plate_file = path.join("..", "src", r"hot_swap_plate.stl")
     plate_offset = 0.0
 
 mount_width = keyswitch_width + 3
@@ -1302,49 +1304,6 @@ def external_mount_hole():
     return shape
 
 
-# def oled_mount_hole():
-#     if oled_mount_type == 'UNDERCUT':
-#         mount_ext_width = oled_mount_width + 2 * oled_mount_rim
-#         mount_ext_height = oled_mount_height + 2 * oled_mount_rim
-#         shape = sl.cube([mount_ext_width, mount_ext_height, oled_mount_cut_depth + .01], center=True)
-#
-#     if oled_mount_type == 'CLIP':
-#         mount_ext_width = oled_mount_width + 2 * oled_mount_rim
-#         mount_ext_height = (
-#                 oled_mount_height + 2 * oled_clip_thickness
-#                 + 2 * oled_clip_undercut + 2 * oled_mount_rim
-#         )
-#         shape = sl.cube([mount_ext_width, mount_ext_height, oled_mount_cut_depth + .01], center=True)
-#
-#     if oled_mount_type == 'SLIDING':
-#         mount_ext_width = oled_mount_width + 2 * oled_mount_rim
-#         mount_ext_height = (
-#                 oled_mount_height + 2 * oled_edge_overlap_end
-#                 + oled_edge_overlap_connector + oled_edge_overlap_clearance
-#                 + 2 * oled_mount_rim
-#         )
-#         mount_ext_up_height = oled_mount_height + 2 * oled_mount_rim
-#         top_hole_start = -mount_ext_height / 2.0 + oled_mount_rim + oled_edge_overlap_end + oled_edge_overlap_connector
-#         top_hole_length = oled_mount_height
-#         shape = sl.cube([mount_ext_width, mount_ext_up_height, oled_mount_cut_depth + .01], center=True)
-#         shape = sl.translate([0., top_hole_start + top_hole_length / 2, 0.])(shape)
-#         shape_down = sl.cube([mount_ext_width, mount_ext_height, oled_mount_depth + oled_mount_cut_depth / 2],
-#                              center=True)
-#         shape_down = sl.translate([0., 0., -oled_mount_cut_depth / 4])(shape_down)
-#         # shape_down = sl.cube([mount_ext_width, mount_ext_height, oled_mount_depth], center=True)
-#         shape += shape_down
-#
-#     shape = sl.rotate(oled_mount_rotation_xyz)(shape)
-#     shape = sl.translate(
-#         (
-#             oled_mount_location_xyz[0],
-#             oled_mount_location_xyz[1],
-#             oled_mount_location_xyz[2],
-#         )
-#     )(shape)
-#     return shape
-
-
 def oled_sliding_mount_frame():
     mount_ext_width = oled_mount_width + 2 * oled_mount_rim
     mount_ext_height = (
@@ -1358,11 +1317,9 @@ def oled_sliding_mount_frame():
     hole = sl.cube([mount_ext_width, mount_ext_up_height, oled_mount_cut_depth + .01], center=True)
     hole = sl.translate([0., top_hole_start + top_hole_length / 2, 0.])(hole)
     hole_down = sl.cube([mount_ext_width, mount_ext_height, oled_mount_depth + oled_mount_cut_depth / 2],
-                         center=True)
+                        center=True)
     hole_down = sl.translate([0., 0., -oled_mount_cut_depth / 4])(hole_down)
-    # shape_down = sl.cube([mount_ext_width, mount_ext_height, oled_mount_depth], center=True)
     hole += hole_down
-
 
     shape = sl.cube([mount_ext_width, mount_ext_height, oled_mount_depth], center=True)
 
@@ -1391,8 +1348,9 @@ def oled_sliding_mount_frame():
 
     top_hole_start = -mount_ext_height / 2.0 + oled_mount_rim + oled_edge_overlap_end + oled_edge_overlap_connector
     top_hole_length = oled_mount_height
-    top_hole = sl.cube([oled_mount_width, top_hole_length, oled_edge_overlap_thickness + oled_thickness - oled_edge_chamfer],
-                       center=True)
+    top_hole = sl.cube(
+        [oled_mount_width, top_hole_length, oled_edge_overlap_thickness + oled_thickness - oled_edge_chamfer],
+        center=True)
     top_hole = sl.translate([
         0,
         top_hole_start + top_hole_length / 2,
@@ -1405,25 +1363,23 @@ def oled_sliding_mount_frame():
         0.01
     ], center=True)
     top_chamfer_2 = sl.cube([
-        oled_mount_width+2*oled_edge_chamfer,
-        top_hole_length+2*oled_edge_chamfer,
+        oled_mount_width + 2 * oled_edge_chamfer,
+        top_hole_length + 2 * oled_edge_chamfer,
         0.01
     ], center=True)
     top_chamfer_1 = sl.translate([
         0,
         0,
-        -oled_edge_chamfer-.05
+        -oled_edge_chamfer - .05
     ])(top_chamfer_1)
     top_chamfer_1 = sl.hull()(top_chamfer_1, top_chamfer_2)
 
     top_chamfer_1 = sl.translate([
         0,
         top_hole_start + top_hole_length / 2,
-        oled_mount_depth / 2.0+.05
+        oled_mount_depth / 2.0 + .05
     ])(top_chamfer_1)
     top_hole += top_chamfer_1
-
-
 
     shape = sl.difference()(shape, conn_hole, top_hole, end_hole)
 
@@ -1477,7 +1433,7 @@ def oled_clip_mount_frame():
         oled_mount_width + .1,
         oled_mount_height - 2 * oled_mount_connector_hole,
         oled_mount_depth - oled_thickness], center=True)
-    plate = sl.translate((0., 0., -oled_thickness/2.0))(plate)
+    plate = sl.translate((0., 0., -oled_thickness / 2.0))(plate)
     shape += plate
 
     shape = sl.rotate(oled_mount_rotation_xyz)(shape)
@@ -1501,7 +1457,6 @@ def oled_clip_mount_frame():
     return hole, shape
 
 
-
 def oled_clip():
     mount_ext_width = oled_mount_width + 2 * oled_mount_rim
     mount_ext_height = (
@@ -1511,15 +1466,15 @@ def oled_clip():
 
     oled_leg_depth = oled_mount_depth + oled_clip_z_gap
 
-    shape = sl.cube([mount_ext_width-.1, mount_ext_height-.1, oled_mount_bezel_thickness], center=True)
-    shape = sl.translate((0., 0., oled_mount_bezel_thickness/2.))(shape)
+    shape = sl.cube([mount_ext_width - .1, mount_ext_height - .1, oled_mount_bezel_thickness], center=True)
+    shape = sl.translate((0., 0., oled_mount_bezel_thickness / 2.))(shape)
 
     hole_1 = sl.cube([
-        oled_screen_width + 2*oled_mount_bezel_chamfer,
-        oled_screen_length + 2*oled_mount_bezel_chamfer,
+        oled_screen_width + 2 * oled_mount_bezel_chamfer,
+        oled_screen_length + 2 * oled_mount_bezel_chamfer,
         .01
     ], center=True)
-    hole_2 = sl.cube([oled_screen_width, oled_screen_length, 2.05*oled_mount_bezel_thickness], center=True)
+    hole_2 = sl.cube([oled_screen_width, oled_screen_length, 2.05 * oled_mount_bezel_thickness], center=True)
     hole = sl.hull()(hole_1, hole_2)
 
     shape -= sl.translate((0., 0., oled_mount_bezel_thickness))(hole)
@@ -1529,23 +1484,23 @@ def oled_clip():
         0.,
         0.,
         # (oled_mount_height+2*oled_clip_overhang+oled_clip_thickness)/2,
-        -oled_leg_depth/2.
+        -oled_leg_depth / 2.
     ))(clip_leg)
 
     latch_1 = sl.cube([
         oled_clip_width,
-        oled_clip_overhang+oled_clip_thickness,
+        oled_clip_overhang + oled_clip_thickness,
         .01
     ], center=True)
     latch_2 = sl.cube([
         oled_clip_width,
-        oled_clip_thickness/2,
+        oled_clip_thickness / 2,
         oled_clip_extension
     ], center=True)
     latch_2 = sl.translate((
         0.,
-        -(-oled_clip_thickness/2 + oled_clip_thickness + oled_clip_overhang)/2,
-        -oled_clip_extension/2
+        -(-oled_clip_thickness / 2 + oled_clip_thickness + oled_clip_overhang) / 2,
+        -oled_clip_extension / 2
     ))(latch_2)
     latch = sl.hull()(latch_1, latch_2)
     latch = sl.translate((
@@ -1815,7 +1770,6 @@ def model_side(side="right"):
         shape -= hole
         shape += frame
 
-
     if side == "left":
         shape = sl.mirror([-1, 0, 0])(shape)
 
@@ -1840,7 +1794,6 @@ else:
 def baseplate():
     shape = sl.union()(
         case_walls(),
-        teensy_holder(),
         screw_insert_outers(),
     )
 
@@ -1855,17 +1808,16 @@ def baseplate():
 
 sl.scad_render_to_file(baseplate(), path.join(r"..", "things", r"plate_py.scad"))
 
-
-if oled_mount_type=='UNDERCUT':
+if oled_mount_type == 'UNDERCUT':
     sl.scad_render_to_file(oled_undercut_mount_frame()[1], path.join(r"..", "things", r"oled_undercut_test.scad"))
 
-if oled_mount_type=='SLIDING':
+if oled_mount_type == 'SLIDING':
     sl.scad_render_to_file(oled_sliding_mount_frame()[1], path.join(r"..", "things", r"oled_sliding_test.scad"))
 
-if oled_mount_type=='CLIP':
-    oled_mount_location_xyz = (0.0, 0.0, -oled_mount_depth/2)
+if oled_mount_type == 'CLIP':
+    oled_mount_location_xyz = (0.0, 0.0, -oled_mount_depth / 2)
     oled_mount_rotation_xyz = (0.0, 0.0, 0.0)
     sl.scad_render_to_file(oled_clip(), path.join(r"..", "things", r"oled_clip.scad"))
     sl.scad_render_to_file(oled_clip_mount_frame()[1], path.join(r"..", "things", r"oled_clip_test.scad"))
-    sl.scad_render_to_file(oled_clip_mount_frame()[1] + oled_clip(), path.join(r"..", "things", r"oled_clip_assy_test.scad"))
-
+    sl.scad_render_to_file(oled_clip_mount_frame()[1] + oled_clip(),
+                           path.join(r"..", "things", r"oled_clip_assy_test.scad"))

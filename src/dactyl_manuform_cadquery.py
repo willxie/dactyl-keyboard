@@ -14,14 +14,6 @@ def deg2rad(degrees: float) -> float:
 def rad2deg(rad: float) -> float:
     return rad * 180 / pi
 
-####################################
-## START CONFIGURATION SECTION
-####################################
-
-######################
-## Run parameters ##
-######################
-
 debug_exports = False
 
 ######################
@@ -39,14 +31,13 @@ centerrow = nrows - 3  # controls front_back tilt
 centercol = 3  # controls left_right tilt / tenting (higher number is more tenting)
 tenting_angle = pi / 12.0  # or, change this for more precise tenting control
 
-#symmetry states if it is a symmetric or asymmetric build.  If asymmetric it doubles the generation time.
-symmetry = "symmetric" # "asymmetric" or "symmetric"
+# symmetry states if it is a symmetric or asymmetric build.  If asymmetric it doubles the generation time.
+symmetry = "symmetric"  # "asymmetric" or "symmetric"
 
 if nrows > 5:
     column_style = "orthographic"
 else:
     column_style = "standard"  # options include :standard, :orthographic, and :fixed
-
 
 thumb_offsets = [6, -3, 7]
 keyboard_z_offset = (
@@ -59,13 +50,13 @@ extra_height = 1.0  # original= 0.5
 wall_z_offset = 15  # length of the first downward_sloping part of the wall
 wall_x_offset = 5  # offset in the x and/or y direction for the first downward_sloping part of the wall (negative)
 wall_y_offset = 6  # offset in the x and/or y direction for the first downward_sloping part of the wall (negative)
-left_wall_x_offset = 10 # specific values for the left side due to the minimal wall.
-left_wall_z_offset = 3 # specific values for the left side due to the minimal wall.
+left_wall_x_offset = 12  # specific values for the left side due to the minimal wall.
+left_wall_z_offset = 3  # specific values for the left side due to the minimal wall.
 wall_thickness = 4.5  # wall thickness parameter used on upper/mid stage of the wall
-wall_base_y_thickness = 4.5 # wall thickness at the lower stage
-wall_base_x_thickness = 4.5 # wall thickness at the lower stage
+wall_base_y_thickness = 4.5  # wall thickness at the lower stage
+wall_base_x_thickness = 4.5  # wall thickness at the lower stage
 
-wall_base_back_thickness = 4.5 # wall thickness at the lower stage in the specifically in back for interface.
+wall_base_back_thickness = 4.5  # wall thickness at the lower stage in the specifically in back for interface.
 
 ## Settings for column_style == :fixed
 ## The defaults roughly match Maltron settings
@@ -89,12 +80,11 @@ lastcol = ncols - 1
 ## Switch Hole ##
 #################
 
-#plate options are
+# plate options are
 # 'HOLE' = a square hole.  Also useful for applying custom plate files.
 # 'NUB' = original side nubs.
 # 'UNDERCUT' = snap fit undercut.  May require CLIP_THICKNESS and possibly CLIP_UNDERCUT tweaking
 #       and/or filing to get proper snap.
-# 'HS_HOLE' = hot swap underside with square hole.
 # 'HS_NUB' = hot swap underside with nubs.
 # 'HS_UNDERCUT' = hot swap underside with undercut. Does not generate properly.  Hot swap step needs to be modified.
 plate_style = 'UNDERCUT'
@@ -114,18 +104,94 @@ plate_thickness = 4
 # Undercut style dimensions
 clip_thickness = 1.4
 clip_undercut = 1.0
-undercut_transition = .2
+undercut_transition = .2  # NOT FUNCTIONAL WITH OPENSCAD, ONLY WORKS WITH CADQUERY
 
 # Custom plate step file
 plate_file = None
 plate_offset = 0.0
 
+##########################
+## OLED Mount Location
+##########################
+# Initial pass will be manual placement.  Can be used to create other mounts as well.
+# Mount type options:
+# None or 'NONE' = No OLED mount
+# 'UNDERCUT' = Simple rectangle with undercut for clip in item
+# 'SLIDING' = Features to slide the OLED in place and use a pin or block to secure from underneath.
+# 'CLIP' = Features to set the OLED in a frame a snap a bezel down to hold it in place.
+
+oled_mount_type = 'CLIP'
+
+if oled_mount_type == 'UNDERCUT':
+    # Common parameters
+    oled_mount_width = 15.0
+    oled_mount_height = 35.0
+    oled_mount_rim = 3.0
+    oled_mount_depth = 6.0
+    oled_mount_cut_depth = 20.0
+    oled_mount_location_xyz = (-80.0, 20.0, 45.0)
+    oled_mount_rotation_xyz = (13.0, 0.0, -6.0)
+    oled_left_wall_x_offset_override = 28.0
+    oled_left_wall_z_offset_override = 0.0
+
+    # 'UNDERCUT' Parameters
+    oled_mount_undercut = 1.0
+    oled_mount_undercut_thickness = 2.0
+
+elif oled_mount_type == 'SLIDING':
+    # Common parameters
+    oled_mount_width = 12.5  # width of OLED, plus clearance
+    oled_mount_height = 25.0  # length of screen
+    oled_mount_rim = 2.5
+    oled_mount_depth = 8.0
+    oled_mount_cut_depth = 20.0
+    oled_mount_location_xyz = (-78.0, 10.0, 41.0)
+    oled_mount_rotation_xyz = (6.0, 0.0, -3.0)
+    oled_left_wall_x_offset_override = 24.0
+    oled_left_wall_z_offset_override = 0.0
+
+    # 'SLIDING' Parameters
+    oled_thickness = 4.2  # thickness of OLED, plus clearance.  Must include components
+    oled_edge_overlap_end = 6.5  # length from end of viewable screen to end of PCB
+    oled_edge_overlap_connector = 5.5  # length from end of viewable screen to end of PCB on connection side.
+    oled_edge_overlap_thickness = 2.5  # thickness of material over edge of PCB
+    oled_edge_overlap_clearance = 2.5  # Clearance to insert PCB before laying down and sliding.
+    oled_edge_chamfer = 2.0
+
+elif oled_mount_type == 'CLIP':
+    # Common parameters
+    oled_mount_width = 12.5  # whole OLED width
+    oled_mount_height = 39.0  # whole OLED length
+    oled_mount_rim = 2.0
+    oled_mount_depth = 7.0
+    oled_mount_cut_depth = 20.0
+    oled_mount_location_xyz = (-78.0, 20.0, 42.0)
+    oled_mount_rotation_xyz = (12.0, 0.0, -6.0)
+    oled_left_wall_x_offset_override = 24.0
+    oled_left_wall_z_offset_override = 0.0
+
+    # 'CLIP' Parameters
+    oled_thickness = 4.2  # thickness of OLED, plus clearance.  Must include components
+    oled_mount_bezel_thickness = 3.5  # z thickness of clip bezel
+    oled_mount_bezel_chamfer = 2.0  # depth of the 45 degree chamfer
+    oled_mount_connector_hole = 6.0
+    oled_screen_start_from_conn_end = 6.5
+    oled_screen_length = 24.5
+    oled_screen_width = 10.5
+    oled_clip_thickness = 1.5
+    oled_clip_width = 6.0
+    oled_clip_overhang = 1.0
+    oled_clip_extension = 5.0
+    oled_clip_width_clearance = 0.5
+    oled_clip_undercut = 0.5
+    oled_clip_undercut_thickness = 2.5
+    oled_clip_y_gap = .2
+    oled_clip_z_gap = .2
 
 web_thickness = 4.0
 post_size = 0.1
 # post_adj = post_size / 2
 post_adj = 0
-
 
 ###################################
 ## Controller Mount / Connectors ##
@@ -141,6 +207,8 @@ controller_mount_type = 'EXTERNAL'
 external_holder_height = 12.5
 external_holder_width = 28.75
 external_holder_xoffset = -5.0
+
+
 # Offset is from the top inner corner of the top inner key.
 
 
@@ -149,7 +217,6 @@ external_holder_xoffset = -5.0
 ####################################
 
 def column_offset(column: int) -> list:
-    # print('column_offset()')
     if column == 2:
         return [0, 2.82, -4.5]
     elif column >= 4:
@@ -163,18 +230,7 @@ def column_offset(column: int) -> list:
 ####################################
 
 
-
-
-
-
-
-
-
-
-
-
-
-#Derived values
+# Derived values
 if plate_style in ['NUB', 'HS_NUB']:
     keyswitch_height = nub_keyswitch_height
     keyswitch_width = nub_keyswitch_width
@@ -190,11 +246,13 @@ if plate_style in ['HS_UNDERCUT', 'HS_NUB', 'HS_HOLE']:
     plate_file = path.join("..", "src", r"hot_swap_plate.step")
     plate_offset = 0.0
 
-
 mount_width = keyswitch_width + 3
 mount_height = keyswitch_height + 3
 mount_thickness = plate_thickness
 
+if oled_mount_type is not None:
+    left_wall_x_offset = oled_left_wall_x_offset_override
+    left_wall_z_offset = oled_left_wall_z_offset_override
 
 
 # column_style='fixed'
@@ -1439,7 +1497,258 @@ def external_mount_hole():
 
 
 
+def oled_sliding_mount_frame():
+    mount_ext_width = oled_mount_width + 2 * oled_mount_rim
+    mount_ext_height = (
+            oled_mount_height + 2 * oled_edge_overlap_end
+            + oled_edge_overlap_connector + oled_edge_overlap_clearance
+            + 2 * oled_mount_rim
+    )
+    mount_ext_up_height = oled_mount_height + 2 * oled_mount_rim
+    top_hole_start = -mount_ext_height / 2.0 + oled_mount_rim + oled_edge_overlap_end + oled_edge_overlap_connector
+    top_hole_length = oled_mount_height
 
+    hole = cq.Workplane("XY").box(mount_ext_width, mount_ext_up_height, oled_mount_cut_depth + .01)
+    hole = hole.translate((0., top_hole_start + top_hole_length / 2, 0.))
+
+    hole_down = cq.Workplane("XY").box(mount_ext_width, mount_ext_height, oled_mount_depth + oled_mount_cut_depth / 2)
+    hole_down = hole_down.translate((0., 0., -oled_mount_cut_depth / 4))
+    hole = hole.union(hole_down)
+
+    shape = cq.Workplane("XY").box(mount_ext_width, mount_ext_height, oled_mount_depth)
+
+    conn_hole_start = -mount_ext_height / 2.0 + oled_mount_rim
+    conn_hole_length = (
+            oled_edge_overlap_end + oled_edge_overlap_connector
+            + oled_edge_overlap_clearance + oled_thickness
+    )
+    conn_hole = cq.Workplane("XY").box(oled_mount_width, conn_hole_length + .01, oled_mount_depth)
+    conn_hole = conn_hole.translate((
+        0,
+        conn_hole_start + conn_hole_length / 2,
+        -oled_edge_overlap_thickness
+    ))
+
+    end_hole_length = (
+            oled_edge_overlap_end + oled_edge_overlap_clearance
+    )
+    end_hole_start = mount_ext_height / 2.0 - oled_mount_rim - end_hole_length
+    end_hole = cq.Workplane("XY").box(oled_mount_width, end_hole_length + .01, oled_mount_depth)
+    end_hole = end_hole.translate((
+        0,
+        end_hole_start + end_hole_length / 2,
+        -oled_edge_overlap_thickness
+    ))
+
+    top_hole_start = -mount_ext_height / 2.0 + oled_mount_rim + oled_edge_overlap_end + oled_edge_overlap_connector
+    top_hole_length = oled_mount_height
+    top_hole = cq.Workplane("XY").box(oled_mount_width, top_hole_length, oled_edge_overlap_thickness + oled_thickness - oled_edge_chamfer)
+    top_hole = top_hole.translate((
+        0,
+        top_hole_start + top_hole_length / 2,
+        (oled_mount_depth - oled_edge_overlap_thickness - oled_thickness - oled_edge_chamfer) / 2.0
+    ))
+
+    top_chamfer_1 = cq.Workplane("XY").box(
+        oled_mount_width,
+        top_hole_length,
+        0.01
+    )
+    top_chamfer_2 = cq.Workplane("XY").box(
+        oled_mount_width + 2 * oled_edge_chamfer,
+        top_hole_length + 2 * oled_edge_chamfer,
+        0.01
+    )
+    top_chamfer_1 = top_chamfer_1.translate((0, 0, -oled_edge_chamfer - .05))
+
+    # top_chamfer_1 = sl.hull()(top_chamfer_1, top_chamfer_2)
+    top_chamfer_1 = hull_from_shapes([top_chamfer_1, top_chamfer_2])
+
+    top_chamfer_1 = top_chamfer_1.translate((
+        0,
+        top_hole_start + top_hole_length / 2,
+        oled_mount_depth / 2.0 + .05
+    ))
+
+    top_hole = top_hole.union(top_chamfer_1)
+
+    shape = shape.cut(conn_hole)
+    shape = shape.cut(top_hole)
+    shape = shape.cut(end_hole)
+
+    shape = rotate(shape, oled_mount_rotation_xyz)
+    shape = translate(shape,
+        (
+            oled_mount_location_xyz[0],
+            oled_mount_location_xyz[1],
+            oled_mount_location_xyz[2],
+        )
+    )
+
+    hole = rotate(hole, oled_mount_rotation_xyz)
+    hole = translate(hole,
+        (
+            oled_mount_location_xyz[0],
+            oled_mount_location_xyz[1],
+            oled_mount_location_xyz[2],
+        )
+    )
+    return hole, shape
+
+
+def oled_clip_mount_frame():
+    mount_ext_width = oled_mount_width + 2 * oled_mount_rim
+    mount_ext_height = (
+            oled_mount_height + 2 * oled_clip_thickness
+            + 2 * oled_clip_undercut + 2 * oled_clip_overhang + 2 * oled_mount_rim
+    )
+    hole = cq.Workplane("XY").box(mount_ext_width, mount_ext_height, oled_mount_cut_depth + .01)
+
+    shape = cq.Workplane("XY").box(mount_ext_width, mount_ext_height, oled_mount_depth)
+    shape = shape.cut(cq.Workplane("XY").box(oled_mount_width, oled_mount_height, oled_mount_depth + .1))
+
+    clip_slot = cq.Workplane("XY").box(
+        oled_clip_width + 2 * oled_clip_width_clearance,
+        oled_mount_height + 2 * oled_clip_thickness + 2 * oled_clip_overhang,
+        oled_mount_depth + .1
+    )
+
+    shape = shape.cut(clip_slot)
+
+    clip_undercut = cq.Workplane("XY").box(
+        oled_clip_width + 2 * oled_clip_width_clearance,
+        oled_mount_height + 2 * oled_clip_thickness + 2 * oled_clip_overhang + 2 * oled_clip_undercut,
+        oled_mount_depth + .1
+    )
+
+    clip_undercut = clip_undercut.translate((0., 0., oled_clip_undercut_thickness))
+    shape = shape.cut(clip_undercut)
+
+    plate = cq.Workplane("XY").box(
+        oled_mount_width + .1,
+        oled_mount_height - 2 * oled_mount_connector_hole,
+        oled_mount_depth - oled_thickness
+    )
+    plate = plate.translate((0., 0., -oled_thickness / 2.0))
+    shape = shape.union(plate)
+
+    shape = rotate(shape, oled_mount_rotation_xyz)
+    shape = translate(shape,
+        (
+            oled_mount_location_xyz[0],
+            oled_mount_location_xyz[1],
+            oled_mount_location_xyz[2],
+        )
+    )
+
+    hole = rotate(hole, oled_mount_rotation_xyz)
+    hole = translate(hole,
+        (
+            oled_mount_location_xyz[0],
+            oled_mount_location_xyz[1],
+            oled_mount_location_xyz[2],
+        )
+    )
+
+    return hole, shape
+
+
+def oled_clip():
+    mount_ext_width = oled_mount_width + 2 * oled_mount_rim
+    mount_ext_height = (
+            oled_mount_height + 2 * oled_clip_thickness + 2 * oled_clip_overhang
+            + 2 * oled_clip_undercut + 2 * oled_mount_rim
+    )
+
+    oled_leg_depth = oled_mount_depth + oled_clip_z_gap
+
+    shape = cq.Workplane("XY").box(mount_ext_width - .1, mount_ext_height - .1, oled_mount_bezel_thickness)
+    shape = translate(shape, (0., 0., oled_mount_bezel_thickness / 2.))
+
+    hole_1 = cq.Workplane("XY").box(
+        oled_screen_width + 2 * oled_mount_bezel_chamfer,
+        oled_screen_length + 2 * oled_mount_bezel_chamfer,
+        .01
+    )
+    hole_2 = cq.Workplane("XY").box(oled_screen_width, oled_screen_length, 2.05 * oled_mount_bezel_thickness)
+    hole = hull_from_shapes([hole_1, hole_2])
+
+    shape = shape.cut(translate(hole, (0., 0., oled_mount_bezel_thickness)))
+
+    clip_leg = cq.Workplane("XY").box(oled_clip_width, oled_clip_thickness, oled_leg_depth)
+    clip_leg = translate(clip_leg, (
+        0.,
+        0.,
+        # (oled_mount_height+2*oled_clip_overhang+oled_clip_thickness)/2,
+        -oled_leg_depth / 2.
+    ))
+
+    latch_1 = cq.Workplane("XY").box(
+        oled_clip_width,
+        oled_clip_overhang + oled_clip_thickness,
+        .01
+    )
+    latch_2 = cq.Workplane("XY").box(
+        oled_clip_width,
+        oled_clip_thickness / 2,
+        oled_clip_extension
+    )
+    latch_2 = translate(latch_2, (
+        0.,
+        -(-oled_clip_thickness / 2 + oled_clip_thickness + oled_clip_overhang) / 2,
+        -oled_clip_extension / 2
+    ))
+    latch = hull_from_shapes([latch_1, latch_2])
+    latch = translate(latch, (
+        0.,
+        oled_clip_overhang / 2,
+        -oled_leg_depth
+    ))
+
+    clip_leg = union([clip_leg, latch])
+
+    clip_leg = translate(clip_leg, (
+        0.,
+        (oled_mount_height + 2 * oled_clip_overhang + oled_clip_thickness) / 2 - oled_clip_y_gap,
+        0.
+    ))
+
+    shape = union([shape, clip_leg, mirror(clip_leg, 'XZ')])
+
+    return shape
+
+
+def oled_undercut_mount_frame():
+    mount_ext_width = oled_mount_width + 2 * oled_mount_rim
+    mount_ext_height = oled_mount_height + 2 * oled_mount_rim
+    hole = cq.Workplane("XY").box(mount_ext_width, mount_ext_height, oled_mount_cut_depth + .01)
+
+    shape = cq.Workplane("XY").box(mount_ext_width, mount_ext_height, oled_mount_depth)
+    shape = shape.cut(cq.Workplane("XY").box(oled_mount_width, oled_mount_height, oled_mount_depth + .1))
+    undercut = cq.Workplane("XY").box(
+        oled_mount_width + 2 * oled_mount_undercut,
+        oled_mount_height + 2 * oled_mount_undercut,
+        oled_mount_depth)
+    undercut = translate(undercut, (0., 0., -oled_mount_undercut_thickness))
+    shape = shape.cut(undercut)
+
+    shape = rotate(shape, oled_mount_rotation_xyz)
+    shape = translate(shape, (
+            oled_mount_location_xyz[0],
+            oled_mount_location_xyz[1],
+            oled_mount_location_xyz[2],
+        )
+    )
+
+    hole = rotate(hole, oled_mount_rotation_xyz)
+    hole = translate(hole, (
+            oled_mount_location_xyz[0],
+            oled_mount_location_xyz[1],
+            oled_mount_location_xyz[2],
+        )
+    )
+
+    return hole, shape
 
 
 teensy_width = 20
@@ -1554,7 +1863,7 @@ def screw_insert_all_shapes(bottom_radius, top_radius, height):
     print('screw_insert_all_shapes()')
     shape = (
         screw_insert(0, 0, bottom_radius, top_radius, height),
-        screw_insert(0, lastrow, bottom_radius, top_radius, height),
+        screw_insert(0, lastrow-1, bottom_radius, top_radius, height),
         screw_insert(2, lastrow + 0.3, bottom_radius, top_radius, height),
         screw_insert(3, 0, bottom_radius, top_radius, height),
         screw_insert(lastcol, 1, bottom_radius, top_radius, height),
@@ -1663,6 +1972,21 @@ def model_side(side="right"):
     if controller_mount_type in ['RJ9_USB_TEENSY', 'RJ9_USB_WALL']:
         shape = shape.union(rj9_holder())
 
+    if oled_mount_type == "UNDERCUT":
+        hole, frame = oled_undercut_mount_frame()
+        shape = shape.cut(hole)
+        shape = union([shape, frame])
+
+    elif oled_mount_type == "SLIDING":
+        hole, frame = oled_sliding_mount_frame()
+        shape = shape.cut(hole)
+        shape = union([shape, frame])
+
+    elif oled_mount_type == "CLIP":
+        hole, frame = oled_clip_mount_frame()
+        shape = shape.cut(hole)
+        shape = union([shape, frame])
+
     block = cq.Workplane("XY").box(350, 350, 40)
     block = block.translate((0, 0, -20))
     shape = shape.cut(block)
@@ -1680,14 +2004,14 @@ def model_side(side="right"):
 
 
 mod_r = model_side(side="right")
-cq.exporters.export(w=mod_r, fname=path.join(r"..", "things", r"right_og_py.step"), exportType='STEP')
+cq.exporters.export(w=mod_r, fname=path.join(r"..", "things", r"right_py.step"), exportType='STEP')
 
 if symmetry == "asymmetric":
     mod_l = model_side(side="left")
-    cq.exporters.export(w=mod_l, fname=path.join(r"..", "things", r"left_og_py.step"), exportType='STEP')
+    cq.exporters.export(w=mod_l, fname=path.join(r"..", "things", r"left_py.step"), exportType='STEP')
 
 else:
-    cq.exporters.export(w=mod_r.mirror('YZ'), fname=path.join(r"..", "things", r"left_og_py.step"), exportType='STEP')
+    cq.exporters.export(w=mod_r.mirror('YZ'), fname=path.join(r"..", "things", r"left_py.step"), exportType='STEP')
 
 
 def baseplate():
@@ -1706,5 +2030,20 @@ def baseplate():
 
 base = baseplate()
 
-cq.exporters.export(w=base, fname=path.join(r"..", "things", r"plate_og_py.step"), exportType='STEP')
-cq.exporters.export(w=base, fname=path.join(r"..", "things", r"plate_og_py.dxf"), exportType='DXF')
+cq.exporters.export(w=base, fname=path.join(r"..", "things", r"plate_py.step"), exportType='STEP')
+cq.exporters.export(w=base, fname=path.join(r"..", "things", r"plate_py.dxf"), exportType='DXF')
+
+if oled_mount_type == 'UNDERCUT':
+    cq.exporters.export(w=oled_undercut_mount_frame()[1], fname=path.join(r"..", "things", r"oled_undercut_test.step"), exportType='STEP')
+
+if oled_mount_type == 'SLIDING':
+    cq.exporters.export(w=oled_sliding_mount_frame()[1], fname=path.join(r"..", "things", r"oled_sliding_test.step"), exportType='STEP')
+
+if oled_mount_type == 'CLIP':
+    oled_mount_location_xyz = (0.0, 0.0, -oled_mount_depth / 2)
+    oled_mount_rotation_xyz = (0.0, 0.0, 0.0)
+    cq.exporters.export(w=oled_clip(), fname=path.join(r"..", "things", r"oled_clip.step"), exportType='STEP')
+    cq.exporters.export(w=oled_clip_mount_frame()[1],
+                        fname=path.join(r"..", "things", r"oled_clip_test.step"), exportType='STEP')
+    cq.exporters.export(w=union((oled_clip_mount_frame()[1], oled_clip())),
+                        fname=path.join(r"..", "things", r"oled_clip_assy_test.step"), exportType='STEP')
