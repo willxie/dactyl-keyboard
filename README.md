@@ -15,11 +15,9 @@ As part of the effort to create a new engine I converted the code to cadquery/Op
 Tired of hot glue and constraining the socket with "nubs"?  I've added an adjustable undercut for using the clips on the sockets.  May require some tweaking and little filing, but I have my DM built without any glue and you can too.  Just use `plate_style = 'UNDERCUT'`.
 
 ### Kailh Hotswap
-Added a new switch for hot swap and a way to include any additional geometry in the key plate by use of an imported file.  For hot swap just change the line to `hot_swap = True`.  To import an arbitrary geometry set the `plate_file = None` and `plate_offset = 0.0`.  The file must be .step for OpenCascade / cadquery and .stl for openSCAD / solid python.  The zero reference should be the key center (XY), and the top of the plate (Z).  Plate offset is a Z-axis translation for minor adjustments without modifying the geometry file.  If you don't want the "nubs" you have to modify the plate function.  It will propagate to all key plate usage.  
+Added a new switch for hot swap and a way to include any additional geometry in the key plate by use of an imported file.  For hot swap just use `plate_style = 'HS_HOLE'` or `plate_style = 'HS_NUB'`.  To import an arbitrary geometry set the `plate_file = None` and `plate_offset = 0.0`.  The file must be .step for OpenCascade / cadquery and .stl for openSCAD / solid python.  The zero reference should be the key center (XY), and the top of the plate (Z).  Plate offset is a Z-axis translation for minor adjustments without modifying the geometry file.  
 
-Just use `plate_style = 'HS_HOLE'` or `plate_style = 'HS_NUB'`.
-
-**DISCLAIMER:  I have not built the hot swap version and cannot speak to the geometry.  I found it running around in various places and don't know the origin.**  
+**DISCLAIMER:  I have not built the hot swap version and cannot speak to the geometry.  I found it running around in various places and don't know the origin.  At least one user has claimed it works.**  
 
 If you know the origin I would like to credit the originator.  If you test it I'd love to know how well it works or if you come up with a better geometry I'm happy to add it.  
 
@@ -37,14 +35,29 @@ Added an external mount for a separate controller tray.  Looks to work with loll
 
 Just use `controller_mount_type = 'EXTERNAL'`.
 
-This is a new feature so any feedback is appreciated.  If you have issued message me on Reddit and I will try to help correct them.
+![Controller tray opening](./resources/external_controller_tray_opening.png)
+![Tray 1](./resources/promicro_tray_1.png)
+![Tray 2](./resources/promicro_tray_2.png)
+
+This is a new feature so any feedback is appreciated.  If you have issues, message me on Reddit and I will try to help correct them.
 
 ### OLED Display Mount
 
-WIP - Adding OLED display mount for .91 inch 128 X 32 Display on inner wall structure. 
+Added 3 OLED mounts.  Have printed them stand alone with success.
+
+![OLED Clip Mounting](./resources/clip_OLED_mounting.png)
+![OLED Clip Plate](./resources/OLED_clip_plate.png)
+
+`oled_mount_type = 'CLIP'` creates an opening to set the OLED with a clip on face plate to hold it down.  This is the preferred mounting, but needs the OLED to have a removable connection.  
+
+`oled_mount_type = 'SLIDING'` creates an opening such that you can slide the screen up through the back and into place.  Needs a piece of foam or a bit of glue to lock in place.
+
+`oled_mount_type = 'UNDERCUT'` creates an opening with an undercut to create whatever custom holder you want.  Will not work without additional part creation from the user.
+
+This is a new feature so any feedback is appreciated.  If you have issues, message me on Reddit and I will try to help correct them.
 
 ## Status / Future
-FWIW, the cadquery version is essentially a double translation and is now a bit of a mess.  I wanted to share with the community as the first version of dactyl-manuform that exports as a STEP file, allowing easier editing.  I am happy to maintain the code, but I am unlikely to spend much more time cleaning it up as I am working on an entirely new object-oriented generator in Python/cadquery.  This was my proof of concept for eliminating OpenSCAD from the workflow and I thought it worth giving back to the community. 
+FWIW, the cadquery version is essentially a double translation and is now a bit of a mess.  I wanted to share with the community as the first version of dactyl-manuform that exports as a STEP file, allowing easier editing.  I have decided to use this code to try new geometries and features to share.  I am still working on a new generator, but feel this one can continue to evolve and inform the other effort.
 
 **The majority of the the rest of the below content is as defined by previous authors, except where noted.**
 
@@ -60,12 +73,6 @@ The main change is that the thumb cluster was adapted from the [ManuForm keyboar
 * Column tilt
 * Column offsets
 * Height
-
-I built a 4x5 version (40% size) for myself. The default has a bit more tenting than the Dactyl. See the following model files for configurations that may be most common:
-
-* [40% size, (4x5)](https://github.com/tshort/dactyl-keyboard/blob/master/things/right-4x5.stl)
-* [60% size, (5x6)](https://github.com/tshort/dactyl-keyboard/blob/master/things/right-5x6.stl)
-
 
 ## Assembly
 
@@ -87,9 +94,9 @@ I built a 4x5 version (40% size) for myself. The default has a bit more tenting 
 **Generating the cadquery design - NEW**
 * Run `python dactyl_manuform_cadquery.py` or `python3 dactyl_manuform_cadquery.py` 
 * This will regenerate the `things/*.step` files
-    * `left_og_py.step`
-    * `right_og_py.step`
-    * `plate_og_py.step`
+    * `left_py.step`
+    * `right_py.step`
+    * `plate_py.step`
 * Use FreeCAD or other program to open a `.step` file.
 * Export functions can be modified to export stl directly if desired.
  When done, use FreeCAD or other CAD program to modify, edit, or export to STL.
@@ -108,16 +115,10 @@ I built a 4x5 version (40% size) for myself. The default has a bit more tenting 
 
 ### Printing
 Pre-generated STL files are available in the [things/](things/) directory. 
-When a model is generated, it also generates a `.scad` model for a bottom plate. 
+When a model is generated, it also generates a  model for a bottom plate. 
 This can be exported to a DXF file in OpenSCAD.
 The [things/](things/) directory also has DXF files for the bottom plate.
 When laser cut, some of the inside cuts will need to be removed. 
-
-### Thingiverse
-
-[The 4x5 STL left/right pair](https://www.thi
-![](resources/dactyl_manuform_left_wire_diagram.png)
-ngiverse.com/thing:2349390) from the [things/](things/) directory is in the thingiverse for public printing
 
 ### Wiring
 
