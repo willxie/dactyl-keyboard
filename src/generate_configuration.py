@@ -182,6 +182,7 @@ shape_config = {
     'post_size':  0.1,
     # post_adj':  post_size / 2
     'post_adj':  0,
+    'screws_offset': 'INSIDE', #'OUTSIDE', 'INSIDE', 'ORIGINAL'
 
     ###################################
     ## Controller Mount / Connectors ##
@@ -196,7 +197,7 @@ shape_config = {
 
     'external_holder_height':  12.5,
     'external_holder_width':  28.75,
-    'external_holder_xoffset':  -5.0,
+    'external_holder_xoffset': -5.0,
 
 
     # Offset is from the top inner corner of the top inner key.

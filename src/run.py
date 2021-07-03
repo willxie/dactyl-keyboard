@@ -5,8 +5,8 @@
 
 
 
-ENGINE = 'solid'
-# ENGINE = 'cadquery'
+# ENGINE = 'solid'
+ENGINE = 'cadquery'
 
 if ENGINE == 'solid':
     exec(open('dactyl_manuform.py').read())

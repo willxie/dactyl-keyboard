@@ -59,6 +59,11 @@ Added 3 OLED mounts.  Have printed them stand alone with success.
 
 This is a new feature so any feedback is appreciated.  If you have issues, message me on Reddit and I will try to help correct them.  
 
+### Screw Post Locations
+
+You can now have slightly better control of screw mounts.  Set to `'screws_offset':'INSIDE'`, `'screws_offset':'OUTSIDE'` or `'screws_offset': 'ORIGINAL'` to control screw locations relative to the wall. 
+![Inside Screws](./resources/inside_screw_posts.PNG)
+
 ## Status / Future
 This is now a bit of a monster of many minds and yet continues to bear fruit.  I plan to continue to use this code to try new geometries and features to share.  I am still working on a new generator, but feel this one can continue to evolve and inform the other effort.
 

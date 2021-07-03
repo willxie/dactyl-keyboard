@@ -1430,25 +1430,47 @@ def screw_insert(column, row, bottom_radius, top_radius, height):
     shift_up = (not (shift_right or shift_left)) and (row == 0)
     shift_down = (not (shift_right or shift_left)) and (row >= lastrow)
 
+    if screws_offset == 'INSIDE':
+        # print('Shift Inside')
+        shift_left_adjust = wall_base_x_thickness
+        shift_right_adjust = -wall_base_x_thickness/2
+        shift_down_adjust = -wall_base_y_thickness/2
+        shift_up_adjust = -wall_base_y_thickness/3
+
+    elif screws_offset == 'OUTSIDE':
+        print('Shift Outside')
+        shift_left_adjust = 0
+        shift_right_adjust = wall_base_x_thickness/2
+        shift_down_adjust = wall_base_y_thickness*2/3
+        shift_up_adjust = wall_base_y_thickness*2/3
+
+    else:
+        # print('Shift Origin')
+        shift_left_adjust = 0
+        shift_right_adjust = 0
+        shift_down_adjust = 0
+        shift_up_adjust = 0
+
     if shift_up:
         position = key_position(
-            list(np.array(wall_locate2(0, 1)) + np.array([0, (mount_height / 2), 0])),
+            list(np.array(wall_locate2(0, 1)) + np.array([0, (mount_height / 2) + shift_up_adjust, 0])),
             column,
             row,
         )
     elif shift_down:
         position = key_position(
-            list(np.array(wall_locate2(0, -1)) - np.array([0, (mount_height / 2), 0])),
+            list(np.array(wall_locate2(0, -1)) - np.array([0, (mount_height / 2) + shift_down_adjust, 0])),
             column,
             row,
         )
     elif shift_left:
         position = list(
-            np.array(left_key_position(row, 0)) + np.array(wall_locate3(-1, 0))
+            np.array(left_key_position(row, 0)) + np.array(wall_locate3(-1, 0)) + np.array((shift_left_adjust,0,0))
         )
     else:
         position = key_position(
-            list(np.array(wall_locate2(1, 0)) + np.array([(mount_height / 2), 0, 0])),
+            list(np.array(wall_locate2(1, 0)) + np.array([(mount_height / 2), 0, 0]) + np.array((shift_right_adjust,0,0))
+                 ),
             column,
             row,
         )

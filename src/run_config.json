@@ -1,8 +1,8 @@
 {
-    "save_dir": "6x6_Basic",
-    "config_name": "6x6_Basic",
+    "save_dir": ".",
+    "config_name": "DM",
     "show_caps": false,
-    "nrows": 6,
+    "nrows": 5,
     "ncols": 6,
     "alpha": 0.26179916666666664,
     "beta": 0.08726638888888888,
@@ -71,7 +71,7 @@
     "undercut_transition": 0.2,
     "plate_file": null,
     "plate_offset": 0.0,
-    "oled_mount_type": null,
+    "oled_mount_type": "CLIP",
     "oled_configurations": {
         "UNDERCUT": {
             "oled_mount_width": 15.0,
@@ -158,7 +158,8 @@
     "web_thickness": 4.0,
     "post_size": 0.1,
     "post_adj": 0,
-    "controller_mount_type": "RJ9_USB_WALL",
+    "screws_offset": "INSIDE",
+    "controller_mount_type": "EXTERNAL",
     "external_holder_height": 12.5,
     "external_holder_width": 28.75,
     "external_holder_xoffset": -5.0,
