@@ -2,7 +2,8 @@ import solid as sl
 import numpy as np
 from numpy import pi
 import os.path as path
-
+import os
+import json
 
 def deg2rad(degrees: float) -> float:
     return degrees * pi / 180
@@ -12,231 +13,23 @@ def rad2deg(rad: float) -> float:
     return rad * 180 / pi
 
 
-####################################
-## START CONFIGURATION SECTION
-####################################
+with open('run_config.json', mode='r') as fid:
+    data = json.load(fid)
+for item in data:
+    locals()[item] = data[item]
 
-######################
-## Run parameters ##
-######################
-
-debug_exports = False
-
-######################
-## Shape parameters ##
-######################
-
-show_caps = False
-
-nrows = 5  # key rows
-ncols = 6  # key columns
-
-alpha = pi / 12.0  # curvature of the columns
-beta = pi / 36.0  # curvature of the rows
-centerrow = nrows - 3  # controls front_back tilt
-centercol = 3  # controls left_right tilt / tenting (higher number is more tenting)
-tenting_angle = pi / 12.0  # or, change this for more precise tenting control
-
-# symmetry states if it is a symmetric or asymmetric build.  If asymmetric it doubles the generation time.
-symmetry = "symmetric"  # "asymmetric" or "symmetric"
+if oled_mount_type is not None:
+    for item in oled_configurations[oled_mount_type]:
+        locals()[item] = oled_configurations[oled_mount_type][item]
 
 if nrows > 5:
-    column_style = "orthographic"
-else:
-    column_style = "standard"  # options include :standard, :orthographic, and :fixed
+    column_style = column_style_gt5
 
-thumb_offsets = [6, -3, 7]
-keyboard_z_offset = (
-    9  # controls overall height# original=9 with centercol=3# use 16 for centercol=2
-)
-
-extra_width = 2.5  # extra space between the base of keys# original= 2
-extra_height = 1.0  # original= 0.5
-
-wall_z_offset = 15  # length of the first downward_sloping part of the wall
-wall_x_offset = 5  # offset in the x and/or y direction for the first downward_sloping part of the wall (negative)
-wall_y_offset = 6  # offset in the x and/or y direction for the first downward_sloping part of the wall (negative)
-left_wall_x_offset = 12  # specific values for the left side due to the minimal wall.
-left_wall_z_offset = 3  # specific values for the left side due to the minimal wall.
-wall_thickness = 4.5  # wall thickness parameter used on upper/mid stage of the wall
-wall_base_y_thickness = 4.5  # wall thickness at the lower stage
-wall_base_x_thickness = 4.5  # wall thickness at the lower stage
-
-wall_base_back_thickness = 4.5  # wall thickness at the lower stage in the specifically in back for interface.
-
-## Settings for column_style == :fixed
-## The defaults roughly match Maltron settings
-##   http://patentimages.storage.googleapis.com/EP0219944A2/imgf0002.png
-## fixed_z overrides the z portion of the column ofsets above.
-## NOTE: THIS DOESN'T WORK QUITE LIKE I'D HOPED.
-fixed_angles = [deg2rad(10), deg2rad(10), 0, 0, 0, deg2rad(-15), deg2rad(-15)]
-fixed_x = [-41.5, -22.5, 0, 20.3, 41.4, 65.5, 89.6]  # relative to the middle finger
-fixed_z = [12.1, 8.3, 0, 5, 10.7, 14.5, 17.5]
-fixed_tenting = deg2rad(0)
-
-#######################
-## General variables ##
-#######################
+centerrow = nrows - centerrow_offset
 
 lastrow = nrows - 1
 cornerrow = lastrow - 1
 lastcol = ncols - 1
-
-#################
-## Switch Hole ##
-#################
-
-# plate options are
-# 'HOLE' = a square hole.  Also useful for applying custom plate files.
-# 'NUB' = original side nubs.
-# 'UNDERCUT' = snap fit undercut.  May require CLIP_THICKNESS and possibly CLIP_UNDERCUT tweaking
-#       and/or filing to get proper snap.
-# 'HS_NUB' = hot swap underside with nubs.
-# 'HS_UNDERCUT' = hot swap underside with undercut. Does not generate properly.  Hot swap step needs to be modified.
-plate_style = 'UNDERCUT'
-
-hole_keyswitch_height = 14.0
-hole_keyswitch_width = 14.0
-
-nub_keyswitch_height = 14.4
-nub_keyswitch_width = 14.4
-
-undercut_keyswitch_height = 14.4
-undercut_keyswitch_width = 14.4
-
-sa_profile_key_height = 12.7
-plate_thickness = 4
-
-# Undercut style dimensions
-clip_thickness = 1.4
-clip_undercut = 1.0
-undercut_transition = .2  # NOT FUNCTIONAL WITH OPENSCAD, ONLY WORKS WITH CADQUERY
-
-# Custom plate step file
-plate_file = None
-plate_offset = 0.0
-
-##########################
-## OLED Mount Location
-##########################
-# Initial pass will be manual placement.  Can be used to create other mounts as well.
-# Mount type options:
-# None or 'NONE' = No OLED mount
-# 'UNDERCUT' = Simple rectangle with undercut for clip in item
-# 'SLIDING' = Features to slide the OLED in place and use a pin or block to secure from underneath.
-# 'CLIP' = Features to set the OLED in a frame a snap a bezel down to hold it in place.
-
-oled_mount_type = 'CLIP'
-
-if oled_mount_type == 'UNDERCUT':
-    # Common parameters
-    oled_mount_width = 15.0
-    oled_mount_height = 35.0
-    oled_mount_rim = 3.0
-    oled_mount_depth = 6.0
-    oled_mount_cut_depth = 20.0
-    oled_mount_location_xyz = (-80.0, 20.0, 45.0)
-    oled_mount_rotation_xyz = (13.0, 0.0, -6.0)
-    oled_left_wall_x_offset_override = 28.0
-    oled_left_wall_z_offset_override = 0.0
-
-    # 'UNDERCUT' Parameters
-    oled_mount_undercut = 1.0
-    oled_mount_undercut_thickness = 2.0
-
-elif oled_mount_type == 'SLIDING':
-    # Common parameters
-    oled_mount_width = 12.5  # width of OLED, plus clearance
-    oled_mount_height = 25.0  # length of screen
-    oled_mount_rim = 2.5
-    oled_mount_depth = 8.0
-    oled_mount_cut_depth = 20.0
-    oled_mount_location_xyz = (-78.0, 10.0, 41.0)
-    oled_mount_rotation_xyz = (6.0, 0.0, -3.0)
-    oled_left_wall_x_offset_override = 24.0
-    oled_left_wall_z_offset_override = 0.0
-
-    # 'SLIDING' Parameters
-    oled_thickness = 4.2  # thickness of OLED, plus clearance.  Must include components
-    oled_edge_overlap_end = 6.5  # length from end of viewable screen to end of PCB
-    oled_edge_overlap_connector = 5.5  # length from end of viewable screen to end of PCB on connection side.
-    oled_edge_overlap_thickness = 2.5  # thickness of material over edge of PCB
-    oled_edge_overlap_clearance = 2.5  # Clearance to insert PCB before laying down and sliding.
-    oled_edge_chamfer = 2.0
-
-elif oled_mount_type == 'CLIP':
-    # Common parameters
-    oled_mount_width = 12.5  # whole OLED width
-    oled_mount_height = 39.0  # whole OLED length
-    oled_mount_rim = 2.0
-    oled_mount_depth = 7.0
-    oled_mount_cut_depth = 20.0
-    oled_mount_location_xyz = (-78.0, 20.0, 42.0)
-    oled_mount_rotation_xyz = (12.0, 0.0, -6.0)
-    oled_left_wall_x_offset_override = 24.0
-    oled_left_wall_z_offset_override = 0.0
-
-    # 'CLIP' Parameters
-    oled_thickness = 4.2  # thickness of OLED, plus clearance.  Must include components
-    oled_mount_bezel_thickness = 3.5  # z thickness of clip bezel
-    oled_mount_bezel_chamfer = 2.0  # depth of the 45 degree chamfer
-    oled_mount_connector_hole = 6.0
-    oled_screen_start_from_conn_end = 6.5
-    oled_screen_length = 24.5
-    oled_screen_width = 10.5
-    oled_clip_thickness = 1.5
-    oled_clip_width = 6.0
-    oled_clip_overhang = 1.0
-    oled_clip_extension = 5.0
-    oled_clip_width_clearance = 0.5
-    oled_clip_undercut = 0.5
-    oled_clip_undercut_thickness = 2.5
-    oled_clip_y_gap = .2
-    oled_clip_z_gap = .2
-
-web_thickness = 4.0
-post_size = 0.1
-# post_adj = post_size / 2
-post_adj = 0
-
-###################################
-## Controller Mount / Connectors ##
-###################################
-# connector options are
-# 'RJ9_USB_WALL' = Standard internal plate with RJ9 opening and square cutout for connection.
-# 'RJ9_USB_TEENSY' = Teensy holder
-# 'EXTERNAL' = square cutout for a holder such as the on from lolligagger.
-# controller_mount_type = 'RJ9_USB_WALL'
-# controller_mount_type = 'RJ9_USB_TEENSY'
-controller_mount_type = 'EXTERNAL'
-
-external_holder_height = 12.5
-external_holder_width = 28.75
-external_holder_xoffset = -5.0
-
-
-# Offset is from the top inner corner of the top inner key.
-
-
-###################################
-## COLUMN OFFSETS
-####################################
-
-def column_offset(column: int) -> list:
-    if column == 2:
-        return [0, 2.82, -4.5]
-    elif column >= 4:
-        return [0, -12, 5.64]  # original [0 -5.8 5.64]
-    else:
-        return [0, 0, 0]
-
-
-####################################
-## END CONFIGURATION SECTION
-####################################
-
-
-
 
 # Derived values
 if plate_style in ['NUB', 'HS_NUB']:
@@ -261,6 +54,14 @@ mount_thickness = plate_thickness
 if oled_mount_type is not None:
     left_wall_x_offset = oled_left_wall_x_offset_override
     left_wall_z_offset = oled_left_wall_z_offset_override
+
+
+spath =  path.join("..", "things", save_dir)
+if not path.isdir(spath):
+    os.mkdir(spath)
+
+def column_offset(column: int) -> list:
+    return column_offsets[column]
 
 
 def single_plate(cylinder_segments=100, side="right"):
@@ -1778,16 +1579,16 @@ def model_side(side="right"):
 
 mod_r = model_side(side="right")
 
-sl.scad_render_to_file(mod_r, path.join(r"..", "things", r"right_py.scad"))
+sl.scad_render_to_file(mod_r, path.join(r"..", "things", save_dir, config_name + r"_right.scad"))
 
 if symmetry == "asymmetric":
     mod_l = model_side(side="left")
     sl.scad_render_to_file(
-        mod_l, path.join(r"..", "things", r"left_py.scad")
+        mod_l, path.join(r"..", "things", save_dir, config_name + r"_left.scad")
     )
 else:
     sl.scad_render_to_file(
-        sl.mirror([-1, 0, 0])(mod_r), path.join(r"..", "things", r"left_py.scad")
+        sl.mirror([-1, 0, 0])(mod_r), path.join(r"..", "things", save_dir, config_name + r"_left.scad")
     )
 
 
@@ -1801,23 +1602,23 @@ def baseplate():
 
     shape = shape - tool
 
-    shape = sl.translate([0, 0, -0.1])(shape)
+    shape = sl.translate([0, 0, -0.01])(shape)
 
     return sl.projection(cut=True)(shape)
 
 
-sl.scad_render_to_file(baseplate(), path.join(r"..", "things", r"plate_py.scad"))
+sl.scad_render_to_file(baseplate(), path.join(r"..", "things", save_dir, config_name + r"_plate.scad"))
 
 if oled_mount_type == 'UNDERCUT':
-    sl.scad_render_to_file(oled_undercut_mount_frame()[1], path.join(r"..", "things", r"oled_undercut_test.scad"))
+    sl.scad_render_to_file(oled_undercut_mount_frame()[1], path.join(r"..", "things", save_dir, config_name + r"_oled_undercut_test.scad"))
 
 if oled_mount_type == 'SLIDING':
-    sl.scad_render_to_file(oled_sliding_mount_frame()[1], path.join(r"..", "things", r"oled_sliding_test.scad"))
+    sl.scad_render_to_file(oled_sliding_mount_frame()[1], path.join(r"..", "things", save_dir, config_name + r"_oled_sliding_test.scad"))
 
 if oled_mount_type == 'CLIP':
     oled_mount_location_xyz = (0.0, 0.0, -oled_mount_depth / 2)
     oled_mount_rotation_xyz = (0.0, 0.0, 0.0)
-    sl.scad_render_to_file(oled_clip(), path.join(r"..", "things", r"oled_clip.scad"))
-    sl.scad_render_to_file(oled_clip_mount_frame()[1], path.join(r"..", "things", r"oled_clip_test.scad"))
+    sl.scad_render_to_file(oled_clip(), path.join(r"..", "things", save_dir, config_name + r"_oled_clip.scad"))
+    sl.scad_render_to_file(oled_clip_mount_frame()[1], path.join(r"..", "things", save_dir, config_name + r"_oled_clip_test.scad"))
     sl.scad_render_to_file(oled_clip_mount_frame()[1] + oled_clip(),
-                           path.join(r"..", "things", r"oled_clip_assy_test.scad"))
+                           path.join(r"..", "things", save_dir, config_name + r"_oled_clip_assy_test.scad"))

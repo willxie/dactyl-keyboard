@@ -3,6 +3,9 @@ This is a fork of [Dactyl-Manuform](https://github.com/tshort/dactyl-keyboard) b
 
 While the code structure remains comparable to the original, Clojure and OpenSCAD have been replaced by Python and cadquery/OpenCASCADE.  The predecessors were exceptional contributions to the ergo keyboard community by the authors but used a rather esoteric programming language, Clojure, and a relatively inconsistent geometry engine, OpenSCAD.  My hope is that by converting the code the community will have an easier time modifying and evolving this design.  
 
+## Helpful Feedback
+**Special thanks to [u/loss_of_signal](https://www.reddit.com/user/loss_of_signal/) on Reddit** for exceptionally useful feedback and suggestions.  Our discussions led to the addition of the controller tray and prompted me to finally add a real OLED mount.  **As someone trying to give the community something new and useful, productive feedback is both extremely helpful and extremely rare.**  Never be afraid to send a message or make a pull request.  I may or may not decide to implement the suggestion, but the discussion and consideration is always worthwhile. 
+
 ## Updated Geometry Engine, now generating STEP files !!!
 As part of the effort to create a new engine I converted the code to cadquery/OpenCASCADE.  While OpenSCAD has provided an open source 3D engine that is extremely popular, it frankly creates barely passable STLs when you have complex geometry.  After being extremely frustrated trying to fix the mesh I realized it is just not a stable engine to create high quality files.  OpenCASCADE is extremely powerful but requires extensive detail to operate.  cadquery provided an excellent platform to run a stable geometry engine with a simplified API. 
 
@@ -54,13 +57,46 @@ Added 3 OLED mounts.  Have printed them stand alone with success.
 
 `oled_mount_type = 'UNDERCUT'` creates an opening with an undercut to create whatever custom holder you want.  Will not work without additional part creation from the user.
 
-This is a new feature so any feedback is appreciated.  If you have issues, message me on Reddit and I will try to help correct them.
+This is a new feature so any feedback is appreciated.  If you have issues, message me on Reddit and I will try to help correct them.  
 
 ## Status / Future
-FWIW, the cadquery version is essentially a double translation and is now a bit of a mess.  I wanted to share with the community as the first version of dactyl-manuform that exports as a STEP file, allowing easier editing.  I have decided to use this code to try new geometries and features to share.  I am still working on a new generator, but feel this one can continue to evolve and inform the other effort.
+This is now a bit of a monster of many minds and yet continues to bear fruit.  I plan to continue to use this code to try new geometries and features to share.  I am still working on a new generator, but feel this one can continue to evolve and inform the other effort.
+
+## Generating a Design
+
+**Setting up the Python environment - NEW**
+* [Install Python 3.X](https://www.python.org/downloads/release/python-385/) or use your [favorite distro / platform (Anaconda)](https://www.anaconda.com/products/individual) 
+* It is advisable, but not necessary, to setup a virtual environment to prevent package/library incompatibility 
+* [Install Numpy](https://pypi.org/project/numpy/), easiest method is `pip install numpy` or `pip3 install numpy` on linux.
+* [Install dataclasses_json](https://pypi.org/project/dataclasses_json/), easiest method is `pip install numpy` or `pip3 install numpy` on linux.
+
+**cadquery install**
+* [Install scipy](https://pypi.org/project/scipy/), easiest method is `pip install scipy` or `pip3 install scipy` on linux.
+* [Install cadquery](https://github.com/CadQuery/cadquery), many options (see link), but easiest method is `conda install -c conda-forge -c cadquery cadquery=2`.  Props to the creators/maintainers, this has the power of Open CASCADE with nearing the simplicity of OpenSCAD.
+
+**OpenSCAD install**
+* [Install SolidPython](https://pypi.org/project/solidpython/), easiest method is `pip install solidpython` or `pip3 install solidpython` on linux.
+* [Install OpenSCAD](http://www.openscad.org/)
+
+**Generating the design - UPDATED**
+* ~~Run `python dactyl_manuform_cadquery.py` or `python3 dactyl_manuform_cadquery.py`~~ 
+* ~~Run `python dactyl_manuform.py` or `python3 dactyl_manuform.py`~~
+* Run `generate_configuration.py` or directly edit `run_config.json` to configure the design
+* Run `run.py` to create the geometry (ENGINE variable in run determines method)
+* This will regenerate the `things/` files (or in subdirectory if defined in config)
+    * `*left.*`
+    * `*right.*`
+    * `*plate.*`
+    * `*oled_clip.*` (if applicable)
+    * `*oled_clip_test.*` (if applicable)
+* Use OpenSCAD to open a `.scad` file
+* Use FreeCAD or other application to open a `.step` file
+* Make changes to design, repeat run step
+* When done, use OpenSCAD or FreeCAD to export STL files
 
 **The majority of the the rest of the below content is as defined by previous authors, except where noted.**
 
+## Origin
 ![Imgur](http://i.imgur.com/LdjEhrR.jpg)
 
 The main change is that the thumb cluster was adapted from the [ManuForm keyboard](https://github.com/jeffgran/ManuForm) ([geekhack](https://geekhack.org/index.php?topic=46015.0)). The walls were changed to just drop to the floor. The keyboard is paramaterized to allow adjusting the following: 
@@ -76,49 +112,8 @@ The main change is that the thumb cluster was adapted from the [ManuForm keyboar
 
 ## Assembly
 
-### Generating a Design - Modified for Python Implementation
-
-**Setting up the Python environment - NEW**
-* [Install Python 3.X](https://www.python.org/downloads/release/python-385/) or use your [favorite distro / platform (Anaconda)](https://www.anaconda.com/products/individual) 
-* It is advisable, but not necessary, to setup a virtual environment to prevent package/library incompatibility 
-* [Install Numpy](https://pypi.org/project/numpy/), easiest method is `pip install numpy` or `pip3 install numpy` on linux.
-
-**cadquery install**
-* [Install scipy](https://pypi.org/project/scipy/), easiest method is `pip install scipy` or `pip3 install scipy` on linux.
-* [Install cadquery](https://github.com/CadQuery/cadquery), many options (see link), but easiest method is `conda install -c conda-forge -c cadquery cadquery=2`.  Props to the creators/maintainers, this has the power of Open CASCADE with nearing the simplicity of OpenSCAD.
-
-**OpenSCAD install**
-* [Install SolidPython](https://pypi.org/project/solidpython/), easiest method is `pip install solidpython` or `pip3 install solidpython` on linux.
-* [Install OpenSCAD](http://www.openscad.org/)
-
-**Generating the cadquery design - NEW**
-* Run `python dactyl_manuform_cadquery.py` or `python3 dactyl_manuform_cadquery.py` 
-* This will regenerate the `things/*.step` files
-    * `left_py.step`
-    * `right_py.step`
-    * `plate_py.step`
-* Use FreeCAD or other program to open a `.step` file.
-* Export functions can be modified to export stl directly if desired.
- When done, use FreeCAD or other CAD program to modify, edit, or export to STL.
-
-
-**Generating the OpenSCAD design - NEW**
-* Run `python dactyl_manuform.py` or `python3 dactyl_manuform.py` 
-* This will regenerate the `things/*.scad` files
-    * `left_py.scad`
-    * `right_py.scad`
-    * `plate_py.scad`
-* Use OpenSCAD to open a `.scad` file.
-* Make changes to design, repeat run step, OpenSCAD will watch for changes and re-render.
-* When done, use OpenSCAD to export STL files
-
-
 ### Printing
-Pre-generated STL files are available in the [things/](things/) directory. 
-When a model is generated, it also generates a  model for a bottom plate. 
-This can be exported to a DXF file in OpenSCAD.
-The [things/](things/) directory also has DXF files for the bottom plate.
-When laser cut, some of the inside cuts will need to be removed. 
+Pre-generated files can be opened in OpenSCAD or FreeCAD and exported to STL.  Bottom plate is available as a step file or dxf for cadquery or a .scad file to be exported from OpenSCAD.
 
 ### Wiring
 
