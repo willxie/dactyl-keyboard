@@ -12,3 +12,4 @@
 *.FCStd1
 debug_*
 */__pycache__/*
+*~$*
