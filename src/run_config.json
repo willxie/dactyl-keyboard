@@ -18,6 +18,10 @@
         7
     ],
     "keyboard_z_offset": 9,
+    "pinky_1_5U": false,
+    "first_1_5U_row": 0,
+    "last_1_5U_row": 5,
+    "thumb_style": "CARBONFET",
     "extra_width": 2.5,
     "extra_height": 1.0,
     "wall_z_offset": 15,

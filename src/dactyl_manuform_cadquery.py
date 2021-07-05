@@ -18,6 +18,12 @@ def rad2deg(rad: float) -> float:
 
 debug_exports = False
 
+## IMPORT DEFAULT CONFIG IN CASE NEW PARAMETERS EXIST
+import src.generate_configuration as cfg
+for item in cfg.shape_config:
+    locals()[item] = cfg.shape_config[item]
+
+## LOAD RUN CONFIGURATION FILE
 with open('run_config.json', mode='r') as fid:
     data = json.load(fid)
 for item in data:

@@ -40,6 +40,17 @@ shape_config = {
         9  # controls overall height# original=9 with centercol=3# use 16 for centercol=2
     ),
 
+
+    ##############################
+    # NEW TEST PARAMETERS
+    ##############################
+    'pinky_1_5U': False,  # LEAVE AS FALSE, CURRENTLY BROKEN
+    'first_1_5U_row': 0,
+    'last_1_5U_row': 5,
+    'thumb_style':  'CARBONFET', #'DEFAULT', 'MINI', 'CARBONFET'
+    ##############################
+
+
     'extra_width':  2.5,  # extra space between the base of keys# original= 2
     'extra_height':  1.0,  # original= 0.5
 
@@ -223,8 +234,9 @@ shape_config = {
     ## END CONFIGURATION SECTION
     ####################################
 
+def save_config():
+    with open('run_config.json', mode='w') as fid:
+        json.dump(shape_config, fid, indent=4)
 
-
-with open('run_config.json', mode='w') as fid:
-    json.dump(shape_config, fid, indent=4)
-
+if __name__ == '__main__':
+    save_config()
