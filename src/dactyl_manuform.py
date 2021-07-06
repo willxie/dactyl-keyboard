@@ -500,39 +500,21 @@ def thumb_1x_layout(shape):
 
 
 def thumb_15x_layout(shape):
-    return sl.union()(thumb_tr_place(shape), thumb_tl_place(shape), )
+    return sl.union()(thumb_tr_place(shape), thumb_tl_place(shape))
 
 
 def double_plate_half():
     plate_height = (sa_double_length - mount_height) / 3
-    # plate_height = (2*sa_length-mount_height) / 3
     top_plate = sl.cube([mount_width, plate_height, web_thickness], center=True)
     top_plate = sl.translate(
         [0, (plate_height + mount_height) / 2, plate_thickness - (web_thickness / 2)]
     )(top_plate)
-
     return top_plate
 
 
 def double_plate():
-    # plate_height = (sa_double_length - mount_height) / 3
-    # # plate_height = (2*sa_length-mount_height) / 3
-    # top_plate = sl.cube([mount_width, plate_height, web_thickness], center=True)
-    # top_plate = sl.translate(
-    #     [0, (plate_height + mount_height) / 2, plate_thickness - (web_thickness / 2)]
-    # )(top_plate)
     top_plate = double_plate_half()
     return sl.union()(top_plate, sl.mirror([0, 1, 0])(top_plate))
-
-
-def thumb(side="right"):
-    if thumb_style == "MINI":
-        return mini_thumb(side)
-    elif thumb_style == "CARBONFET":
-        return carbonfet_thumb(side)
-    else:
-        return default_thumb(side)
-
 
 def thumbcaps():
     if thumb_style == "MINI":
@@ -541,6 +523,14 @@ def thumbcaps():
         return carbonfet_thumbcaps()
     else:
         return default_thumbcaps()
+
+def thumb(side="right"):
+    if thumb_style == "MINI":
+        return mini_thumb(side)
+    elif thumb_style == "CARBONFET":
+        return carbonfet_thumb(side)
+    else:
+        return default_thumb(side)
 
 def thumb_connectors():
     if thumb_style == "MINI":
@@ -563,12 +553,6 @@ def default_thumb(side="right"):
     shape = thumb_1x_layout(sl.rotate([0.0, 0.0, -90])(single_plate(side=side)))
     shape += thumb_15x_layout(sl.rotate([0.0, 0.0, -90])(single_plate(side=side)))
     shape += thumb_15x_layout(double_plate())
-
-    # shape = thumb_1x_layout(sl.rotate([0.0, 0.0, -90])(single_plate(side=side)))
-    # shape += thumb_tr_place(sl.rotate([0.0, 0.0, 90])(single_plate(side=side)))
-    # shape += thumb_tr_place(double_plate(side=side))
-    # shape += thumb_tl_place(sl.rotate([0.0, 0.0, 90])(single_plate(side=side)))
-    # shape += thumb_tl_place(double_plate(side=side))
 
     return shape
 
@@ -2228,7 +2212,6 @@ def screw_insert(column, row, bottom_radius, top_radius, height):
 def screw_insert_all_shapes(bottom_radius, top_radius, height):
     shape = sl.union()(
         screw_insert(0, 0, bottom_radius, top_radius, height),
-        # screw_insert(0, lastrow, bottom_radius, top_radius, height),
         screw_insert(0, lastrow - 1, bottom_radius, top_radius, height),
         screw_insert(3, lastrow, bottom_radius, top_radius, height),
         screw_insert(3, 0, bottom_radius, top_radius, height),

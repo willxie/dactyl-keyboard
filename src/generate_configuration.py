@@ -47,7 +47,7 @@ shape_config = {
     'pinky_1_5U': False,  # LEAVE AS FALSE, CURRENTLY BROKEN
     'first_1_5U_row': 0,
     'last_1_5U_row': 5,
-    'thumb_style':  'CARBONFET', #'DEFAULT', 'MINI', 'CARBONFET'
+    'thumb_style':  'MINI', #'DEFAULT', 'MINI', 'CARBONFET'
     ##############################
 
 

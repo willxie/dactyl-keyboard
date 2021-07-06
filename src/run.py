@@ -3,11 +3,11 @@
 # preference.  You may want to back it up as another file name to prevent the generator from
 # overwriting your config history.
 
-# import generate_configuration as cfg
+# import src.generate_configuration as cfg
 # cfg.save_config()
 
-ENGINE = 'solid'
-# ENGINE = 'cadquery'
+# ENGINE = 'solid'
+ENGINE = 'cadquery'
 
 if ENGINE == 'solid':
     exec(open('dactyl_manuform.py').read())

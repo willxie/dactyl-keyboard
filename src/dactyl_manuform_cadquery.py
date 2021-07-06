@@ -80,7 +80,6 @@ def column_offset(column: int) -> list:
 # column_style='fixed'
 
 def rotate(shape, angle):
-    # print('rotate()')
     origin = (0, 0, 0)
     shape = shape.rotate(axisStartPoint=origin, axisEndPoint=(1, 0, 0), angleDegrees=angle[0])
     shape = shape.rotate(axisStartPoint=origin, axisEndPoint=(0, 1, 0), angleDegrees=angle[1])
@@ -89,7 +88,6 @@ def rotate(shape, angle):
 
 
 def translate(shape, vector):
-    # print('translate()')
     return shape.translate(tuple(vector))
 
 
@@ -253,14 +251,26 @@ def sa_cap(Usize=1):
     # MODIFIED TO NOT HAVE THE ROTATION.  NEEDS ROTATION DURING ASSEMBLY
     sa_length = 18.25
 
-    bw2 = Usize * sa_length / 2
-    bl2 = sa_length / 2
-    m = 0
-    pw2 = 6 * Usize + 1
-    pl2 = 6
-
     if Usize == 1:
+        bl2 = 18.5/2
+        bw2 = 18.5/2
         m = 17 / 2
+        pl2 = 6
+        pw2 = 6
+
+    elif Usize == 2:
+        bl2 = sa_length
+        bw2 = sa_length / 2
+        m = 0
+        pl2 = 16
+        pw2 = 6
+
+    elif Usize == 1.5:
+        bl2 = sa_length / 2
+        bw2 = 27.94 / 2
+        m = 0
+        pl2 = 6
+        pw2 = 11
 
     k1 = cq.Workplane('XY').polyline([(bw2, bl2), (bw2, -bl2), (-bw2, -bl2), (-bw2, bl2), (bw2, bl2)])
     k1 = cq.Wire.assembleEdges(k1.edges().objects)
@@ -432,10 +442,6 @@ def caps():
 ## Web Connectors ##
 ####################
 
-web_thickness = 4.0
-post_size = 0.2
-post_adj = post_size / 2
-# post_adj = 0
 
 
 def web_post():
@@ -445,24 +451,37 @@ def web_post():
     return post
 
 
-def web_post_tr():
-    # print('web_post_tr()')
-    return web_post().translate(((mount_width / 2) - post_adj, (mount_height / 2) - post_adj, 0))
+def web_post_tr(wide=False):
+    if wide:
+        w_divide = 1.2
+    else:
+        w_divide = 2.0
+
+    return web_post().translate(((mount_width / w_divide) - post_adj, (mount_height / 2) - post_adj, 0))
 
 
-def web_post_tl():
-    # print('web_post_tl()')
-    return web_post().translate((-(mount_width / 2) + post_adj, (mount_height / 2) - post_adj, 0))
+def web_post_tl(wide=False):
+    if wide:
+        w_divide = 1.2
+    else:
+        w_divide = 2.0
+    return web_post().translate((-(mount_width / w_divide) + post_adj, (mount_height / 2) - post_adj, 0))
 
 
-def web_post_bl():
-    # print('web_post_bl()')
-    return web_post().translate((-(mount_width / 2) + post_adj, -(mount_height / 2) + post_adj, 0))
+def web_post_bl(wide=False):
+    if wide:
+        w_divide = 1.2
+    else:
+        w_divide = 2.0
+    return web_post().translate((-(mount_width / w_divide) + post_adj, -(mount_height / 2) + post_adj, 0))
 
 
-def web_post_br():
-    # print('web_post_br()')
-    return web_post().translate(((mount_width / 2) - post_adj, -(mount_height / 2) + post_adj, 0))
+def web_post_br(wide=False):
+    if wide:
+        w_divide = 1.2
+    else:
+        w_divide = 2.0
+    return web_post().translate(((mount_width / w_divide) - post_adj, -(mount_height / 2) + post_adj, 0))
 
 
 def triangle_hulls(shapes):
@@ -598,26 +617,55 @@ def thumb_15x_layout(shape, cap=False):
     else:
         return thumb_tr_place(shape).union(thumb_tl_place(shape))
 
-
-def double_plate():
+def double_plate_half():
     print('double_plate()')
     plate_height = (sa_double_length - mount_height) / 3
-    # plate_height = (2*sa_length-mount_height) / 3
     top_plate = cq.Workplane("XY").box(mount_width, plate_height, web_thickness)
     top_plate = translate(top_plate,
                           [0, (plate_height + mount_height) / 2, plate_thickness - (web_thickness / 2)]
                           )
+    return top_plate
+
+def double_plate():
+    print('double_plate()')
+    top_plate = double_plate_half()
     return union((top_plate, mirror(top_plate, 'XZ')))
 
 
 def thumbcaps():
+    if thumb_style == "MINI":
+        return mini_thumbcaps()
+    elif thumb_style == "CARBONFET":
+        return carbonfet_thumbcaps()
+    else:
+        return default_thumbcaps()
+
+
+def thumb(side="right"):
+    if thumb_style == "MINI":
+        return mini_thumb(side)
+    elif thumb_style == "CARBONFET":
+        return carbonfet_thumb(side)
+    else:
+        return default_thumb(side)
+
+
+def thumb_connectors():
+    if thumb_style == "MINI":
+        return mini_thumb_connectors()
+    elif thumb_style == "CARBONFET":
+        return carbonfet_thumb_connectors()
+    else:
+        return default_thumb_connectors()
+
+
+def default_thumbcaps():
     t1 = thumb_1x_layout(sa_cap(1), cap=True)
-    # t15 = thumb_15x_layout(rotate(sa_cap(1.5), [0, 0, pi / 2]), cap=True)
     t15 = thumb_15x_layout(sa_cap(1.5), cap=True)
     return t1.add(t15)
 
 
-def thumb(side="right"):
+def default_thumb(side="right"):
     print('thumb()')
     shape = thumb_1x_layout(rotate(single_plate(side=side), (0, 0, -90)))
     shape = shape.union(thumb_15x_layout(rotate(single_plate(side=side), (0, 0, -90))))
@@ -653,7 +701,7 @@ def thumb_post_br():
                      )
 
 
-def thumb_connectors():
+def default_thumb_connectors():
     print('thumb_connectors()')
     hulls = []
 
@@ -784,6 +832,481 @@ def thumb_connectors():
                 key_place(web_post_tr(), 3, lastrow),
                 key_place(web_post_br(), 3, lastrow),
                 key_place(web_post_tr(), 3, lastrow),
+                key_place(web_post_bl(), 4, cornerrow),
+            ]
+        )
+    )
+
+    return union(hulls)
+
+############################
+# MINI THUMB CLUSTER
+############################
+
+
+def mini_thumb_tr_place(shape):
+    shape = rotate(shape, [14, -15, 10])
+    shape = shape.translate(thumborigin())
+    shape = shape.translate([-15, -10, 5])
+    return shape
+
+
+def mini_thumb_tl_place(shape):
+    shape = rotate(shape, [10, -23, 25])
+    shape = shape.translate(thumborigin())
+    shape = shape.translate([-35, -16, -2])
+    return shape
+
+
+def mini_thumb_mr_place(shape):
+    shape = rotate(shape, [10, -23, 25])
+    shape = shape.translate(thumborigin())
+    shape = shape.translate([-23, -34, -6])
+    return shape
+
+
+def mini_thumb_br_place(shape):
+    shape = rotate(shape, [6, -34, 35])
+    shape = shape.translate(thumborigin())
+    shape = shape.translate([-39, -43, -16])
+    return shape
+
+
+def mini_thumb_bl_place(shape):
+    shape = rotate(shape, [6, -32, 35])
+    shape = shape.translate(thumborigin())
+    shape = shape.translate([-51, -25, -11.5])
+    return shape
+
+
+def mini_thumb_1x_layout(shape):
+    return union([
+        mini_thumb_mr_place(shape),
+        mini_thumb_br_place(shape),
+        mini_thumb_tl_place(shape),
+        mini_thumb_bl_place(shape),
+    ])
+
+
+def mini_thumb_15x_layout(shape):
+    return union([mini_thumb_tr_place(shape)] )
+
+
+def mini_thumbcaps():
+    t1 = mini_thumb_1x_layout(sa_cap(1))
+    t15 = mini_thumb_15x_layout(rotate(sa_cap(1) , pi / 2, [0, 0, 1]))
+    return t1.add(t15)
+
+
+def mini_thumb(side="right"):
+
+    # shape = thumb_1x_layout(sl.rotate([0.0, 0.0, -90])(single_plate(side=side)))
+    # shape += thumb_15x_layout(sl.rotate([0.0, 0.0, -90])(single_plate(side=side)))
+    shape = mini_thumb_1x_layout(single_plate(side=side))
+    shape = union([shape, mini_thumb_15x_layout(single_plate(side=side))])
+
+    return shape
+
+
+def mini_thumb_post_tr():
+    return translate(web_post(),
+        [(mount_width / 2) - post_adj, (mount_height / 2) - post_adj, 0]
+    )
+
+
+def mini_thumb_post_tl():
+    return translate(web_post(),
+        [-(mount_width / 2) + post_adj, (mount_height / 2) - post_adj, 0]
+    )
+
+
+def mini_thumb_post_bl():
+    return translate(web_post(),
+        [-(mount_width / 2) + post_adj, -(mount_height / 2) + post_adj, 0]
+    )
+
+
+def mini_thumb_post_br():
+    return translate(web_post(),
+        [(mount_width / 2) - post_adj, -(mount_height / 2) + post_adj, 0]
+    )
+
+
+def mini_thumb_connectors():
+    hulls = []
+
+    # Top two
+    hulls.append(
+        triangle_hulls(
+            [
+                mini_thumb_tl_place(web_post_tr()),
+                mini_thumb_tl_place(web_post_br()),
+                mini_thumb_tr_place(mini_thumb_post_tl()),
+                mini_thumb_tr_place(mini_thumb_post_bl()),
+            ]
+        )
+    )
+
+    # bottom two on the right
+    hulls.append(
+        triangle_hulls(
+            [
+                mini_thumb_br_place(web_post_tr()),
+                mini_thumb_br_place(web_post_br()),
+                mini_thumb_mr_place(web_post_tl()),
+                mini_thumb_mr_place(web_post_bl()),
+            ]
+        )
+    )
+
+    # bottom two on the left
+    hulls.append(
+        triangle_hulls(
+            [
+                mini_thumb_mr_place(web_post_tr()),
+                mini_thumb_mr_place(web_post_br()),
+                mini_thumb_tr_place(mini_thumb_post_br()),
+            ]
+        )
+    )
+
+    # between top and bottom row
+    hulls.append(
+        triangle_hulls(
+            [
+                mini_thumb_br_place(web_post_tl()),
+                mini_thumb_bl_place(web_post_bl()),
+                mini_thumb_br_place(web_post_tr()),
+                mini_thumb_bl_place(web_post_br()),
+                mini_thumb_mr_place(web_post_tl()),
+                mini_thumb_tl_place(web_post_bl()),
+                mini_thumb_mr_place(web_post_tr()),
+                mini_thumb_tl_place(web_post_br()),
+                mini_thumb_tr_place(web_post_bl()),
+                mini_thumb_mr_place(web_post_tr()),
+                mini_thumb_tr_place(web_post_br()),
+            ]
+        )
+    )
+    # top two to the main keyboard, starting on the left
+    hulls.append(
+        triangle_hulls(
+            [
+                mini_thumb_tl_place(web_post_tl()),
+                mini_thumb_bl_place(web_post_tr()),
+                mini_thumb_tl_place(web_post_bl()),
+                mini_thumb_bl_place(web_post_br()),
+                mini_thumb_mr_place(web_post_tr()),
+                mini_thumb_tl_place(web_post_bl()),
+                mini_thumb_tl_place(web_post_br()),
+                mini_thumb_mr_place(web_post_tr()),
+            ]
+        )
+    )
+    # top two to the main keyboard, starting on the left
+    hulls.append(
+        triangle_hulls(
+            [
+                mini_thumb_tl_place(web_post_tl()),
+                key_place(web_post_bl(), 0, cornerrow),
+                mini_thumb_tl_place(web_post_tr()),
+                key_place(web_post_br(), 0, cornerrow),
+                mini_thumb_tr_place(mini_thumb_post_tl()),
+                key_place(web_post_bl(), 1, cornerrow),
+                mini_thumb_tr_place(mini_thumb_post_tr()),
+                key_place(web_post_br(), 1, cornerrow),
+                key_place(web_post_tl(), 2, lastrow),
+                key_place(web_post_bl(), 2, lastrow),
+                mini_thumb_tr_place(mini_thumb_post_tr()),
+                key_place(web_post_bl(), 2, lastrow),
+                mini_thumb_tr_place(mini_thumb_post_br()),
+                key_place(web_post_br(), 2, lastrow),
+                key_place(web_post_bl(), 3, lastrow),
+                key_place(web_post_tr(), 2, lastrow),
+                key_place(web_post_tl(), 3, lastrow),
+                key_place(web_post_bl(), 3, cornerrow),
+                key_place(web_post_tr(), 3, lastrow),
+                key_place(web_post_br(), 3, cornerrow),
+            ]
+        )
+    )
+
+    hulls.append(
+        triangle_hulls(
+            [
+                key_place(web_post_br(), 1, cornerrow),
+                key_place(web_post_tl(), 2, lastrow),
+                key_place(web_post_bl(), 2, cornerrow),
+                key_place(web_post_tr(), 2, lastrow),
+                key_place(web_post_br(), 2, cornerrow),
+                key_place(web_post_bl(), 3, cornerrow),
+            ]
+        )
+    )
+
+    return union(hulls)
+
+
+############################
+# Carbonfet THUMB CLUSTER
+############################
+
+
+def carbonfet_thumb_tl_place(shape):
+    shape = rotate(shape, [10, -24, 10])
+    shape = shape.translate(thumborigin())
+    shape = shape.translate([-13, -9.8, 4])
+    return shape
+
+def carbonfet_thumb_tr_place(shape):
+    shape = rotate(shape, [6, -25, 10])
+    shape = shape.translate(thumborigin())
+    shape = shape.translate([-7.5, -29.5, 0])
+    return shape
+
+def carbonfet_thumb_ml_place(shape):
+    shape = rotate(shape, [8, -31, 14])
+    shape = shape.translate(thumborigin())
+    shape = shape.translate([-30.5, -17, -6])
+    return shape
+
+def carbonfet_thumb_mr_place(shape):
+    shape = rotate(shape, [4, -31, 14])
+    shape = shape.translate(thumborigin())
+    shape = shape.translate([-22.2, -41, -10.3])
+    return shape
+
+def carbonfet_thumb_br_place(shape):
+    shape = rotate(shape, [2, -37, 18])
+    shape = shape.translate(thumborigin())
+    shape = shape.translate([-37, -46.4, -22])
+    return shape
+
+def carbonfet_thumb_bl_place(shape):
+    shape = rotate(shape, [6, -37, 18])
+    shape = shape.translate(thumborigin())
+    shape = shape.translate([-47, -23, -19])
+    return shape
+
+
+def carbonfet_thumb_1x_layout(shape):
+    return union([
+        carbonfet_thumb_tr_place(shape),
+        carbonfet_thumb_mr_place(shape),
+        carbonfet_thumb_br_place(shape),
+        carbonfet_thumb_tl_place(shape),
+    ])
+
+
+def carbonfet_thumb_15x_layout(shape):
+    return union([
+        carbonfet_thumb_bl_place(shape),
+        carbonfet_thumb_ml_place(shape)
+    ])
+
+
+def carbonfet_thumbcaps():
+    t1 = carbonfet_thumb_1x_layout(sa_cap(1))
+    t15 = carbonfet_thumb_15x_layout(rotate(sa_cap(1.5), pi / 2, [0, 0, 1]))
+    return t1.add(t15)
+
+
+def carbonfet_thumb(side="right"):
+    # shape = thumb_1x_layout(sl.rotate([0.0, 0.0, -90])(single_plate(side=side)))
+    # shape += thumb_15x_layout(sl.rotate([0.0, 0.0, -90])(single_plate(side=side)))
+    shape = carbonfet_thumb_1x_layout(single_plate(side=side))
+    shape = union([shape, carbonfet_thumb_15x_layout(double_plate_half())])
+    shape = union([shape, carbonfet_thumb_15x_layout(single_plate(side=side))])
+
+    return shape
+
+def carbonfet_thumb_post_tr():
+    return translate(web_post(),
+        [(mount_width / 2) - post_adj, (mount_height / 1.15) - post_adj, 0]
+    )
+
+
+def carbonfet_thumb_post_tl():
+    return translate(web_post(),
+        [-(mount_width / 2) + post_adj, (mount_height / 1.15) - post_adj, 0]
+    )
+
+
+def carbonfet_thumb_post_bl():
+    return translate(web_post(),
+        [-(mount_width / 2) + post_adj, -(mount_height / 1.15) + post_adj, 0]
+    )
+
+
+def carbonfet_thumb_post_br():
+    return translate(web_post(),
+        [(mount_width / 2) - post_adj, -(mount_height / 2) + post_adj, 0]
+    )
+
+def carbonfet_thumb_connectors():
+    hulls = []
+
+    # Top two
+    hulls.append(
+        triangle_hulls(
+            [
+                carbonfet_thumb_tl_place(web_post_tl()),
+                carbonfet_thumb_tl_place(web_post_bl()),
+                carbonfet_thumb_ml_place(carbonfet_thumb_post_tr()),
+                carbonfet_thumb_ml_place(web_post_br()),
+            ]
+        )
+    )
+
+    hulls.append(
+        triangle_hulls(
+            [
+                carbonfet_thumb_ml_place(carbonfet_thumb_post_tl()),
+                carbonfet_thumb_ml_place(web_post_bl()),
+                carbonfet_thumb_bl_place(carbonfet_thumb_post_tr()),
+                carbonfet_thumb_bl_place(web_post_br()),
+            ]
+        )
+    )
+
+    # bottom two on the right
+    hulls.append(
+        triangle_hulls(
+            [
+                carbonfet_thumb_br_place(web_post_tr()),
+                carbonfet_thumb_br_place(web_post_br()),
+                carbonfet_thumb_mr_place(web_post_tl()),
+                carbonfet_thumb_mr_place(web_post_bl()),
+            ]
+        )
+    )
+
+    # bottom two on the left
+    hulls.append(
+        triangle_hulls(
+            [
+                carbonfet_thumb_mr_place(web_post_tr()),
+                carbonfet_thumb_mr_place(web_post_br()),
+                carbonfet_thumb_tr_place(web_post_tl()),
+                carbonfet_thumb_tr_place(web_post_bl()),
+            ]
+        )
+    )
+    hulls.append(
+        triangle_hulls(
+            [
+                carbonfet_thumb_tr_place(web_post_br()),
+                carbonfet_thumb_tr_place(web_post_bl()),
+                carbonfet_thumb_mr_place(web_post_br()),
+            ]
+        )
+    )
+
+    # between top and bottom row
+    hulls.append(
+        triangle_hulls(
+            [
+                carbonfet_thumb_br_place(web_post_tl()),
+                carbonfet_thumb_bl_place(web_post_bl()),
+                carbonfet_thumb_br_place(web_post_tr()),
+                carbonfet_thumb_bl_place(web_post_br()),
+                carbonfet_thumb_mr_place(web_post_tl()),
+                carbonfet_thumb_ml_place(web_post_bl()),
+                carbonfet_thumb_mr_place(web_post_tr()),
+                carbonfet_thumb_ml_place(web_post_br()),
+                carbonfet_thumb_tr_place(web_post_tl()),
+                carbonfet_thumb_tl_place(web_post_bl()),
+                carbonfet_thumb_tr_place(web_post_tr()),
+                carbonfet_thumb_tl_place(web_post_br()),
+            ]
+        )
+    )
+    # top two to the main keyboard, starting on the left
+    hulls.append(
+        triangle_hulls(
+            [
+                carbonfet_thumb_ml_place(carbonfet_thumb_post_tl()),
+                key_place(web_post_bl(), 0, cornerrow),
+                carbonfet_thumb_ml_place(carbonfet_thumb_post_tr()),
+                key_place(web_post_br(), 0, cornerrow),
+                carbonfet_thumb_tl_place(web_post_tl()),
+                key_place(web_post_bl(), 1, cornerrow),
+                carbonfet_thumb_tl_place(web_post_tr()),
+                key_place(web_post_br(), 1, cornerrow),
+                key_place(web_post_tl(), 2, lastrow),
+                key_place(web_post_bl(), 2, lastrow),
+                carbonfet_thumb_tl_place(web_post_tr()),
+                key_place(web_post_bl(), 2, lastrow),
+                carbonfet_thumb_tl_place(web_post_br()),
+                key_place(web_post_br(), 2, lastrow),
+                key_place(web_post_bl(), 3, lastrow),
+                carbonfet_thumb_tl_place(web_post_br()),
+                carbonfet_thumb_tr_place(web_post_tr()),
+            ]
+        )
+    )
+
+    hulls.append(
+        triangle_hulls(
+            [
+                key_place(web_post_tr(), 3, lastrow),
+                key_place(web_post_br(), 3, cornerrow),
+                key_place(web_post_tl(), 3, lastrow),
+                key_place(web_post_bl(), 3, cornerrow),
+            ]
+        )
+    )
+
+    hulls.append(
+        triangle_hulls(
+            [
+                key_place(web_post_tr(), 2, lastrow),
+                key_place(web_post_br(), 2, lastrow),
+                key_place(web_post_tl(), 3, lastrow),
+                key_place(web_post_bl(), 3, lastrow),
+            ]
+        )
+    )
+
+    hulls.append(
+        triangle_hulls(
+            [
+                carbonfet_thumb_tr_place(web_post_br()),
+                carbonfet_thumb_tr_place(web_post_tr()),
+                key_place(web_post_bl(), 3, lastrow),
+            ]
+        )
+    )
+
+    hulls.append(
+        triangle_hulls(
+            [
+                key_place(web_post_br(), 1, cornerrow),
+                key_place(web_post_tl(), 2, lastrow),
+                key_place(web_post_bl(), 2, cornerrow),
+                key_place(web_post_tr(), 2, lastrow),
+                key_place(web_post_br(), 2, cornerrow),
+                key_place(web_post_tl(), 3, lastrow),
+                key_place(web_post_bl(), 3, cornerrow),
+            ]
+        )
+    )
+
+    hulls.append(
+        triangle_hulls(
+            [
+                key_place(web_post_tr(), 3, lastrow),
+                key_place(web_post_br(), 3, lastrow),
+                key_place(web_post_bl(), 4, cornerrow),
+            ]
+        )
+    )
+
+    hulls.append(
+        triangle_hulls(
+            [
+                key_place(web_post_tr(), 3, lastrow),
+                key_place(web_post_br(), 3, cornerrow),
                 key_place(web_post_bl(), 4, cornerrow),
             ]
         )
@@ -1069,77 +1592,53 @@ def front_wall():
 
     return shape
 
-
 def thumb_walls():
+    if thumb_style == "MINI":
+        return mini_thumb_walls()
+    elif thumb_style == "CARBONFET":
+        return carbonfet_thumb_walls()
+    else:
+        return default_thumb_walls()
+
+def thumb_connection():
+    if thumb_style == "MINI":
+        return mini_thumb_connection()
+    elif thumb_style == "CARBONFET":
+        return carbonfet_thumb_connection()
+    else:
+        return default_thumb_connection()
+
+def default_thumb_walls():
     print('thumb_walls()')
     # thumb, walls
     shape = cq.Workplane('XY')
-    shape = shape.union(
-        wall_brace(
-            thumb_mr_place, 0, -1, web_post_br(), thumb_tr_place, 0, -1, thumb_post_br()
-        )
-    )
-    shape = shape.union(wall_brace(
-        thumb_mr_place, 0, -1, web_post_br(), thumb_mr_place, 0, -1, web_post_bl()
-    ))
-    shape = shape.union(wall_brace(
-        thumb_br_place, 0, -1, web_post_br(), thumb_br_place, 0, -1, web_post_bl()
-    ))
-    shape = shape.union(wall_brace(
-        thumb_ml_place, -0.3, 1, web_post_tr(), thumb_ml_place, 0, 1, web_post_tl()
-    ))
-    shape = shape.union(wall_brace(
-        thumb_bl_place, 0, 1, web_post_tr(), thumb_bl_place, 0, 1, web_post_tl()
-    ))
-    shape = shape.union(wall_brace(
-        thumb_br_place, -1, 0, web_post_tl(), thumb_br_place, -1, 0, web_post_bl()
-    ))
-    shape = shape.union(wall_brace(
-        thumb_bl_place, -1, 0, web_post_tl(), thumb_bl_place, -1, 0, web_post_bl()
-    ))
+    shape = shape.union(wall_brace(thumb_mr_place, 0, -1, web_post_br(), thumb_tr_place, 0, -1, thumb_post_br()))
+    shape = shape.union(wall_brace(thumb_mr_place, 0, -1, web_post_br(), thumb_mr_place, 0, -1, web_post_bl()))
+    shape = shape.union(wall_brace(thumb_br_place, 0, -1, web_post_br(), thumb_br_place, 0, -1, web_post_bl()))
+    shape = shape.union(wall_brace(thumb_ml_place, -0.3, 1, web_post_tr(), thumb_ml_place, 0, 1, web_post_tl()))
+    shape = shape.union(wall_brace(thumb_bl_place, 0, 1, web_post_tr(), thumb_bl_place, 0, 1, web_post_tl()))
+    shape = shape.union(wall_brace(thumb_br_place, -1, 0, web_post_tl(), thumb_br_place, -1, 0, web_post_bl()))
+    shape = shape.union(wall_brace(thumb_bl_place, -1, 0, web_post_tl(), thumb_bl_place, -1, 0, web_post_bl()))
     # thumb, corners
-    shape = shape.union(wall_brace(
-        thumb_br_place, -1, 0, web_post_bl(), thumb_br_place, 0, -1, web_post_bl()
-    ))
-    shape = shape.union(wall_brace(
-        thumb_bl_place, -1, 0, web_post_tl(), thumb_bl_place, 0, 1, web_post_tl()
-    ))
+    shape = shape.union(wall_brace(thumb_br_place, -1, 0, web_post_bl(), thumb_br_place, 0, -1, web_post_bl()))
+    shape = shape.union(wall_brace(thumb_bl_place, -1, 0, web_post_tl(), thumb_bl_place, 0, 1, web_post_tl()))
     # thumb, tweeners
-    shape = shape.union(wall_brace(
-        thumb_mr_place, 0, -1, web_post_bl(), thumb_br_place, 0, -1, web_post_br()
-    ))
-    shape = shape.union(wall_brace(
-        thumb_ml_place, 0, 1, web_post_tl(), thumb_bl_place, 0, 1, web_post_tr()
-    ))
-    shape = shape.union(wall_brace(
-        thumb_bl_place, -1, 0, web_post_bl(), thumb_br_place, -1, 0, web_post_tl()
-    ))
-    shape = shape.union(wall_brace(
-        thumb_tr_place,
-        0,
-        -1,
-        thumb_post_br(),
-        (lambda sh: key_place(sh, 3, lastrow)),
-        0,
-        -1,
-        web_post_bl(),
-    ))
+    shape = shape.union(wall_brace(thumb_mr_place, 0, -1, web_post_bl(), thumb_br_place, 0, -1, web_post_br()))
+    shape = shape.union(wall_brace(thumb_ml_place, 0, 1, web_post_tl(), thumb_bl_place, 0, 1, web_post_tr()))
+    shape = shape.union(wall_brace(thumb_bl_place, -1, 0, web_post_bl(), thumb_br_place, -1, 0, web_post_tl()))
+    shape = shape.union(wall_brace(thumb_tr_place, 0, -1, thumb_post_br(), (lambda sh: key_place(sh, 3, lastrow)), 0, -1, web_post_bl()))
 
     return shape
 
 
-def thumb_connection():
+def default_thumb_connection():
     print('thumb_connection()')
     shape = cq.Workplane('XY')
     # clunky bit on the top left thumb connection  (normal connectors don't work well)
     shape = shape.union(bottom_hull(
         [
-            left_key_place(
-                translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1
-            ),
-            left_key_place(
-                translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1
-            ),
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1),
             thumb_ml_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
             thumb_ml_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
         ]
@@ -1150,12 +1649,8 @@ def thumb_connection():
     shape = shape.union(
         hull_from_shapes(
             [
-                left_key_place(
-                    translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1
-                ),
-                left_key_place(
-                    translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1
-                ),
+                left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1),
+                left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1),
                 thumb_ml_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
                 thumb_ml_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
                 thumb_tl_place(thumb_post_tl()),
@@ -1166,15 +1661,9 @@ def thumb_connection():
     shape = shape.union(hull_from_shapes(
         [
             left_key_place(web_post(), cornerrow, -1),
-            left_key_place(
-                translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1
-            ),
-            left_key_place(
-                translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1
-            ),
-            left_key_place(
-                translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1
-            ),
+            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1),
             thumb_tl_place(thumb_post_tl()),
         ]
     ))
@@ -1182,9 +1671,7 @@ def thumb_connection():
     shape = shape.union(hull_from_shapes(
         [
             left_key_place(web_post(), cornerrow, -1),
-            left_key_place(
-                translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1
-            ),
+            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1),
             key_place(web_post_bl(), 0, cornerrow),
             key_place(translate(web_post_bl(), wall_locate1(-1, 0)), 0, cornerrow),
             thumb_tl_place(thumb_post_tl()),
@@ -1203,6 +1690,157 @@ def thumb_connection():
 
     return shape
 
+def mini_thumb_walls():
+    # thumb, walls
+    shape = cq.Workplane('XY')
+    shape = shape.union(wall_brace(mini_thumb_mr_place, 0, -1, web_post_br(), mini_thumb_tr_place, 0, -1, mini_thumb_post_br()))
+    shape = shape.union(wall_brace(mini_thumb_mr_place, 0, -1, web_post_br(), mini_thumb_mr_place, 0, -1, web_post_bl()))
+    shape = shape.union(wall_brace(mini_thumb_br_place, 0, -1, web_post_br(), mini_thumb_br_place, 0, -1, web_post_bl()))
+    shape = shape.union(wall_brace(mini_thumb_bl_place, 0, 1, web_post_tr(), mini_thumb_bl_place, 0, 1, web_post_tl()))
+    shape = shape.union(wall_brace(mini_thumb_br_place, -1, 0, web_post_tl(), mini_thumb_br_place, -1, 0, web_post_bl()))
+    shape = shape.union(wall_brace(mini_thumb_bl_place, -1, 0, web_post_tl(), mini_thumb_bl_place, -1, 0, web_post_bl()))
+    # thumb, corners
+    shape = shape.union(wall_brace(mini_thumb_br_place, -1, 0, web_post_bl(), mini_thumb_br_place, 0, -1, web_post_bl()))
+    shape = shape.union(wall_brace(mini_thumb_bl_place, -1, 0, web_post_tl(), mini_thumb_bl_place, 0, 1, web_post_tl()))
+    # thumb, tweeners
+    shape = shape.union(wall_brace(mini_thumb_mr_place, 0, -1, web_post_bl(), mini_thumb_br_place, 0, -1, web_post_br()))
+    shape = shape.union(wall_brace(mini_thumb_bl_place, -1, 0, web_post_bl(), mini_thumb_br_place, -1, 0, web_post_tl()))
+    shape = shape.union(wall_brace(mini_thumb_tr_place, 0, -1, mini_thumb_post_br(), (lambda sh: key_place(sh, 3, lastrow)), 0, -1, web_post_bl()))
+
+    return shape
+
+def mini_thumb_connection():
+    shape = cq.Workplane('XY')
+    # clunky bit on the top left thumb connection  (normal connectors don't work well)
+    shape = shape.union(bottom_hull(
+        [
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1),
+            mini_thumb_bl_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
+            mini_thumb_bl_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
+        ]
+    ))
+
+    shape = shape.union(
+        hull_from_shapes(
+        [
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1),
+            mini_thumb_bl_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
+            mini_thumb_bl_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
+            mini_thumb_tl_place(web_post_tl()),
+        ]
+    ))
+
+    shape = shape.union(
+        hull_from_shapes(
+        [
+            left_key_place(web_post(), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1),
+            mini_thumb_tl_place(web_post_tl()),
+        ]
+    ))
+
+    shape = shape.union(
+        hull_from_shapes(
+        [
+            left_key_place(web_post(), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1),
+            key_place(web_post_bl(), 0, cornerrow),
+            mini_thumb_tl_place(web_post_tl()),
+        ]
+    ))
+
+    shape = shape.union(
+        hull_from_shapes(
+        [
+            mini_thumb_bl_place(web_post_tr()),
+            mini_thumb_bl_place(translate(web_post_tr(), wall_locate1(-0.3, 1))),
+            mini_thumb_bl_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
+            mini_thumb_bl_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
+            mini_thumb_tl_place(web_post_tl()),
+        ]
+    ))
+
+    return shape
+
+
+
+def carbonfet_thumb_walls():
+    # thumb, walls
+    shape = cq.Workplane('XY')
+    shape = shape.union(wall_brace(carbonfet_thumb_mr_place, 0, -1, web_post_br(), carbonfet_thumb_tr_place, 0, -1, web_post_br()))
+    shape = shape.union(wall_brace(carbonfet_thumb_mr_place, 0, -1, web_post_br(), carbonfet_thumb_mr_place, 0, -1.15, web_post_bl()))
+    shape = shape.union(wall_brace(carbonfet_thumb_br_place, 0, -1, web_post_br(), carbonfet_thumb_br_place, 0, -1, web_post_bl()))
+    shape = shape.union(wall_brace(carbonfet_thumb_bl_place, -.3, 1, thumb_post_tr(), carbonfet_thumb_bl_place, 0, 1, thumb_post_tl()))
+    shape = shape.union(wall_brace(carbonfet_thumb_br_place, -1, 0, web_post_tl(), carbonfet_thumb_br_place, -1, 0, web_post_bl()))
+    shape = shape.union(wall_brace(carbonfet_thumb_bl_place, -1, 0, thumb_post_tl(), carbonfet_thumb_bl_place, -1, 0, web_post_bl()))
+    # thumb, corners
+    shape = shape.union(wall_brace(carbonfet_thumb_br_place, -1, 0, web_post_bl(), carbonfet_thumb_br_place, 0, -1, web_post_bl()))
+    shape = shape.union(wall_brace(carbonfet_thumb_bl_place, -1, 0, thumb_post_tl(), carbonfet_thumb_bl_place, 0, 1, thumb_post_tl()))
+    # thumb, tweeners
+    shape = shape.union(wall_brace(carbonfet_thumb_mr_place, 0, -1.15, web_post_bl(), carbonfet_thumb_br_place, 0, -1, web_post_br()))
+    shape = shape.union(wall_brace(carbonfet_thumb_bl_place, -1, 0, web_post_bl(), carbonfet_thumb_br_place, -1, 0, web_post_tl()))
+    shape = shape.union(wall_brace(carbonfet_thumb_tr_place, 0, -1, web_post_br(), (lambda sh: key_place(sh, 3, lastrow)), 0, -1, web_post_bl()))
+    return shape
+
+def carbonfet_thumb_connection():
+    # clunky bit on the top left thumb connection  (normal connectors don't work well)
+    shape = bottom_hull(
+        [
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1),
+            carbonfet_thumb_bl_place(translate(thumb_post_tr(), wall_locate2(-0.3, 1))),
+            carbonfet_thumb_bl_place(translate(thumb_post_tr(), wall_locate3(-0.3, 1))),
+        ]
+    )
+
+    shape = shape.union(
+        hull_from_shapes(
+        [
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1),
+            carbonfet_thumb_bl_place(translate(thumb_post_tr(), wall_locate2(-0.3, 1))),
+            carbonfet_thumb_bl_place(translate(thumb_post_tr(), wall_locate3(-0.3, 1))),
+            carbonfet_thumb_ml_place(thumb_post_tl()),
+        ]
+    ))
+
+    shape = shape.union(
+        hull_from_shapes(
+        [
+            left_key_place(web_post(), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1),
+            carbonfet_thumb_ml_place(thumb_post_tl()),
+        ]
+    ))
+
+    shape = shape.union(
+        hull_from_shapes(
+        [
+            left_key_place(web_post(), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1),
+            key_place(web_post_bl(), 0, cornerrow),
+            carbonfet_thumb_ml_place(thumb_post_tl()),
+        ]
+    ))
+
+    shape = shape.union(
+        hull_from_shapes(
+        [
+            carbonfet_thumb_bl_place(thumb_post_tr()),
+            carbonfet_thumb_bl_place(translate(thumb_post_tr(), wall_locate1(-0.3, 1))),
+            carbonfet_thumb_bl_place(translate(thumb_post_tr(), wall_locate2(-0.3, 1))),
+            carbonfet_thumb_bl_place(translate(thumb_post_tr(), wall_locate3(-0.3, 1))),
+            carbonfet_thumb_ml_place(thumb_post_tl()),
+        ]
+    ))
+
+    return shape
 
 def case_walls():
     print('case_walls()')
@@ -1709,9 +2347,10 @@ def screw_insert_all_shapes(bottom_radius, top_radius, height):
     shape = (
         screw_insert(0, 0, bottom_radius, top_radius, height),
         screw_insert(0, lastrow-1, bottom_radius, top_radius, height),
-        screw_insert(2, lastrow + 0.3, bottom_radius, top_radius, height),
+        screw_insert(3, lastrow, bottom_radius, top_radius, height),
         screw_insert(3, 0, bottom_radius, top_radius, height),
-        screw_insert(lastcol, 1, bottom_radius, top_radius, height),
+        screw_insert(lastcol, 0, bottom_radius, top_radius, height),
+        screw_insert(lastcol, lastrow-1, bottom_radius, top_radius, height),
     )
 
     return shape
