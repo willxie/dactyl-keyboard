@@ -121,13 +121,13 @@ for config in configurations:
     for ENGINE in ['solid', 'cadquery']:
         if ENGINE == 'solid':
             if init:
-                import src.dactyl_manuform as dactyl_manuform
+                import src.dactyl_manuform_solid as dactyl_manuform
             else:
                 importlib.reload(dactyl_manuform)
 
         if ENGINE == 'cadquery':
             if init:
-                import src.dactyl_manuform_cadquery as dactyl_manuform_cadquery
+                import src.dactyl_manuform as dactyl_manuform_cadquery
             else:
                 importlib.reload(dactyl_manuform_cadquery)
 

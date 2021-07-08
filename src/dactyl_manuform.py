@@ -1,9 +1,10 @@
-import solid as sl
 import numpy as np
 from numpy import pi
 import os.path as path
-import os
 import json
+import os
+
+from scipy.spatial import ConvexHull as sphull
 
 def deg2rad(degrees: float) -> float:
     return degrees * pi / 180
@@ -12,6 +13,12 @@ def deg2rad(degrees: float) -> float:
 def rad2deg(rad: float) -> float:
     return rad * 180 / pi
 
+ENGINE = 'solid'
+ENGINE = 'cadquery'
+debug_exports = False
+
+# if __name__=='__main__':
+#
 
 
 ## IMPORT DEFAULT CONFIG IN CASE NEW PARAMETERS EXIST
@@ -38,6 +45,7 @@ lastrow = nrows - 1
 cornerrow = lastrow - 1
 lastcol = ncols - 1
 
+
 # Derived values
 if plate_style in ['NUB', 'HS_NUB']:
     keyswitch_height = nub_keyswitch_height
@@ -51,7 +59,7 @@ else:
 
 if plate_style in ['HS_UNDERCUT', 'HS_NUB', 'HS_HOLE']:
     symmetry = "asymmetric"
-    plate_file = path.join("..", "src", r"hot_swap_plate.stl")
+    plate_file = path.join("..", "src", r"hot_swap_plate")
     plate_offset = 0.0
 
 mount_width = keyswitch_width + 3
@@ -63,70 +71,409 @@ if oled_mount_type is not None:
     left_wall_z_offset = oled_left_wall_z_offset_override
 
 
+cap_top_height = plate_thickness + sa_profile_key_height
+row_radius = ((mount_height + extra_height) / 2) / (np.sin(alpha / 2)) + cap_top_height
+column_radius = (
+                        ((mount_width + extra_width) / 2) / (np.sin(beta / 2))
+                ) + cap_top_height
+column_x_delta = -1 - column_radius * np.sin(beta)
+column_base_angle = beta * (centercol - 2)
+
+
+
+
+teensy_width = 20
+teensy_height = 12
+teensy_length = 33
+teensy2_length = 53
+teensy_pcb_thickness = 2
+teensy_offset_height = 5
+teensy_holder_top_length = 18
+teensy_holder_width = 7 + teensy_pcb_thickness
+teensy_holder_height = 6 + teensy_width
+
+
+
+wire_post_height = 7
+wire_post_overhang = 3.5
+wire_post_diameter = 2.6
+
+screw_insert_height = 3.8
+screw_insert_bottom_radius = 5.31 / 2
+screw_insert_top_radius = 5.1 / 2
+
+
 spath =  path.join("..", "things", save_dir)
 if not path.isdir(spath):
     os.mkdir(spath)
 
+
 def column_offset(column: int) -> list:
     return column_offsets[column]
 
+# column_style='fixed'
+####################################################
+# HELPER FUNCTIONS TO MERGE CADQUERY AND OPENSCAD
+####################################################
+
+if ENGINE == 'cadquery':
+    import cadquery as cq
+    def box(width, height, depth):
+        return cq.Workplane("XY").box(width, height, depth)
+
+    def cylinder(radius, height, segments=100):
+        return cq.Workplane("XY").union(cq.Solid.makeCylinder(radius=radius, height=height))
+
+    def sphere(radius):
+        return cq.Workplane('XY').union(cq.Solid.makeSphere(radius))
+
+    def cone(r1, r2, height):
+        return cq.Workplane('XY').union(
+            cq.Solid.makeCone(radius1=r1, radius2=r2, height=height))
+
+    def rotate(shape, angle):
+        origin = (0, 0, 0)
+        shape = shape.rotate(axisStartPoint=origin, axisEndPoint=(1, 0, 0), angleDegrees=angle[0])
+        shape = shape.rotate(axisStartPoint=origin, axisEndPoint=(0, 1, 0), angleDegrees=angle[1])
+        shape = shape.rotate(axisStartPoint=origin, axisEndPoint=(0, 0, 1), angleDegrees=angle[2])
+        return shape
+
+
+    def translate(shape, vector):
+        return shape.translate(tuple(vector))
+
+
+    def mirror(shape, plane=None):
+        print('mirror()')
+        return shape.mirror(mirrorPlane=plane)
+
+
+    def union(shapes):
+        print('union()')
+        shape = None
+        for item in shapes:
+            if shape is None:
+                shape = item
+            else:
+                shape = shape.union(item)
+        return shape
+
+    def add(shapes):
+        print('union()')
+        shape = None
+        for item in shapes:
+            if shape is None:
+                shape = item
+            else:
+                shape = shape.add(item)
+        return shape
+
+
+    def difference(shape, shapes):
+        print('difference()')
+        for item in shapes:
+            shape = shape.cut(item)
+        return shape
+
+
+    def intersect(shape1, shape2):
+        return shape1.intersect(shape2)
+
+
+    def face_from_points(points):
+        # print('face_from_points()')
+        edges = []
+        num_pnts = len(points)
+        for i in range(len(points)):
+            p1 = points[i]
+            p2 = points[(i + 1) % num_pnts]
+            edges.append(
+                cq.Edge.makeLine(
+                    cq.Vector(p1[0], p1[1], p1[2]),
+                    cq.Vector(p2[0], p2[1], p2[2]),
+                )
+            )
+
+        face = cq.Face.makeFromWires(cq.Wire.assembleEdges(edges))
+
+        return face
+
+
+    def hull_from_points(points):
+        # print('hull_from_points()')
+        hull_calc = sphull(points)
+        n_faces = len(hull_calc.simplices)
+
+        faces = []
+        for i in range(n_faces):
+            face_items = hull_calc.simplices[i]
+            fpnts = []
+            for item in face_items:
+                fpnts.append(points[item])
+            faces.append(face_from_points(fpnts))
+
+        shape = cq.Solid.makeSolid(cq.Shell.makeShell(faces))
+        shape = cq.Workplane('XY').union(shape)
+        return shape
+
+
+    def hull_from_shapes(shapes, points=None):
+        # print('hull_from_shapes()')
+        vertices = []
+        for shape in shapes:
+            verts = shape.vertices()
+            for vert in verts.objects:
+                vertices.append(np.array(vert.toTuple()))
+        if points is not None:
+            for point in points:
+                vertices.append(np.array(point))
+
+        shape = hull_from_points(vertices)
+        return shape
+
+
+    def tess_hull(shapes, sl_tol=.5, sl_angTol=1):
+        # print('hull_from_shapes()')
+        vertices = []
+        solids = []
+        for wp in shapes:
+            for item in wp.solids().objects:
+                solids.append(item)
+
+        for shape in solids:
+            verts = shape.tessellate(sl_tol, sl_angTol)[0]
+            for vert in verts:
+                vertices.append(np.array(vert.toTuple()))
+
+        shape = hull_from_points(vertices)
+        return shape
+
+    def triangle_hulls(shapes):
+        print('triangle_hulls()')
+        hulls = [cq.Workplane('XY')]
+        for i in range(len(shapes) - 2):
+            hulls.append(hull_from_shapes(shapes[i: (i + 3)]))
+
+        return union(hulls)
+
+    def polyline(point_list):
+        return cq.Workplane('XY').polyline(point_list)
+
+    # def project_to_plate():
+    #     square = cq.Workplane('XY').rect(1000, 1000)
+    #     for wire in square.wires().objects:
+    #         plane = cq.Workplane('XY').add(cq.Face.makeFromWires(wire))
+
+
+    def extrude_poly(outer_poly, inner_polys=None, height=1):#vector=(0,0,1)):
+        outer_wires = cq.Wire.assembleEdges(outer_poly.edges().objects)
+        inner_wires = []
+        if inner_polys is not None:
+            for item in inner_polys:
+                inner_wires.append(cq.Wire.assembleEdges(item.edges().objects))
+
+        return cq.Workplane('XY').add(cq.Solid.extrudeLinear(outerWire=outer_wires, innerWires=inner_wires, vecNormal=cq.Vector(0, 0, height)))
+
+
+    def import_file(filename):
+        return cq.Workplane('XY').add(cq.importers.importShape(
+            cq.exporters.ExportTypes.STEP,
+            filename+".step"))
+
+
+    def export_file(shape, fname):
+        cq.exporters.export(w=shape, fname=fname+".step",
+                            exportType='STEP')
+
+    def export_dxf(shape, fname):
+        cq.exporters.export(w=shape, fname=fname+".dxf",
+                            exportType='DXF')
+
+else:
+    import solid as sl
+
+
+    def box(width, height, depth):
+        return sl.cube([width, height, depth], center=True)
+
+
+    def cylinder(radius, height, segments=100):
+        return sl.cylinder(r=radius, h=height, segments=segments, center=True)
+
+
+    def sphere(radius):
+        return sl.sphere(radius)
+
+
+    def cone(r1, r2, height):
+        return sl.cylinder(r1=r1, r2=r2, h=height)#, center=True)
+
+
+    def rotate(shape, angle):
+        return sl.rotate(angle)(shape)
+
+
+    def translate(shape, vector):
+        return sl.translate(tuple(vector))(shape)
+
+
+    def mirror(shape, plane=None):
+        print('mirror()')
+        planes={
+            'XY': [0, 0, 1],
+            'YX': [0, 0, -1],
+            'XZ': [0, 1, 0],
+            'ZX': [0, -1, 0],
+            'YZ': [1, 0, 0],
+            'ZY': [-1, 0, 0],
+        }
+        return sl.mirror(planes[plane])(shape)
+
+
+    def union(shapes):
+        print('union()')
+        shape = None
+        for item in shapes:
+            if shape is None:
+                shape = item
+            else:
+                shape += item
+        return shape
+
+
+    def add(shapes):
+        print('union()')
+        shape = None
+        for item in shapes:
+            if shape is None:
+                shape = item
+            else:
+                shape += item
+        return shape
+
+
+    def difference(shape, shapes):
+        print('difference()')
+        for item in shapes:
+            shape -= item
+        return shape
+
+
+    def intersect(shape1, shape2):
+        return sl.intersect()(shape1, shape2)
+
+    def hull_from_points(points):
+        return sl.hull()(*points)
+
+    def hull_from_shapes(shapes, points=None):
+        hs = []
+        if points is not None:
+            hs.extend(points)
+        if shapes is not None:
+            hs.extend(shapes)
+        return sl.hull()(*hs)
+
+    def tess_hull(shapes, sl_tol=.5, sl_angTol=1):
+        return  sl.hull()(*shapes)
+
+    def triangle_hulls(shapes):
+        print('triangle_hulls()')
+        hulls = []
+        for i in range(len(shapes) - 2):
+            hulls.append(hull_from_shapes(shapes[i: (i + 3)]))
+
+        return union(hulls)
+
+
+    def polyline(point_list):
+        return sl.polygon(point_list)
+
+
+    # def project_to_plate():
+    #     square = cq.Workplane('XY').rect(1000, 1000)
+    #     for wire in square.wires().objects:
+    #         plane = cq.Workplane('XY').add(cq.Face.makeFromWires(wire))
+
+    def extrude_poly(outer_poly, inner_polys=None, height=1):
+        if inner_polys is not None:
+            return sl.linear_extrude(height=height, twist=0, convexity=0, center=True)(outer_poly, *inner_polys)
+        else:
+            return sl.linear_extrude(height=height, twist=0, convexity=0, center=True)(outer_poly)
+
+
+    def import_file(fname):
+        return sl.import_(fname+".stl")
+
+
+    def export_file(shape, fname):
+        print("EXPORTING TO {}".format(fname+".scad"))
+        sl.scad_render_to_file(shape, fname+".scad")
+
+
+    def export_dxf(shape, fname):
+        pass
+
+####################################################
+# END HELPER FUNCTIONS
+####################################################
+
 
 def single_plate(cylinder_segments=100, side="right"):
+
     if plate_style in ['NUB', 'HS_NUB']:
-        top_wall = sl.cube([mount_width, 1.5, plate_thickness], center=True)
-        top_wall = sl.translate(
-            (0, (1.5 / 2) + (keyswitch_height / 2), plate_thickness / 2)
-        )(top_wall)
+        top_wall = box(mount_width, 1.5, plate_thickness)
+        top_wall = translate(top_wall, (0, (1.5 / 2) + (keyswitch_height / 2), plate_thickness / 2))
 
-        left_wall = sl.cube([1.5, mount_height, plate_thickness], center=True)
-        left_wall = sl.translate(
-            ((1.5 / 2) + (keyswitch_width / 2), 0, plate_thickness / 2)
-        )(left_wall)
+        left_wall = box(1.5, mount_height, plate_thickness)
+        left_wall = translate(left_wall, ((1.5 / 2) + (keyswitch_width / 2), 0, plate_thickness / 2))
 
-        side_nub = sl.cylinder(1, 2.75, segments=cylinder_segments, center=True)
-        side_nub = sl.rotate(rad2deg(pi / 2), [1, 0, 0])(side_nub)
-        side_nub = sl.translate((keyswitch_width / 2, 0, 1))(side_nub)
-        nub_cube = sl.cube([1.5, 2.75, plate_thickness], center=True)
-        nub_cube = sl.translate(
-            ((1.5 / 2) + (keyswitch_width / 2), 0, plate_thickness / 2)
-        )(nub_cube)
+        side_nub = cylinder(radius=1, height=2.75)
+        side_nub = translate(side_nub, (0, 0, -2.75 / 2.0))
+        side_nub = rotate(side_nub, (90, 0, 0))
+        side_nub = translate(side_nub, (keyswitch_width / 2, 0, 1))
+        nub_cube = box(1.5, 2.75, plate_thickness)
+        nub_cube = translate(nub_cube, ((1.5 / 2) + (keyswitch_width / 2), 0, plate_thickness / 2))
 
-        side_nub = sl.hull()(side_nub, nub_cube)
+        side_nub2 = tess_hull(shapes=(side_nub, nub_cube))
+        side_nub2 = union([side_nub2, side_nub, nub_cube])
 
-        plate_half1 = top_wall + left_wall + side_nub
+        plate_half1 = union([top_wall, left_wall, side_nub2])
         plate_half2 = plate_half1
-        plate_half2 = sl.mirror([0, 1, 0])(plate_half2)
-        plate_half2 = sl.mirror([1, 0, 0])(plate_half2)
+        plate_half2 = mirror(plate_half2, 'XZ')
+        plate_half2 = mirror(plate_half2, 'YZ')
 
-        plate = plate_half1 + plate_half2
-
+        plate = union([plate_half1, plate_half2])
 
     else:  # 'HOLE' or default, square cutout for non-nub designs.
-        plate = sl.cube([mount_width, mount_height, mount_thickness], center=True)
-        plate = sl.translate((0.0, 0.0, mount_thickness / 2.0))(plate)
-        shape_cut = sl.cube([keyswitch_width, keyswitch_height, mount_thickness * 2], center=True)
-        shape_cut = sl.translate((0.0, 0.0, mount_thickness))(shape_cut)
-        plate = sl.difference()(plate, shape_cut)
+        plate = box(mount_width, mount_height, mount_thickness)
+        plate = translate(plate, (0.0, 0.0, mount_thickness / 2.0))
+
+        shape_cut = box(keyswitch_width, keyswitch_height, mount_thickness * 2)
+        shape_cut = translate(shape_cut, (0.0, 0.0, mount_thickness))
+
+        plate = difference(plate, [shape_cut])
 
     if plate_style in ['UNDERCUT', 'HS_UNDERCUT']:
-        undercut = sl.cube([
+        undercut = box(
             keyswitch_width + 2 * clip_undercut,
             keyswitch_height + 2 * clip_undercut,
             mount_thickness
-        ], center=True)
+        )
 
-        undercut = sl.translate((0.0, 0.0, -clip_thickness + mount_thickness / 2.0))(undercut)
+        undercut = translate(undercut, (0.0, 0.0, -clip_thickness + mount_thickness / 2.0))
 
-        plate = sl.difference()(plate, undercut)
+        if ENGINE=='cadquery' and undercut_transition > 0:
+            undercut = undercut.faces("+Z").chamfer(undercut_transition, clip_undercut)
+
+        plate = difference(plate, [undercut])
 
     if plate_file is not None:
-        socket = sl.import_(plate_file)
-        socket = sl.translate([0.0, 0.0, plate_thickness + plate_offset])(socket)
-
-        plate = sl.union()(plate, socket)
+        socket = import_file(plate_file)
+        socket = translate(socket, [0, 0, plate_thickness + plate_offset])
+        plate = union([plate, socket])
 
     if side == "left":
-        plate = sl.mirror([-1, 0, 0])(plate)
+        plate = mirror(plate, 'YZ')
 
     return plate
 
@@ -164,23 +511,23 @@ def sa_cap(Usize=1):
         pl2 = 6
         pw2 = 11
 
-
-    k1 = sl.polygon([[bw2, bl2], [bw2, -bl2], [-bw2, -bl2], [-bw2, bl2]])
-    k1 = sl.linear_extrude(height=0.1, twist=0, convexity=0, center=True)(k1)
-    k1 = sl.translate([0, 0, 0.05])(k1)
-    k2 = sl.polygon([[pw2, pl2], [pw2, -pl2], [-pw2, -pl2], [-pw2, pl2]])
-    k2 = sl.linear_extrude(height=0.1, twist=0, convexity=0, center=True)(k2)
-    k2 = sl.translate([0, 0, 12.0])(k2)
+    k1 = polyline([(bw2, bl2), (bw2, -bl2), (-bw2, -bl2), (-bw2, bl2), (bw2, bl2)])
+    k1 = extrude_poly(outer_poly=k1, height=0.1)
+    k1 = translate(k1, (0, 0, 0.05))
+    k2 = polyline([(pw2, pl2), (pw2, -pl2), (-pw2, -pl2), (-pw2, pl2), (pw2, pl2)])
+    k2 = extrude_poly(outer_poly=k2, height=0.1)
+    k2 = translate(k2, (0, 0, 12.0))
     if m > 0:
-        m1 = sl.polygon([[m, m], [m, -m], [-m, -m], [-m, m]])
-        m1 = sl.linear_extrude(height=0.1, twist=0, convexity=0, center=True)(m1)
-        m1 = sl.translate([0, 0, 6.0])(m1)
-        key_cap = sl.hull()(k1, k2, m1)
+        m1 = polyline([(m, m), (m, -m), (-m, -m), (-m, m), (m, m)])
+        # m1 = cq.Wire.assembleEdges(m1.edges().objects)
+        m1 = extrude_poly(outer_poly=m1, height=0.1)
+        m1 = translate(m1, (0, 0, 6.0))
+        key_cap = hull_from_shapes((k1, k2, m1))
     else:
-        key_cap = sl.hull()(k1, k2)
+        key_cap = hull_from_shapes((k1, k2))
 
-    # key_cap = sl.translate([0, 0, 5 + plate_thickness])(key_cap)
-    key_cap = sl.color([220 / 255, 163 / 255, 163 / 255, 1])(key_cap)
+    key_cap = translate(key_cap, (0, 0, 5 + plate_thickness))
+    # key_cap = key_cap.color((220 / 255, 163 / 255, 163 / 255, 1))
 
     return key_cap
 
@@ -191,7 +538,7 @@ def sa_cap(Usize=1):
 
 
 def rotate_around_x(position, angle):
-    # print((position, angle))
+    # print('rotate_around_x()')
     t_matrix = np.array(
         [
             [1, 0, 0],
@@ -203,7 +550,7 @@ def rotate_around_x(position, angle):
 
 
 def rotate_around_y(position, angle):
-    # print((position, angle))
+    # print('rotate_around_y()')
     t_matrix = np.array(
         [
             [np.cos(angle), 0, np.sin(angle)],
@@ -214,21 +561,7 @@ def rotate_around_y(position, angle):
     return np.matmul(t_matrix, position)
 
 
-cap_top_height = plate_thickness + sa_profile_key_height
-row_radius = ((mount_height + extra_height) / 2) / (np.sin(alpha / 2)) + cap_top_height
-column_radius = (
-                        ((mount_width + extra_width) / 2) / (np.sin(beta / 2))
-                ) + cap_top_height
-column_x_delta = -1 - column_radius * np.sin(beta)
-column_base_angle = beta * (centercol - 2)
 
-def offset_for_column(col, row):
-    if pinky_1_5U and (
-           col == lastcol and row <= last_1_5U and row >= first_1_5U
-    ):
-        return 4.7625
-    else:
-        return 0
 
 def apply_key_geometry(
         shape,
@@ -239,6 +572,8 @@ def apply_key_geometry(
         row,
         column_style=column_style,
 ):
+    print('apply_key_geometry()')
+
     column_angle = beta * (centercol - column)
 
     if column_style == "orthographic":
@@ -262,7 +597,7 @@ def apply_key_geometry(
         shape = translate_fn(shape, [0, column_offset(column)[1], 0])
 
     else:
-        shape = translate_fn(shape, [offset_for_column(column, row), 0, -row_radius])
+        shape = translate_fn(shape, [0, 0, -row_radius])
         shape = rotate_x_fn(shape, alpha * (centerrow - row))
         shape = translate_fn(shape, [0, 0, row_radius])
         shape = translate_fn(shape, [0, 0, -column_radius])
@@ -276,23 +611,23 @@ def apply_key_geometry(
     return shape
 
 
-def translate(shape, xyz):
-    return sl.translate(xyz)(shape)
-
-
 def x_rot(shape, angle):
-    return sl.rotate(rad2deg(angle), [1, 0, 0])(shape)
+    # print('x_rot()')
+    return rotate(shape, [rad2deg(angle), 0, 0])
 
 
 def y_rot(shape, angle):
-    return sl.rotate(rad2deg(angle), [0, 1, 0])(shape)
+    # print('y_rot()')
+    return rotate(shape, [0, rad2deg(angle), 0])
 
 
 def key_place(shape, column, row):
+    print('key_place()')
     return apply_key_geometry(shape, translate, x_rot, y_rot, column, row)
 
 
 def add_translate(shape, xyz):
+    print('add_translate()')
     vals = []
     for i in range(len(shape)):
         vals.append(shape[i] + xyz[i])
@@ -300,30 +635,37 @@ def add_translate(shape, xyz):
 
 
 def key_position(position, column, row):
+    print('key_position()')
     return apply_key_geometry(
         position, add_translate, rotate_around_x, rotate_around_y, column, row
     )
 
 
 def key_holes(side="right"):
-    hole = single_plate(side=side)
+    print('key_holes()')
+    # hole = single_plate()
     holes = []
     for column in range(ncols):
         for row in range(nrows):
             if (column in [2, 3]) or (not row == lastrow):
-                holes.append(key_place(hole, column, row))
+                holes.append(key_place(single_plate(side=side), column, row))
 
-    return sl.union()(*holes)
+    shape = union(holes)
+
+    return shape
 
 
 def caps():
-    caps = []
+    caps = None
     for column in range(ncols):
         for row in range(nrows):
             if (column in [2, 3]) or (not row == lastrow):
-                caps.append(key_place(sa_cap(), column, row))
+                if caps is None:
+                    caps = key_place(sa_cap(), column, row)
+                else:
+                    caps = add([caps, key_place(sa_cap(), column, row)])
 
-    return sl.union()(*caps)
+    return caps
 
 
 ####################
@@ -331,13 +673,12 @@ def caps():
 ####################
 
 
+
 def web_post():
-    post = sl.cube([post_size, post_size, web_thickness], center=True)
-    post = sl.translate([0, 0, plate_thickness - (web_thickness / 2)])(post)
+    print('web_post()')
+    post = box(post_size, post_size, web_thickness)
+    post = translate(post, (0, 0, plate_thickness - (web_thickness / 2)))
     return post
-
-
-post_adj = post_size / 2
 
 
 def web_post_tr(wide=False):
@@ -345,18 +686,16 @@ def web_post_tr(wide=False):
         w_divide = 1.2
     else:
         w_divide = 2.0
-    return sl.translate(
-            [(mount_width / w_divide) - post_adj, (mount_height / 2) - post_adj, 0]
-        )(web_post())
+
+    return translate(web_post(), ((mount_width / w_divide) - post_adj, (mount_height / 2) - post_adj, 0))
+
 
 def web_post_tl(wide=False):
     if wide:
         w_divide = 1.2
     else:
         w_divide = 2.0
-    return sl.translate(
-        [-(mount_width / w_divide) + post_adj, (mount_height / 2) - post_adj, 0]
-    )(web_post())
+    return translate(web_post(), (-(mount_width / w_divide) + post_adj, (mount_height / 2) - post_adj, 0))
 
 
 def web_post_bl(wide=False):
@@ -364,9 +703,7 @@ def web_post_bl(wide=False):
         w_divide = 1.2
     else:
         w_divide = 2.0
-    return sl.translate(
-        [-(mount_width / w_divide) + post_adj, -(mount_height / 2) + post_adj, 0]
-    )(web_post())
+    return translate(web_post(), (-(mount_width / w_divide) + post_adj, -(mount_height / 2) + post_adj, 0))
 
 
 def web_post_br(wide=False):
@@ -374,22 +711,12 @@ def web_post_br(wide=False):
         w_divide = 1.2
     else:
         w_divide = 2.0
-    return sl.translate(
-        [(mount_width / w_divide) - post_adj, -(mount_height / 2) + post_adj, 0]
-    )(web_post())
+    return translate(web_post(), ((mount_width / w_divide) - post_adj, -(mount_height / 2) + post_adj, 0))
 
-
-
-
-def triangle_hulls(shapes):
-    hulls = []
-    for i in range(len(shapes) - 2):
-        hulls.append(sl.hull()(*shapes[i: (i + 3)]))
-
-    return sl.union()(*hulls)
 
 
 def connectors():
+    print('connectors()')
     hulls = []
     for column in range(ncols - 1):
         for row in range(lastrow):  # need to consider last_row?
@@ -421,7 +748,7 @@ def connectors():
             places.append(key_place(web_post_tl(), column + 1, row + 1))
             hulls.append(triangle_hulls(places))
 
-    return sl.union()(*hulls)
+    return union(hulls)
 
 
 ############
@@ -430,6 +757,7 @@ def connectors():
 
 
 def thumborigin():
+    # print('thumborigin()')
     origin = key_position([mount_width / 2, -(mount_height / 2), 0], 1, cornerrow)
     for i in range(len(origin)):
         origin[i] = origin[i] + thumb_offsets[i]
@@ -437,84 +765,94 @@ def thumborigin():
 
 
 def thumb_tr_place(shape):
-    shape = sl.rotate(10, [1, 0, 0])(shape)
-    shape = sl.rotate(-23, [0, 1, 0])(shape)
-    shape = sl.rotate(10, [0, 0, 1])(shape)
-    shape = sl.translate(thumborigin())(shape)
-    shape = sl.translate([-12, -16, 3])(shape)
+    print('thumb_tr_place()')
+    shape = rotate(shape, [10, -23, 10])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-12, -16, 3])
     return shape
 
 
 def thumb_tl_place(shape):
-    shape = sl.rotate(10, [1, 0, 0])(shape)
-    shape = sl.rotate(-23, [0, 1, 0])(shape)
-    shape = sl.rotate(10, [0, 0, 1])(shape)
-    shape = sl.translate(thumborigin())(shape)
-    shape = sl.translate([-32, -15, -2])(shape)
+    print('thumb_tl_place()')
+    shape = rotate(shape, [10, -23, 10])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-32, -15, -2])
     return shape
 
 
 def thumb_mr_place(shape):
-    shape = sl.rotate(-6, [1, 0, 0])(shape)
-    shape = sl.rotate(-34, [0, 1, 0])(shape)
-    shape = sl.rotate(48, [0, 0, 1])(shape)
-    shape = sl.translate(thumborigin())(shape)
-    shape = sl.translate([-29, -40, -13])(shape)
+    print('thumb_mr_place()')
+    shape = rotate(shape, [-6, -34, 48])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-29, -40, -13])
     return shape
 
 
 def thumb_ml_place(shape):
-    shape = sl.rotate(6, [1, 0, 0])(shape)
-    shape = sl.rotate(-34, [0, 1, 0])(shape)
-    shape = sl.rotate(40, [0, 0, 1])(shape)
-    shape = sl.translate(thumborigin())(shape)
-    shape = sl.translate([-51, -25, -12])(shape)
+    print('thumb_ml_place()')
+    shape = rotate(shape, [6, -34, 40])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-51, -25, -12])
     return shape
 
 
 def thumb_br_place(shape):
-    shape = sl.rotate(-16, [1, 0, 0])(shape)
-    shape = sl.rotate(-33, [0, 1, 0])(shape)
-    shape = sl.rotate(54, [0, 0, 1])(shape)
-    shape = sl.translate(thumborigin())(shape)
-    shape = sl.translate([-37.8, -55.3, -25.3])(shape)
+    print('thumb_br_place()')
+    shape = rotate(shape, [-16, -33, 54])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-37.8, -55.3, -25.3])
     return shape
 
 
 def thumb_bl_place(shape):
-    shape = sl.rotate(-4, [1, 0, 0])(shape)
-    shape = sl.rotate(-35, [0, 1, 0])(shape)
-    shape = sl.rotate(52, [0, 0, 1])(shape)
-    shape = sl.translate(thumborigin())(shape)
-    shape = sl.translate([-56.3, -43.3, -23.5])(shape)
+    print('thumb_bl_place()')
+    shape = rotate(shape, [-4, -35, 52])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-56.3, -43.3, -23.5])
     return shape
 
 
-def thumb_1x_layout(shape):
-    return sl.union()(
-        thumb_mr_place(shape),
-        thumb_ml_place(shape),
-        thumb_br_place(shape),
-        thumb_bl_place(shape),
-    )
+def thumb_1x_layout(shape, cap=False):
+    print('thumb_1x_layout()')
+    if cap:
+        shapes = thumb_mr_place(shape)
+        shapes = shapes.add(thumb_ml_place(shape))
+        shapes = shapes.add(thumb_br_place(shape))
+        shapes = shapes.add(thumb_bl_place(shape))
+    else:
+        shapes = union(
+            [
+                thumb_mr_place(shape),
+                thumb_ml_place(shape),
+                thumb_br_place(shape),
+                thumb_bl_place(shape),
+            ]
+        )
+    return shapes
 
 
-def thumb_15x_layout(shape):
-    return sl.union()(thumb_tr_place(shape), thumb_tl_place(shape))
-
+def thumb_15x_layout(shape, cap=False):
+    print('thumb_15x_layout()')
+    if cap:
+        shape = rotate(shape, (0, 0, 90))
+        return add([thumb_tr_place(shape), thumb_tl_place(shape).solids().objects[0]])
+    else:
+        return union([thumb_tr_place(shape), thumb_tl_place(shape)])
 
 def double_plate_half():
+    print('double_plate()')
     plate_height = (sa_double_length - mount_height) / 3
-    top_plate = sl.cube([mount_width, plate_height, web_thickness], center=True)
-    top_plate = sl.translate(
-        [0, (plate_height + mount_height) / 2, plate_thickness - (web_thickness / 2)]
-    )(top_plate)
+    top_plate = box(mount_width, plate_height, web_thickness)
+    top_plate = translate(top_plate,
+                          [0, (plate_height + mount_height) / 2, plate_thickness - (web_thickness / 2)]
+                          )
     return top_plate
 
-
 def double_plate():
+    print('double_plate()')
     top_plate = double_plate_half()
-    return sl.union()(top_plate, sl.mirror([0, 1, 0])(top_plate))
+    return union((top_plate, mirror(top_plate, 'XZ')))
+
 
 def thumbcaps():
     if thumb_style == "MINI":
@@ -524,6 +862,7 @@ def thumbcaps():
     else:
         return default_thumbcaps()
 
+
 def thumb(side="right"):
     if thumb_style == "MINI":
         return mini_thumb(side)
@@ -531,6 +870,7 @@ def thumb(side="right"):
         return carbonfet_thumb(side)
     else:
         return default_thumb(side)
+
 
 def thumb_connectors():
     if thumb_style == "MINI":
@@ -542,46 +882,49 @@ def thumb_connectors():
 
 
 def default_thumbcaps():
-    t1 = thumb_1x_layout(sa_cap(1))
-    t15 = thumb_15x_layout(sl.rotate(pi / 2, [0, 0, 1])(sa_cap(1.5)))
-    return t1 + t15
-
+    t1 = thumb_1x_layout(sa_cap(1), cap=True)
+    t15 = thumb_15x_layout(sa_cap(1.5), cap=True)
+    return t1.add(t15)
 
 
 def default_thumb(side="right"):
-
-    shape = thumb_1x_layout(sl.rotate([0.0, 0.0, -90])(single_plate(side=side)))
-    shape += thumb_15x_layout(sl.rotate([0.0, 0.0, -90])(single_plate(side=side)))
-    shape += thumb_15x_layout(double_plate())
-
+    print('thumb()')
+    shape = thumb_1x_layout(rotate(single_plate(side=side), (0, 0, -90)))
+    shape = union([shape, thumb_15x_layout(rotate(single_plate(side=side), (0, 0, -90)))])
+    shape = union([shape, thumb_15x_layout(double_plate())])
     return shape
 
 
 def thumb_post_tr():
-    return sl.translate(
-        [(mount_width / 2) - post_adj, (mount_height / 1.15) - post_adj, 0]
-    )(web_post())
+    print('thumb_post_tr()')
+    return translate(web_post(),
+                     [(mount_width / 2) - post_adj, (mount_height / 1.15) - post_adj, 0]
+                     )
 
 
 def thumb_post_tl():
-    return sl.translate(
-        [-(mount_width / 2) + post_adj, (mount_height / 1.15) - post_adj, 0]
-    )(web_post())
+    print('thumb_post_tl()')
+    return translate(web_post(),
+                     [-(mount_width / 2) + post_adj, (mount_height / 1.15) - post_adj, 0]
+                     )
 
 
 def thumb_post_bl():
-    return sl.translate(
-        [-(mount_width / 2) + post_adj, -(mount_height / 1.15) + post_adj, 0]
-    )(web_post())
+    print('thumb_post_bl()')
+    return translate(web_post(),
+                     [-(mount_width / 2) + post_adj, -(mount_height / 1.15) + post_adj, 0]
+                     )
 
 
 def thumb_post_br():
-    return sl.translate(
-        [(mount_width / 2) - post_adj, -(mount_height / 1.15) + post_adj, 0]
-    )(web_post())
+    print('thumb_post_br()')
+    return translate(web_post(),
+                     [(mount_width / 2) - post_adj, -(mount_height / 1.15) + post_adj, 0]
+                     )
 
 
 def default_thumb_connectors():
+    print('thumb_connectors()')
     hulls = []
 
     # Top two
@@ -716,8 +1059,7 @@ def default_thumb_connectors():
         )
     )
 
-    return sl.union()(*hulls)
-
+    return union(hulls)
 
 ############################
 # MINI THUMB CLUSTER
@@ -725,67 +1067,57 @@ def default_thumb_connectors():
 
 
 def mini_thumb_tr_place(shape):
-    shape = sl.rotate(14, [1, 0, 0])(shape)
-    shape = sl.rotate(-15, [0, 1, 0])(shape)
-    shape = sl.rotate(10, [0, 0, 1])(shape)
-    shape = sl.translate(thumborigin())(shape)
-    shape = sl.translate([-15, -10, 5])(shape)
+    shape = rotate(shape, [14, -15, 10])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-15, -10, 5])
     return shape
 
 
 def mini_thumb_tl_place(shape):
-    shape = sl.rotate(10, [1, 0, 0])(shape)
-    shape = sl.rotate(-23, [0, 1, 0])(shape)
-    shape = sl.rotate(25, [0, 0, 1])(shape)
-    shape = sl.translate(thumborigin())(shape)
-    shape = sl.translate([-35, -16, -2])(shape)
+    shape = rotate(shape, [10, -23, 25])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-35, -16, -2])
     return shape
 
 
 def mini_thumb_mr_place(shape):
-    shape = sl.rotate(10, [1, 0, 0])(shape)
-    shape = sl.rotate(-23, [0, 1, 0])(shape)
-    shape = sl.rotate(25, [0, 0, 1])(shape)
-    shape = sl.translate(thumborigin())(shape)
-    shape = sl.translate([-23, -34, -6])(shape)
+    shape = rotate(shape, [10, -23, 25])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-23, -34, -6])
     return shape
 
 
 def mini_thumb_br_place(shape):
-    shape = sl.rotate(6, [1, 0, 0])(shape)
-    shape = sl.rotate(-34, [0, 1, 0])(shape)
-    shape = sl.rotate(35, [0, 0, 1])(shape)
-    shape = sl.translate(thumborigin())(shape)
-    shape = sl.translate([-39, -43, -16])(shape)
+    shape = rotate(shape, [6, -34, 35])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-39, -43, -16])
     return shape
 
 
 def mini_thumb_bl_place(shape):
-    shape = sl.rotate(6, [1, 0, 0])(shape)
-    shape = sl.rotate(-32, [0, 1, 0])(shape)
-    shape = sl.rotate(35, [0, 0, 1])(shape)
-    shape = sl.translate(thumborigin())(shape)
-    shape = sl.translate([-51, -25, -11.5])(shape)
+    shape = rotate(shape, [6, -32, 35])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-51, -25, -11.5])
     return shape
 
 
 def mini_thumb_1x_layout(shape):
-    return sl.union()(
+    return union([
         mini_thumb_mr_place(shape),
         mini_thumb_br_place(shape),
         mini_thumb_tl_place(shape),
         mini_thumb_bl_place(shape),
-    )
+    ])
 
 
 def mini_thumb_15x_layout(shape):
-    return sl.union()(mini_thumb_tr_place(shape))
+    return union([mini_thumb_tr_place(shape)] )
 
 
 def mini_thumbcaps():
     t1 = mini_thumb_1x_layout(sa_cap(1))
-    t15 = mini_thumb_15x_layout(sl.rotate(pi / 2, [0, 0, 1])(sa_cap(1)))
-    return t1 + t15
+    t15 = mini_thumb_15x_layout(rotate(sa_cap(1) , pi / 2, [0, 0, 1]))
+    return t1.add(t15)
 
 
 def mini_thumb(side="right"):
@@ -793,33 +1125,33 @@ def mini_thumb(side="right"):
     # shape = thumb_1x_layout(sl.rotate([0.0, 0.0, -90])(single_plate(side=side)))
     # shape += thumb_15x_layout(sl.rotate([0.0, 0.0, -90])(single_plate(side=side)))
     shape = mini_thumb_1x_layout(single_plate(side=side))
-    shape += mini_thumb_15x_layout(single_plate(side=side))
+    shape = union([shape, mini_thumb_15x_layout(single_plate(side=side))])
 
     return shape
 
 
 def mini_thumb_post_tr():
-    return sl.translate(
+    return translate(web_post(),
         [(mount_width / 2) - post_adj, (mount_height / 2) - post_adj, 0]
-    )(web_post())
+    )
 
 
 def mini_thumb_post_tl():
-    return sl.translate(
+    return translate(web_post(),
         [-(mount_width / 2) + post_adj, (mount_height / 2) - post_adj, 0]
-    )(web_post())
+    )
 
 
 def mini_thumb_post_bl():
-    return sl.translate(
+    return translate(web_post(),
         [-(mount_width / 2) + post_adj, -(mount_height / 2) + post_adj, 0]
-    )(web_post())
+    )
 
 
 def mini_thumb_post_br():
-    return sl.translate(
+    return translate(web_post(),
         [(mount_width / 2) - post_adj, -(mount_height / 2) + post_adj, 0]
-    )(web_post())
+    )
 
 
 def mini_thumb_connectors():
@@ -934,18 +1266,7 @@ def mini_thumb_connectors():
         )
     )
 
-    # hulls.append(
-    #     triangle_hulls(
-    #         [
-    #             key_place(web_post_tr(), 3, lastrow),
-    #             key_place(web_post_br(), 3, lastrow),
-    #             key_place(web_post_tr(), 3, lastrow),
-    #             key_place(web_post_bl(), 4, cornerrow),
-    #         ]
-    #     )
-    # )
-
-    return sl.union()(*hulls)
+    return union(hulls)
 
 
 ############################
@@ -954,110 +1275,95 @@ def mini_thumb_connectors():
 
 
 def carbonfet_thumb_tl_place(shape):
-    shape = sl.rotate(10, [1, 0, 0])(shape)
-    shape = sl.rotate(-24, [0, 1, 0])(shape)
-    shape = sl.rotate(10, [0, 0, 1])(shape)
-    shape = sl.translate(thumborigin())(shape)
-    shape = sl.translate([-13, -9.8, 4])(shape)
-
+    shape = rotate(shape, [10, -24, 10])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-13, -9.8, 4])
     return shape
 
 def carbonfet_thumb_tr_place(shape):
-    shape = sl.rotate(6, [1, 0, 0])(shape)
-    shape = sl.rotate(-24, [0, 1, 0])(shape)
-    shape = sl.rotate(10, [0, 0, 1])(shape)
-    shape = sl.translate(thumborigin())(shape)
-    shape = sl.translate([-7.5, -29.5, 0])(shape)
+    shape = rotate(shape, [6, -25, 10])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-7.5, -29.5, 0])
     return shape
 
 def carbonfet_thumb_ml_place(shape):
-    shape = sl.rotate(8, [1, 0, 0])(shape)
-    shape = sl.rotate(-31, [0, 1, 0])(shape)
-    shape = sl.rotate(14, [0, 0, 1])(shape)
-    shape = sl.translate(thumborigin())(shape)
-    shape = sl.translate([-30.5, -17, -6])(shape)
+    shape = rotate(shape, [8, -31, 14])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-30.5, -17, -6])
     return shape
 
 def carbonfet_thumb_mr_place(shape):
-    shape = sl.rotate(4, [1, 0, 0])(shape)
-    shape = sl.rotate(-31, [0, 1, 0])(shape)
-    shape = sl.rotate(14, [0, 0, 1])(shape)
-    shape = sl.translate(thumborigin())(shape)
-    shape = sl.translate([-22.2, -41, -10.3])(shape)
+    shape = rotate(shape, [4, -31, 14])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-22.2, -41, -10.3])
     return shape
 
 def carbonfet_thumb_br_place(shape):
-    shape = sl.rotate(2, [1, 0, 0])(shape)
-    shape = sl.rotate(-37, [0, 1, 0])(shape)
-    shape = sl.rotate(18, [0, 0, 1])(shape)
-    shape = sl.translate(thumborigin())(shape)
-    shape = sl.translate([-37, -46.4, -22])(shape)
+    shape = rotate(shape, [2, -37, 18])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-37, -46.4, -22])
     return shape
 
 def carbonfet_thumb_bl_place(shape):
-    shape = sl.rotate(6, [1, 0, 0])(shape)
-    shape = sl.rotate(-37, [0, 1, 0])(shape)
-    shape = sl.rotate(18, [0, 0, 1])(shape)
-    shape = sl.translate(thumborigin())(shape)
-    shape = sl.translate([-47, -23, -19])(shape)
+    shape = rotate(shape, [6, -37, 18])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-47, -23, -19])
     return shape
 
 
 def carbonfet_thumb_1x_layout(shape):
-    return sl.union()(
-        # carbonfet_thumb_tr_place(sl.rotate(pi / 2, [0, 0, 1])(shape)),
+    return union([
         carbonfet_thumb_tr_place(shape),
         carbonfet_thumb_mr_place(shape),
         carbonfet_thumb_br_place(shape),
-        # carbonfet_thumb_tl_place(sl.rotate(pi / 2, [0, 0, 1])(shape)),
         carbonfet_thumb_tl_place(shape),
-    )
+    ])
 
 
 def carbonfet_thumb_15x_layout(shape):
-    return sl.union()(
+    return union([
         carbonfet_thumb_bl_place(shape),
         carbonfet_thumb_ml_place(shape)
-    )
+    ])
 
 
 def carbonfet_thumbcaps():
     t1 = carbonfet_thumb_1x_layout(sa_cap(1))
-    t15 = carbonfet_thumb_15x_layout(sl.rotate(pi / 2, [0, 0, 1])(sa_cap(1.5)))
-    return t1 + t15
+    t15 = carbonfet_thumb_15x_layout(rotate(sa_cap(1.5), pi / 2, [0, 0, 1]))
+    return t1.add(t15)
 
 
 def carbonfet_thumb(side="right"):
     # shape = thumb_1x_layout(sl.rotate([0.0, 0.0, -90])(single_plate(side=side)))
     # shape += thumb_15x_layout(sl.rotate([0.0, 0.0, -90])(single_plate(side=side)))
     shape = carbonfet_thumb_1x_layout(single_plate(side=side))
-    shape += carbonfet_thumb_15x_layout(double_plate_half())
-    shape += carbonfet_thumb_15x_layout(single_plate(side=side))
+    shape = union([shape, carbonfet_thumb_15x_layout(double_plate_half())])
+    shape = union([shape, carbonfet_thumb_15x_layout(single_plate(side=side))])
 
     return shape
 
 def carbonfet_thumb_post_tr():
-    return sl.translate(
+    return translate(web_post(),
         [(mount_width / 2) - post_adj, (mount_height / 1.15) - post_adj, 0]
-    )(web_post())
+    )
 
 
 def carbonfet_thumb_post_tl():
-    return sl.translate(
+    return translate(web_post(),
         [-(mount_width / 2) + post_adj, (mount_height / 1.15) - post_adj, 0]
-    )(web_post())
+    )
 
 
 def carbonfet_thumb_post_bl():
-    return sl.translate(
+    return translate(web_post(),
         [-(mount_width / 2) + post_adj, -(mount_height / 1.15) + post_adj, 0]
-    )(web_post())
+    )
 
 
 def carbonfet_thumb_post_br():
-    return sl.translate(
+    return translate(web_post(),
         [(mount_width / 2) - post_adj, -(mount_height / 2) + post_adj, 0]
-    )(web_post())
+    )
 
 def carbonfet_thumb_connectors():
     hulls = []
@@ -1228,8 +1534,8 @@ def carbonfet_thumb_connectors():
         )
     )
 
+    return union(hulls)
 
-    return sl.union()(*hulls)
 
 ##########
 ## Case ##
@@ -1237,20 +1543,54 @@ def carbonfet_thumb_connectors():
 
 
 def bottom_hull(p, height=0.001):
-    shape = None
-    for item in p:
-        proj = sl.projection()(p)
-        t_shape = sl.linear_extrude(height=height, twist=0, convexity=0, center=True)(
-            proj
-        )
-        t_shape = sl.translate([0, 0, height / 2 - 10])(t_shape)
-        if shape is None:
-            shape = t_shape
-        shape = sl.hull()(p, shape, t_shape)
-    return shape
+    print("bottom_hull()")
+    if ENGINE == 'cadquery':
+        shape = None
+        for item in p:
+            # proj = sl.projection()(p)
+            # t_shape = sl.linear_extrude(height=height, twist=0, convexity=0, center=True)(
+            #      proj
+            # )
+            vertices = []
+            verts = item.faces('<Z').vertices()
+            for vert in verts.objects:
+                v0 = vert.toTuple()
+                v1 = [v0[0], v0[1], -10]
+                vertices.append(np.array(v0))
+                vertices.append(np.array(v1))
+
+            t_shape = hull_from_points(vertices)
+
+            # t_shape = translate(t_shape, [0, 0, height / 2 - 10])
+
+            if shape is None:
+                shape = t_shape
+
+            for shp in (*p, shape, t_shape):
+                try:
+                    shp.vertices()
+                except:
+                    0
+            shape = union([shape, hull_from_shapes((shape, t_shape))])
+
+        return shape
+
+    else:
+        shape = None
+        for item in p:
+            proj = sl.projection()(p)
+            t_shape = sl.linear_extrude(height=height, twist=0, convexity=0, center=True)(
+                proj
+            )
+            t_shape = sl.translate([0, 0, height / 2 - 10])(t_shape)
+            if shape is None:
+                shape = t_shape
+            shape = sl.hull()(p, shape, t_shape)
+        return shape
 
 
 def left_key_position(row, direction):
+    print("left_key_position()")
     pos = np.array(
         key_position([-mount_width * 0.5, direction * mount_height * 0.5, 0], 0, row)
     )
@@ -1258,19 +1598,23 @@ def left_key_position(row, direction):
 
 
 def left_key_place(shape, row, direction):
+    print("left_key_place()")
     pos = left_key_position(row, direction)
-    return sl.translate(pos)(shape)
+    return translate(shape, pos)
 
 
 def wall_locate1(dx, dy):
+    print("wall_locate1()")
     return [dx * wall_thickness, dy * wall_thickness, -1]
 
 
 def wall_locate2(dx, dy):
+    print("wall_locate2()")
     return [dx * wall_x_offset, dy * wall_y_offset, -wall_z_offset]
 
 
 def wall_locate3(dx, dy, back=False):
+    print("wall_locate3()")
     if back:
         return [
             dx * (wall_x_offset + wall_base_x_thickness),
@@ -1283,33 +1627,41 @@ def wall_locate3(dx, dy, back=False):
             dy * (wall_y_offset + wall_base_y_thickness),
             -wall_z_offset,
         ]
+    # return [
+    #     dx * (wall_xy_offset + wall_thickness),
+    #     dy * (wall_xy_offset + wall_thickness),
+    #     -wall_z_offset,
+    # ]
 
 
 def wall_brace(place1, dx1, dy1, post1, place2, dx2, dy2, post2, back=False):
+    print("wall_brace()")
     hulls = []
 
     hulls.append(place1(post1))
-    hulls.append(place1(sl.translate(wall_locate1(dx1, dy1))(post1)))
-    hulls.append(place1(sl.translate(wall_locate2(dx1, dy1))(post1)))
-    hulls.append(place1(sl.translate(wall_locate3(dx1, dy1, back))(post1)))
+    hulls.append(place1(translate(post1, wall_locate1(dx1, dy1))))
+    hulls.append(place1(translate(post1, wall_locate2(dx1, dy1))))
+    hulls.append(place1(translate(post1, wall_locate3(dx1, dy1, back))))
 
     hulls.append(place2(post2))
-    hulls.append(place2(sl.translate(wall_locate1(dx2, dy2))(post2)))
-    hulls.append(place2(sl.translate(wall_locate2(dx2, dy2))(post2)))
-    hulls.append(place2(sl.translate(wall_locate3(dx2, dy2, back))(post2)))
-    shape1 = sl.hull()(*hulls)
+    hulls.append(place2(translate(post2, wall_locate1(dx2, dy2))))
+    hulls.append(place2(translate(post2, wall_locate2(dx2, dy2))))
+    hulls.append(place2(translate(post2, wall_locate3(dx2, dy2, back))))
+    shape1 = hull_from_shapes(hulls)
 
     hulls = []
-    hulls.append(place1(sl.translate(wall_locate2(dx1, dy1))(post1)))
-    hulls.append(place1(sl.translate(wall_locate3(dx1, dy1, back))(post1)))
-    hulls.append(place2(sl.translate(wall_locate2(dx2, dy2))(post2)))
-    hulls.append(place2(sl.translate(wall_locate3(dx2, dy2, back))(post2)))
+    hulls.append(place1(translate(post1, wall_locate2(dx1, dy1))))
+    hulls.append(place1(translate(post1, wall_locate3(dx1, dy1, back))))
+    hulls.append(place2(translate(post2, wall_locate2(dx2, dy2))))
+    hulls.append(place2(translate(post2, wall_locate3(dx2, dy2, back))))
     shape2 = bottom_hull(hulls)
 
-    return shape1 + shape2
+    return union([shape1, shape2])
+    # return shape1
 
 
 def key_wall_brace(x1, y1, dx1, dy1, post1, x2, y2, dx2, dy2, post2, back=False):
+    print("key_wall_brace()")
     return wall_brace(
         (lambda shape: key_place(shape, x1, y1)),
         dx1,
@@ -1324,84 +1676,59 @@ def key_wall_brace(x1, y1, dx1, dy1, post1, x2, y2, dx2, dy2, post2, back=False)
 
 
 def back_wall():
+    print("back_wall()")
     x = 0
-    shape = key_wall_brace(x, 0, 0, 1, web_post_tl(), x, 0, 0, 1, web_post_tr(), back=True)
+    shape = union([key_wall_brace(x, 0, 0, 1, web_post_tl(), x, 0, 0, 1, web_post_tr(), back=True)])
     for i in range(ncols - 1):
         x = i + 1
-        shape += key_wall_brace(x, 0, 0, 1, web_post_tl(), x, 0, 0, 1, web_post_tr(), back=True)
-        shape += key_wall_brace(
+        shape = union([shape, key_wall_brace(x, 0, 0, 1, web_post_tl(), x, 0, 0, 1, web_post_tr(), back=True)])
+        shape = union([shape, key_wall_brace(
             x, 0, 0, 1, web_post_tl(), x - 1, 0, 0, 1, web_post_tr(), back=True
-        )
-    shape += key_wall_brace(
+        )])
+    shape = union([shape, key_wall_brace(
         lastcol, 0, 0, 1, web_post_tr(), lastcol, 0, 1, 0, web_post_tr(), back=True
-    )
+    )])
     return shape
 
 
 def right_wall():
-    if pinky_1_5U:
-        if first_1_5U_row > 0:
-            shape = key_wall_brace(
-                lastcol, 0, 0, 1, web_post_tr(), lastcol, 0, 1, 0, web_post_tr())
-        else:
-            shape = key_wall_brace(
-                lastcol, 0, 0, 1, web_post_tr(), lastcol, 0, 0, 1, web_post_tr(wide=True))
-            shape += key_wall_brace(
-                lastcol, 0, 0, 1, web_post_tr(), lastcol, 0, 1, 0, web_post_tr(wide=True))
-
-        shape += key_wall_brace(
-            lastcol, 0, 0, -1, web_post_br(), lastcol, 0, 1, 0, web_post_br())
-
-        if first_1_5U_row >= 2:
-            for y in range(first_1_5U_row - 1):
-                shape += key_wall_brace(
-                    lastcol, y, 1, 0, web_post_tr(), lastcol, y, 1, 0, web_post_br())
-                shape += key_wall_brace(
-                    lastcol, y, 1, 0, web_post_br(), lastcol, y-1, 1, 0, web_post_tr())
-
-        if first_1_5U_row >= 1:
-            for i in range(2):
-                y = first_1_5U_row - 1 + i
-                shape += key_wall_brace(
-                    lastcol, y, 1, 0, web_post_tr(), lastcol, y-1, 1, 0, web_post_tr(wide=True))
-
-        for i in range(2):
-            y = first_1_5U_row + i
-            shape += key_wall_brace(
-                lastcol, y, 1, 0, web_post_tr(wide=True), lastcol, y, 1, 0, web_post_br(wide=True))
-
-        for i in range(first_1_5U_row - last_1_5U_row):
-            y = first_1_5U_row + i
-            shape += key_wall_brace(
-                lastcol, y+1, 1, 0, web_post_tr(wide=True), lastcol, y, 1, 0, web_post_br(wide=True))
-
-        if first_1_5U_row >= 1:
-            for i in range(2):
-                y = first_1_5U_row - 1 + i
-                shape += key_wall_brace(
-                    lastcol, y, 1, 0, web_post_tr(), lastcol, y-1, 1, 0, web_post_tr(wide=True))
-
-    else:
-        y = 0
-        shape = key_wall_brace(
+    print("right_wall()")
+    y = 0
+    shape = union([
+        key_wall_brace(
             lastcol, y, 1, 0, web_post_tr(), lastcol, y, 1, 0, web_post_br()
         )
-        for i in range(lastrow - 1):
-            y = i + 1
-            shape += key_wall_brace(
-                lastcol, y - 1, 1, 0, web_post_br(), lastcol, y, 1, 0, web_post_tr())
+    ])
 
-            shape += key_wall_brace(
-                lastcol, y, 1, 0, web_post_tr(), lastcol, y, 1, 0, web_post_br())
+    for i in range(lastrow - 1):
+        y = i + 1
+        shape = union([shape,key_wall_brace(
+            lastcol, y - 1, 1, 0, web_post_br(), lastcol, y, 1, 0, web_post_tr()
+        )])
 
-        shape += key_wall_brace(
-            lastcol, cornerrow, 0, -1, web_post_br(), lastcol, cornerrow, 1, 0, web_post_br())
+        shape = union([shape,key_wall_brace(
+            lastcol, y, 1, 0, web_post_tr(), lastcol, y, 1, 0, web_post_br()
+        )])
+        #STRANGE PARTIAL OFFSET
 
+    shape = union([shape,key_wall_brace(
+        lastcol,
+        cornerrow,
+        0,
+        -1,
+        web_post_br(),
+        lastcol,
+        cornerrow,
+        1,
+        0,
+        web_post_br(),
+    )])
     return shape
 
 
 def left_wall():
-    shape = wall_brace(
+    print('left_wall()')
+    shape = union([wall_brace(
         (lambda sh: key_place(sh, 0, 0)),
         0,
         1,
@@ -1410,9 +1737,9 @@ def left_wall():
         0,
         1,
         web_post(),
-    )
+    )])
 
-    shape += wall_brace(
+    shape = union([shape,wall_brace(
         (lambda sh: left_key_place(sh, 0, 1)),
         0,
         1,
@@ -1421,7 +1748,7 @@ def left_wall():
         -1,
         0,
         web_post(),
-    )
+    )])
 
     for i in range(lastrow):
         y = i
@@ -1435,13 +1762,14 @@ def left_wall():
             0,
             web_post(),
         )
-        temp_shape2 = sl.hull()(
+        temp_shape2 = hull_from_shapes((
             key_place(web_post_tl(), 0, y),
             key_place(web_post_bl(), 0, y),
             left_key_place(web_post(), y, 1),
             left_key_place(web_post(), y, -1),
-        )
-        shape += temp_shape1 + temp_shape2
+        ))
+        shape = union([shape,temp_shape1])
+        shape = union([shape,temp_shape2])
 
     for i in range(lastrow - 1):
         y = i + 1
@@ -1455,37 +1783,41 @@ def left_wall():
             0,
             web_post(),
         )
-        temp_shape2 = sl.hull()(
+        temp_shape2 = hull_from_shapes((
             key_place(web_post_tl(), 0, y),
             key_place(web_post_bl(), 0, y - 1),
             left_key_place(web_post(), y, 1),
             left_key_place(web_post(), y - 1, -1),
-        )
-        shape += temp_shape1 + temp_shape2
+        ))
+        shape = union([shape,temp_shape1])
+        shape = union([shape,temp_shape2])
 
     return shape
 
 
 def front_wall():
-    shape = key_wall_brace(
-        lastcol, 0, 0, 1, web_post_tr(), lastcol, 0, 1, 0, web_post_tr()
-    )
-    shape += key_wall_brace(
+    print('front_wall()')
+    shape = union([
+        key_wall_brace(
+            lastcol, 0, 0, 1, web_post_tr(), lastcol, 0, 1, 0, web_post_tr()
+        )
+    ])
+    shape = union([shape,key_wall_brace(
         3, lastrow, 0, -1, web_post_bl(), 3, lastrow, 0.5, -1, web_post_br()
-    )
-    shape += key_wall_brace(
+    )])
+    shape = union([shape,key_wall_brace(
         3, lastrow, 0.5, -1, web_post_br(), 4, cornerrow, 1, -1, web_post_bl()
-    )
+    )])
     for i in range(ncols - 4):
         x = i + 4
-        shape += key_wall_brace(
+        shape = union([shape,key_wall_brace(
             x, cornerrow, 0, -1, web_post_bl(), x, cornerrow, 0, -1, web_post_br()
-        )
+        )])
     for i in range(ncols - 5):
         x = i + 5
-        shape += key_wall_brace(
+        shape = union([shape, key_wall_brace(
             x, cornerrow, 0, -1, web_post_bl(), x - 1, cornerrow, 0, -1, web_post_br()
-        )
+        )])
 
     return shape
 
@@ -1506,148 +1838,154 @@ def thumb_connection():
         return default_thumb_connection()
 
 def default_thumb_walls():
+    print('thumb_walls()')
     # thumb, walls
-    shape = wall_brace(thumb_mr_place, 0, -1, web_post_br(), thumb_tr_place, 0, -1, thumb_post_br())
-    shape += wall_brace(thumb_mr_place, 0, -1, web_post_br(), thumb_mr_place, 0, -1, web_post_bl())
-    shape += wall_brace(thumb_br_place, 0, -1, web_post_br(), thumb_br_place, 0, -1, web_post_bl())
-    shape += wall_brace(thumb_ml_place, -0.3, 1, web_post_tr(), thumb_ml_place, 0, 1, web_post_tl())
-    shape += wall_brace(thumb_bl_place, 0, 1, web_post_tr(), thumb_bl_place, 0, 1, web_post_tl())
-    shape += wall_brace(thumb_br_place, -1, 0, web_post_tl(), thumb_br_place, -1, 0, web_post_bl())
-    shape += wall_brace(thumb_bl_place, -1, 0, web_post_tl(), thumb_bl_place, -1, 0, web_post_bl())
+    shape = union([wall_brace(thumb_mr_place, 0, -1, web_post_br(), thumb_tr_place, 0, -1, thumb_post_br())])
+    shape = union([shape, wall_brace(thumb_mr_place, 0, -1, web_post_br(), thumb_mr_place, 0, -1, web_post_bl())])
+    shape = union([shape, wall_brace(thumb_br_place, 0, -1, web_post_br(), thumb_br_place, 0, -1, web_post_bl())])
+    shape = union([shape, wall_brace(thumb_ml_place, -0.3, 1, web_post_tr(), thumb_ml_place, 0, 1, web_post_tl())])
+    shape = union([shape, wall_brace(thumb_bl_place, 0, 1, web_post_tr(), thumb_bl_place, 0, 1, web_post_tl())])
+    shape = union([shape, wall_brace(thumb_br_place, -1, 0, web_post_tl(), thumb_br_place, -1, 0, web_post_bl())])
+    shape = union([shape, wall_brace(thumb_bl_place, -1, 0, web_post_tl(), thumb_bl_place, -1, 0, web_post_bl())])
     # thumb, corners
-    shape += wall_brace(thumb_br_place, -1, 0, web_post_bl(), thumb_br_place, 0, -1, web_post_bl())
-    shape += wall_brace(thumb_bl_place, -1, 0, web_post_tl(), thumb_bl_place, 0, 1, web_post_tl())
+    shape = union([shape, wall_brace(thumb_br_place, -1, 0, web_post_bl(), thumb_br_place, 0, -1, web_post_bl())])
+    shape = union([shape, wall_brace(thumb_bl_place, -1, 0, web_post_tl(), thumb_bl_place, 0, 1, web_post_tl())])
     # thumb, tweeners
-    shape += wall_brace(thumb_mr_place, 0, -1, web_post_bl(), thumb_br_place, 0, -1, web_post_br())
-    shape += wall_brace(thumb_ml_place, 0, 1, web_post_tl(), thumb_bl_place, 0, 1, web_post_tr())
-    shape += wall_brace(thumb_bl_place, -1, 0, web_post_bl(), thumb_br_place, -1, 0, web_post_tl())
-    shape += wall_brace(thumb_tr_place, 0, -1, thumb_post_br(), (lambda sh: key_place(sh, 3, lastrow)), 0, -1, web_post_bl())
+    shape = union([shape, wall_brace(thumb_mr_place, 0, -1, web_post_bl(), thumb_br_place, 0, -1, web_post_br())])
+    shape = union([shape, wall_brace(thumb_ml_place, 0, 1, web_post_tl(), thumb_bl_place, 0, 1, web_post_tr())])
+    shape = union([shape, wall_brace(thumb_bl_place, -1, 0, web_post_bl(), thumb_br_place, -1, 0, web_post_tl())])
+    shape = union([shape, wall_brace(thumb_tr_place, 0, -1, thumb_post_br(), (lambda sh: key_place(sh, 3, lastrow)), 0, -1, web_post_bl())])
 
     return shape
+
 
 def default_thumb_connection():
+    print('thumb_connection()')
     # clunky bit on the top left thumb connection  (normal connectors don't work well)
-    shape = bottom_hull(
+    shape = union([bottom_hull(
         [
-            left_key_place(sl.translate(wall_locate2(-1, 0))(web_post()), cornerrow, -1),
-            left_key_place(sl.translate(wall_locate3(-1, 0))(web_post()), cornerrow, -1),
-            thumb_ml_place(sl.translate(wall_locate2(-0.3, 1))(web_post_tr())),
-            thumb_ml_place(sl.translate(wall_locate3(-0.3, 1))(web_post_tr())),
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1),
+            thumb_ml_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
+            thumb_ml_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
         ]
-    )
+    )])
 
-    shape += sl.hull()(
-        [
-            left_key_place(sl.translate(wall_locate2(-1, 0))(web_post()), cornerrow, -1),
-            left_key_place(sl.translate(wall_locate3(-1, 0))(web_post()), cornerrow, -1),
-            thumb_ml_place(sl.translate(wall_locate2(-0.3, 1))(web_post_tr())),
-            thumb_ml_place(sl.translate(wall_locate3(-0.3, 1))(web_post_tr())),
-            thumb_tl_place(thumb_post_tl()),
-        ]
-    )
+    shape = union([shape,
+        hull_from_shapes(
+            [
+                left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1),
+                left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1),
+                thumb_ml_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
+                thumb_ml_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
+                thumb_tl_place(thumb_post_tl()),
+            ]
+        )
+    ])  # )
 
-    shape += sl.hull()(
+    shape = union([shape, hull_from_shapes(
         [
             left_key_place(web_post(), cornerrow, -1),
-            left_key_place(sl.translate(wall_locate1(-1, 0))(web_post()), cornerrow, -1),
-            left_key_place(sl.translate(wall_locate2(-1, 0))(web_post()), cornerrow, -1),
-            left_key_place(sl.translate(wall_locate3(-1, 0))(web_post()), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1),
             thumb_tl_place(thumb_post_tl()),
         ]
-    )
+    )])
 
-    shape += sl.hull()(
+    shape = union([shape, hull_from_shapes(
         [
             left_key_place(web_post(), cornerrow, -1),
-            left_key_place(sl.translate(wall_locate1(-1, 0))(web_post()), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1),
             key_place(web_post_bl(), 0, cornerrow),
-            # key_place(sl.translate(wall_locate1(-1, 0))(web_post_bl()), 0, cornerrow),
-            key_place(sl.translate(wall_locate1(0, 0))(web_post_bl()), 0, cornerrow),
+            key_place(translate(web_post_bl(), wall_locate1(-1, 0)), 0, cornerrow),
             thumb_tl_place(thumb_post_tl()),
         ]
-    )
+    )])
 
-    shape += sl.hull()(
+    shape = union([shape, hull_from_shapes(
         [
             thumb_ml_place(web_post_tr()),
-            thumb_ml_place(sl.translate(wall_locate1(-0.3, 1))(web_post_tr())),
-            thumb_ml_place(sl.translate(wall_locate2(-0.3, 1))(web_post_tr())),
-            thumb_ml_place(sl.translate(wall_locate3(-0.3, 1))(web_post_tr())),
+            thumb_ml_place(translate(web_post_tr(), wall_locate1(-0.3, 1))),
+            thumb_ml_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
+            thumb_ml_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
             thumb_tl_place(thumb_post_tl()),
         ]
-    )
+    )])
 
     return shape
-
 
 def mini_thumb_walls():
     # thumb, walls
-    shape = wall_brace(mini_thumb_mr_place, 0, -1, web_post_br(), mini_thumb_tr_place, 0, -1, mini_thumb_post_br())
-    shape += wall_brace(mini_thumb_mr_place, 0, -1, web_post_br(), mini_thumb_mr_place, 0, -1, web_post_bl())
-    shape += wall_brace(mini_thumb_br_place, 0, -1, web_post_br(), mini_thumb_br_place, 0, -1, web_post_bl())
-    shape += wall_brace(mini_thumb_bl_place, 0, 1, web_post_tr(), mini_thumb_bl_place, 0, 1, web_post_tl())
-    shape += wall_brace(mini_thumb_br_place, -1, 0, web_post_tl(), mini_thumb_br_place, -1, 0, web_post_bl())
-    shape += wall_brace(mini_thumb_bl_place, -1, 0, web_post_tl(), mini_thumb_bl_place, -1, 0, web_post_bl())
+    shape = union([wall_brace(mini_thumb_mr_place, 0, -1, web_post_br(), mini_thumb_tr_place, 0, -1, mini_thumb_post_br())])
+    shape = union([shape, wall_brace(mini_thumb_mr_place, 0, -1, web_post_br(), mini_thumb_mr_place, 0, -1, web_post_bl())])
+    shape = union([shape, wall_brace(mini_thumb_br_place, 0, -1, web_post_br(), mini_thumb_br_place, 0, -1, web_post_bl())])
+    shape = union([shape, wall_brace(mini_thumb_bl_place, 0, 1, web_post_tr(), mini_thumb_bl_place, 0, 1, web_post_tl())])
+    shape = union([shape, wall_brace(mini_thumb_br_place, -1, 0, web_post_tl(), mini_thumb_br_place, -1, 0, web_post_bl())])
+    shape = union([shape, wall_brace(mini_thumb_bl_place, -1, 0, web_post_tl(), mini_thumb_bl_place, -1, 0, web_post_bl())])
     # thumb, corners
-    shape += wall_brace(mini_thumb_br_place, -1, 0, web_post_bl(), mini_thumb_br_place, 0, -1, web_post_bl())
-    shape += wall_brace(mini_thumb_bl_place, -1, 0, web_post_tl(), mini_thumb_bl_place, 0, 1, web_post_tl())
+    shape = union([shape, wall_brace(mini_thumb_br_place, -1, 0, web_post_bl(), mini_thumb_br_place, 0, -1, web_post_bl())])
+    shape = union([shape, wall_brace(mini_thumb_bl_place, -1, 0, web_post_tl(), mini_thumb_bl_place, 0, 1, web_post_tl())])
     # thumb, tweeners
-    shape += wall_brace(mini_thumb_mr_place, 0, -1, web_post_bl(), mini_thumb_br_place, 0, -1, web_post_br())
-    shape += wall_brace(mini_thumb_bl_place, -1, 0, web_post_bl(), mini_thumb_br_place, -1, 0, web_post_tl())
-    shape += wall_brace(mini_thumb_tr_place, 0, -1, mini_thumb_post_br(), (lambda sh: key_place(sh, 3, lastrow)), 0, -1, web_post_bl())
+    shape = union([shape, wall_brace(mini_thumb_mr_place, 0, -1, web_post_bl(), mini_thumb_br_place, 0, -1, web_post_br())])
+    shape = union([shape, wall_brace(mini_thumb_bl_place, -1, 0, web_post_bl(), mini_thumb_br_place, -1, 0, web_post_tl())])
+    shape = union([shape, wall_brace(mini_thumb_tr_place, 0, -1, mini_thumb_post_br(), (lambda sh: key_place(sh, 3, lastrow)), 0, -1, web_post_bl())])
 
     return shape
 
 def mini_thumb_connection():
     # clunky bit on the top left thumb connection  (normal connectors don't work well)
-    shape = bottom_hull(
+    shape = union([bottom_hull(
         [
-            left_key_place(sl.translate(wall_locate2(-1, 0))(web_post()), cornerrow, -1),
-            left_key_place(sl.translate(wall_locate3(-1, 0))(web_post()), cornerrow, -1),
-            mini_thumb_bl_place(sl.translate(wall_locate2(-0.3, 1))(web_post_tr())),
-            mini_thumb_bl_place(sl.translate(wall_locate3(-0.3, 1))(web_post_tr())),
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1),
+            mini_thumb_bl_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
+            mini_thumb_bl_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
         ]
-    )
+    )])
 
-    shape += sl.hull()(
+    shape = union([shape,
+        hull_from_shapes(
         [
-            left_key_place(sl.translate(wall_locate2(-1, 0))(web_post()), cornerrow, -1),
-            left_key_place(sl.translate(wall_locate3(-1, 0))(web_post()), cornerrow, -1),
-            mini_thumb_bl_place(sl.translate(wall_locate2(-0.3, 1))(web_post_tr())),
-            mini_thumb_bl_place(sl.translate(wall_locate3(-0.3, 1))(web_post_tr())),
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1),
+            mini_thumb_bl_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
+            mini_thumb_bl_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
             mini_thumb_tl_place(web_post_tl()),
         ]
-    )
+    )])
 
-    shape += sl.hull()(
+    shape = union([shape,
+        hull_from_shapes(
         [
             left_key_place(web_post(), cornerrow, -1),
-            left_key_place(sl.translate(wall_locate1(-1, 0))(web_post()), cornerrow, -1),
-            left_key_place(sl.translate(wall_locate2(-1, 0))(web_post()), cornerrow, -1),
-            left_key_place(sl.translate(wall_locate3(-1, 0))(web_post()), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1),
             mini_thumb_tl_place(web_post_tl()),
         ]
-    )
+    )])
 
-    shape += sl.hull()(
+    shape = union([shape,
+        hull_from_shapes(
         [
             left_key_place(web_post(), cornerrow, -1),
-            left_key_place(sl.translate(wall_locate1(-1, 0))(web_post()), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1),
             key_place(web_post_bl(), 0, cornerrow),
-            # key_place(sl.translate(wall_locate1(-1, 0))(web_post_bl()), 0, cornerrow),
             mini_thumb_tl_place(web_post_tl()),
         ]
-    )
+    )])
 
-    shape += sl.hull()(
+    shape = union([shape,
+        hull_from_shapes(
         [
             mini_thumb_bl_place(web_post_tr()),
-            mini_thumb_bl_place(sl.translate(wall_locate1(-0.3, 1))(web_post_tr())),
-            mini_thumb_bl_place(sl.translate(wall_locate2(-0.3, 1))(web_post_tr())),
-            mini_thumb_bl_place(sl.translate(wall_locate3(-0.3, 1))(web_post_tr())),
+            mini_thumb_bl_place(translate(web_post_tr(), wall_locate1(-0.3, 1))),
+            mini_thumb_bl_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
+            mini_thumb_bl_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
             mini_thumb_tl_place(web_post_tl()),
         ]
-    )
+    )])
 
     return shape
 
@@ -1655,85 +1993,88 @@ def mini_thumb_connection():
 
 def carbonfet_thumb_walls():
     # thumb, walls
-    shape = wall_brace(carbonfet_thumb_mr_place, 0, -1, web_post_br(), carbonfet_thumb_tr_place, 0, -1, web_post_br())
-    shape += wall_brace(carbonfet_thumb_mr_place, 0, -1, web_post_br(), carbonfet_thumb_mr_place, 0, -1.15, web_post_bl())
-    shape += wall_brace(carbonfet_thumb_br_place, 0, -1, web_post_br(), carbonfet_thumb_br_place, 0, -1, web_post_bl())
-    shape += wall_brace(carbonfet_thumb_bl_place, -.3, 1, thumb_post_tr(), carbonfet_thumb_bl_place, 0, 1, thumb_post_tl())
-    shape += wall_brace(carbonfet_thumb_br_place, -1, 0, web_post_tl(), carbonfet_thumb_br_place, -1, 0, web_post_bl())
-    shape += wall_brace(carbonfet_thumb_bl_place, -1, 0, thumb_post_tl(), carbonfet_thumb_bl_place, -1, 0, web_post_bl())
+    shape = union([wall_brace(carbonfet_thumb_mr_place, 0, -1, web_post_br(), carbonfet_thumb_tr_place, 0, -1, web_post_br())])
+    shape = union([shape, wall_brace(carbonfet_thumb_mr_place, 0, -1, web_post_br(), carbonfet_thumb_mr_place, 0, -1.15, web_post_bl())])
+    shape = union([shape, wall_brace(carbonfet_thumb_br_place, 0, -1, web_post_br(), carbonfet_thumb_br_place, 0, -1, web_post_bl())])
+    shape = union([shape, wall_brace(carbonfet_thumb_bl_place, -.3, 1, thumb_post_tr(), carbonfet_thumb_bl_place, 0, 1, thumb_post_tl())])
+    shape = union([shape, wall_brace(carbonfet_thumb_br_place, -1, 0, web_post_tl(), carbonfet_thumb_br_place, -1, 0, web_post_bl())])
+    shape = union([shape, wall_brace(carbonfet_thumb_bl_place, -1, 0, thumb_post_tl(), carbonfet_thumb_bl_place, -1, 0, web_post_bl())])
     # thumb, corners
-    shape += wall_brace(carbonfet_thumb_br_place, -1, 0, web_post_bl(), carbonfet_thumb_br_place, 0, -1, web_post_bl())
-    shape += wall_brace(carbonfet_thumb_bl_place, -1, 0, thumb_post_tl(), carbonfet_thumb_bl_place, 0, 1, thumb_post_tl())
+    shape = union([shape, wall_brace(carbonfet_thumb_br_place, -1, 0, web_post_bl(), carbonfet_thumb_br_place, 0, -1, web_post_bl())])
+    shape = union([shape, wall_brace(carbonfet_thumb_bl_place, -1, 0, thumb_post_tl(), carbonfet_thumb_bl_place, 0, 1, thumb_post_tl())])
     # thumb, tweeners
-    shape += wall_brace(carbonfet_thumb_mr_place, 0, -1.15, web_post_bl(), carbonfet_thumb_br_place, 0, -1, web_post_br())
-    # shape += wall_brace(thumb_ml_place, 0, 1, web_post_tl(), carbonfet_thumb_bl_place, 0, 1, web_post_tr())
-    shape += wall_brace(carbonfet_thumb_bl_place, -1, 0, web_post_bl(), carbonfet_thumb_br_place, -1, 0, web_post_tl())
-    shape += wall_brace(carbonfet_thumb_tr_place, 0, -1, web_post_br(), (lambda sh: key_place(sh, 3, lastrow)), 0, -1, web_post_bl())
+    shape = union([shape, wall_brace(carbonfet_thumb_mr_place, 0, -1.15, web_post_bl(), carbonfet_thumb_br_place, 0, -1, web_post_br())])
+    shape = union([shape, wall_brace(carbonfet_thumb_bl_place, -1, 0, web_post_bl(), carbonfet_thumb_br_place, -1, 0, web_post_tl())])
+    shape = union([shape, wall_brace(carbonfet_thumb_tr_place, 0, -1, web_post_br(), (lambda sh: key_place(sh, 3, lastrow)), 0, -1, web_post_bl())])
     return shape
 
 def carbonfet_thumb_connection():
     # clunky bit on the top left thumb connection  (normal connectors don't work well)
     shape = bottom_hull(
         [
-            left_key_place(sl.translate(wall_locate2(-1, 0))(web_post()), cornerrow, -1),
-            left_key_place(sl.translate(wall_locate3(-1, 0))(web_post()), cornerrow, -1),
-            carbonfet_thumb_bl_place(sl.translate(wall_locate2(-0.3, 1))(thumb_post_tr())),
-            carbonfet_thumb_bl_place(sl.translate(wall_locate3(-0.3, 1))(thumb_post_tr())),
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1),
+            carbonfet_thumb_bl_place(translate(thumb_post_tr(), wall_locate2(-0.3, 1))),
+            carbonfet_thumb_bl_place(translate(thumb_post_tr(), wall_locate3(-0.3, 1))),
         ]
     )
 
-    shape += sl.hull()(
+    shape = union([shape,
+        hull_from_shapes(
         [
-            left_key_place(sl.translate(wall_locate2(-1, 0))(web_post()), cornerrow, -1),
-            left_key_place(sl.translate(wall_locate3(-1, 0))(web_post()), cornerrow, -1),
-            carbonfet_thumb_bl_place(sl.translate(wall_locate2(-0.3, 1))(thumb_post_tr())),
-            carbonfet_thumb_bl_place(sl.translate(wall_locate3(-0.3, 1))(thumb_post_tr())),
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1),
+            carbonfet_thumb_bl_place(translate(thumb_post_tr(), wall_locate2(-0.3, 1))),
+            carbonfet_thumb_bl_place(translate(thumb_post_tr(), wall_locate3(-0.3, 1))),
             carbonfet_thumb_ml_place(thumb_post_tl()),
         ]
-    )
+    )])
 
-    shape += sl.hull()(
+    shape = union([shape,
+        hull_from_shapes(
         [
             left_key_place(web_post(), cornerrow, -1),
-            left_key_place(sl.translate(wall_locate1(-1, 0))(web_post()), cornerrow, -1),
-            left_key_place(sl.translate(wall_locate2(-1, 0))(web_post()), cornerrow, -1),
-            left_key_place(sl.translate(wall_locate3(-1, 0))(web_post()), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1),
             carbonfet_thumb_ml_place(thumb_post_tl()),
         ]
-    )
+    )])
 
-    shape += sl.hull()(
+    shape = union([shape,
+        hull_from_shapes(
         [
             left_key_place(web_post(), cornerrow, -1),
-            left_key_place(sl.translate(wall_locate1(-1, 0))(web_post()), cornerrow, -1),
+            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1),
             key_place(web_post_bl(), 0, cornerrow),
-            # key_place(sl.translate(wall_locate1(-1, 0))(web_post_bl()), 0, cornerrow),
             carbonfet_thumb_ml_place(thumb_post_tl()),
         ]
-    )
+    )])
 
-    shape += sl.hull()(
+    shape = union([shape,
+        hull_from_shapes(
         [
             carbonfet_thumb_bl_place(thumb_post_tr()),
-            carbonfet_thumb_bl_place(sl.translate(wall_locate1(-0.3, 1))(thumb_post_tr())),
-            carbonfet_thumb_bl_place(sl.translate(wall_locate2(-0.3, 1))(thumb_post_tr())),
-            carbonfet_thumb_bl_place(sl.translate(wall_locate3(-0.3, 1))(thumb_post_tr())),
+            carbonfet_thumb_bl_place(translate(thumb_post_tr(), wall_locate1(-0.3, 1))),
+            carbonfet_thumb_bl_place(translate(thumb_post_tr(), wall_locate2(-0.3, 1))),
+            carbonfet_thumb_bl_place(translate(thumb_post_tr(), wall_locate3(-0.3, 1))),
             carbonfet_thumb_ml_place(thumb_post_tl()),
         ]
-    )
+    )])
 
     return shape
 
-
-
 def case_walls():
+    print('case_walls()')
     return (
-            back_wall()
-            + left_wall()
-            + right_wall()
-            + front_wall()
-            + thumb_walls()
-            + thumb_connection()
+        union([
+            back_wall(),
+            left_wall(),
+            right_wall(),
+            front_wall(),
+            thumb_walls(),
+            thumb_connection(),
+        ])
     )
 
 
@@ -1748,24 +2089,27 @@ rj9_start = list(
     )
 )
 
-rj9_position = [rj9_start[0], rj9_start[1], 11]
+rj9_position = (rj9_start[0], rj9_start[1], 11)
 
 
 def rj9_cube():
-    return sl.cube([14.78, 13, 22.38], center=True)
+    print('rj9_cube()')
+    shape = box(14.78, 13, 22.38)
+
+    return shape
 
 
 def rj9_space():
-    return sl.translate(rj9_position)(rj9_cube())
+    print('rj9_space()')
+    return translate(rj9_cube(), rj9_position)
 
 
 def rj9_holder():
-    shape = sl.union()(
-        sl.translate([0, 2, 0])(sl.cube([10.78, 9, 18.38], center=True)),
-        sl.translate([0, 0, 5])(sl.cube([10.78, 13, 5], center=True)),
-    )
-    shape = sl.difference()(rj9_cube(), shape)
-    shape = sl.translate(rj9_position)(shape)
+    print('rj9_holder()')
+    shape = union([translate(box(10.78, 9, 18.38), (0, 2, 0)), translate(box(10.78, 13, 5), (0, 0, 5))])
+    shape = difference(rj9_cube(), [shape])
+    shape = translate(shape, rj9_position)
+
     return shape
 
 
@@ -1777,37 +2121,37 @@ usb_holder_thickness = 4
 
 
 def usb_holder():
-    shape = sl.cube(
-        [
-            usb_holder_size[0] + usb_holder_thickness,
-            usb_holder_size[1],
-            usb_holder_size[2] + usb_holder_thickness,
-        ],
-        center=True,
+    print('usb_holder()')
+    shape = box(
+        usb_holder_size[0] + usb_holder_thickness,
+        usb_holder_size[1],
+        usb_holder_size[2] + usb_holder_thickness,
     )
-    shape = sl.translate(
-        [
+    shape = translate(shape,
+        (
             usb_holder_position[0],
             usb_holder_position[1],
             (usb_holder_size[2] + usb_holder_thickness) / 2,
-        ]
-    )(shape)
+        )
+    )
     return shape
 
 
 def usb_holder_hole():
-    shape = sl.cube(usb_holder_size, center=True)
-    shape = sl.translate(
-        [
+    print('usb_holder_hole()')
+    shape = box(*usb_holder_size)
+    shape = translate(shape,
+        (
             usb_holder_position[0],
             usb_holder_position[1],
             (usb_holder_size[2] + usb_holder_thickness) / 2,
-        ]
-    )(shape)
+        )
+    )
     return shape
 
 
 external_start = list(
+    # np.array([0, -3, 0])
     np.array([external_holder_width / 2, 0, 0])
     + np.array(
         key_position(
@@ -1818,18 +2162,18 @@ external_start = list(
     )
 )
 
-
 def external_mount_hole():
     print('external_mount_hole()')
-    shape = sl.cube((external_holder_width, 20.0, external_holder_height), center=True)
-    shape = sl.translate(
+    shape = box(external_holder_width, 20.0, external_holder_height+.1)
+    shape = translate(shape,
         (
             external_start[0] + external_holder_xoffset,
             external_start[1],
-            external_holder_height / 2
+            external_holder_height / 2-.05,
         )
-    )(shape)
+    )
     return shape
+
 
 
 def oled_sliding_mount_frame():
@@ -1842,92 +2186,90 @@ def oled_sliding_mount_frame():
     mount_ext_up_height = oled_mount_height + 2 * oled_mount_rim
     top_hole_start = -mount_ext_height / 2.0 + oled_mount_rim + oled_edge_overlap_end + oled_edge_overlap_connector
     top_hole_length = oled_mount_height
-    hole = sl.cube([mount_ext_width, mount_ext_up_height, oled_mount_cut_depth + .01], center=True)
-    hole = sl.translate([0., top_hole_start + top_hole_length / 2, 0.])(hole)
-    hole_down = sl.cube([mount_ext_width, mount_ext_height, oled_mount_depth + oled_mount_cut_depth / 2],
-                        center=True)
-    hole_down = sl.translate([0., 0., -oled_mount_cut_depth / 4])(hole_down)
-    hole += hole_down
 
-    shape = sl.cube([mount_ext_width, mount_ext_height, oled_mount_depth], center=True)
+    hole = box(mount_ext_width, mount_ext_up_height, oled_mount_cut_depth + .01)
+    hole = translate(hole, (0., top_hole_start + top_hole_length / 2, 0.))
+
+    hole_down = box(mount_ext_width, mount_ext_height, oled_mount_depth + oled_mount_cut_depth / 2)
+    hole_down = translate(hole_down, (0., 0., -oled_mount_cut_depth / 4))
+    hole = union([hole, hole_down])
+
+    shape = box(mount_ext_width, mount_ext_height, oled_mount_depth)
 
     conn_hole_start = -mount_ext_height / 2.0 + oled_mount_rim
     conn_hole_length = (
             oled_edge_overlap_end + oled_edge_overlap_connector
             + oled_edge_overlap_clearance + oled_thickness
     )
-    conn_hole = sl.cube([oled_mount_width, conn_hole_length + .01, oled_mount_depth], center=True)
-    conn_hole = sl.translate([
+    conn_hole = box(oled_mount_width, conn_hole_length + .01, oled_mount_depth)
+    conn_hole = translate(conn_hole, (
         0,
         conn_hole_start + conn_hole_length / 2,
         -oled_edge_overlap_thickness
-    ])(conn_hole)
+    ))
 
     end_hole_length = (
             oled_edge_overlap_end + oled_edge_overlap_clearance
     )
     end_hole_start = mount_ext_height / 2.0 - oled_mount_rim - end_hole_length
-    end_hole = sl.cube([oled_mount_width, end_hole_length + .01, oled_mount_depth], center=True)
-    end_hole = sl.translate([
+    end_hole = box(oled_mount_width, end_hole_length + .01, oled_mount_depth)
+    end_hole = translate(end_hole, (
         0,
         end_hole_start + end_hole_length / 2,
         -oled_edge_overlap_thickness
-    ])(end_hole)
+    ))
 
     top_hole_start = -mount_ext_height / 2.0 + oled_mount_rim + oled_edge_overlap_end + oled_edge_overlap_connector
     top_hole_length = oled_mount_height
-    top_hole = sl.cube(
-        [oled_mount_width, top_hole_length, oled_edge_overlap_thickness + oled_thickness - oled_edge_chamfer],
-        center=True)
-    top_hole = sl.translate([
+    top_hole = box(oled_mount_width, top_hole_length, oled_edge_overlap_thickness + oled_thickness - oled_edge_chamfer)
+    top_hole = translate(top_hole, (
         0,
         top_hole_start + top_hole_length / 2,
         (oled_mount_depth - oled_edge_overlap_thickness - oled_thickness - oled_edge_chamfer) / 2.0
-    ])(top_hole)
+    ))
 
-    top_chamfer_1 = sl.cube([
+    top_chamfer_1 = box(
         oled_mount_width,
         top_hole_length,
         0.01
-    ], center=True)
-    top_chamfer_2 = sl.cube([
+    )
+    top_chamfer_2 = box(
         oled_mount_width + 2 * oled_edge_chamfer,
         top_hole_length + 2 * oled_edge_chamfer,
         0.01
-    ], center=True)
-    top_chamfer_1 = sl.translate([
-        0,
-        0,
-        -oled_edge_chamfer - .05
-    ])(top_chamfer_1)
-    top_chamfer_1 = sl.hull()(top_chamfer_1, top_chamfer_2)
+    )
+    top_chamfer_1 = translate(top_chamfer_1, (0, 0, -oled_edge_chamfer - .05))
 
-    top_chamfer_1 = sl.translate([
+    # top_chamfer_1 = sl.hull()(top_chamfer_1, top_chamfer_2)
+    top_chamfer_1 = hull_from_shapes([top_chamfer_1, top_chamfer_2])
+
+    top_chamfer_1 = translate(top_chamfer_1, (
         0,
         top_hole_start + top_hole_length / 2,
         oled_mount_depth / 2.0 + .05
-    ])(top_chamfer_1)
-    top_hole += top_chamfer_1
+    ))
 
-    shape = sl.difference()(shape, conn_hole, top_hole, end_hole)
+    top_hole = union([top_hole, top_chamfer_1])
 
-    shape = sl.rotate(oled_mount_rotation_xyz)(shape)
-    shape = sl.translate(
+    shape = difference(shape, [conn_hole, top_hole, end_hole])
+
+    shape = rotate(shape, oled_mount_rotation_xyz)
+    shape = translate(shape,
         (
             oled_mount_location_xyz[0],
             oled_mount_location_xyz[1],
             oled_mount_location_xyz[2],
         )
-    )(shape)
+    )
 
-    hole = sl.rotate(oled_mount_rotation_xyz)(hole)
-    hole = sl.translate(
+    hole = rotate(hole, oled_mount_rotation_xyz)
+    hole = translate(hole,
         (
             oled_mount_location_xyz[0],
             oled_mount_location_xyz[1],
             oled_mount_location_xyz[2],
         )
-    )(hole)
+    )
     return hole, shape
 
 
@@ -1937,50 +2279,53 @@ def oled_clip_mount_frame():
             oled_mount_height + 2 * oled_clip_thickness
             + 2 * oled_clip_undercut + 2 * oled_clip_overhang + 2 * oled_mount_rim
     )
-    hole = sl.cube([mount_ext_width, mount_ext_height, oled_mount_cut_depth + .01], center=True)
+    hole = box(mount_ext_width, mount_ext_height, oled_mount_cut_depth + .01)
 
-    shape = sl.cube([mount_ext_width, mount_ext_height, oled_mount_depth], center=True)
-    shape -= sl.cube([oled_mount_width, oled_mount_height, oled_mount_depth + .1], center=True)
+    shape = box(mount_ext_width, mount_ext_height, oled_mount_depth)
+    shape = difference(shape, [box(oled_mount_width, oled_mount_height, oled_mount_depth + .1)])
 
-    clip_slot = sl.cube([
+    clip_slot = box(
         oled_clip_width + 2 * oled_clip_width_clearance,
         oled_mount_height + 2 * oled_clip_thickness + 2 * oled_clip_overhang,
-        oled_mount_depth + .1], center=True)
+        oled_mount_depth + .1
+    )
 
-    shape -= clip_slot
+    shape = difference(shape, [clip_slot])
 
-    clip_undercut = sl.cube([
+    clip_undercut = box(
         oled_clip_width + 2 * oled_clip_width_clearance,
         oled_mount_height + 2 * oled_clip_thickness + 2 * oled_clip_overhang + 2 * oled_clip_undercut,
-        oled_mount_depth + .1], center=True)
+        oled_mount_depth + .1
+    )
 
-    clip_undercut = sl.translate((0., 0., oled_clip_undercut_thickness))(clip_undercut)
-    shape -= clip_undercut
+    clip_undercut = translate(clip_undercut, (0., 0., oled_clip_undercut_thickness))
+    shape = difference(shape, [clip_undercut])
 
-    plate = sl.cube([
+    plate = box(
         oled_mount_width + .1,
         oled_mount_height - 2 * oled_mount_connector_hole,
-        oled_mount_depth - oled_thickness], center=True)
-    plate = sl.translate((0., 0., -oled_thickness / 2.0))(plate)
-    shape += plate
+        oled_mount_depth - oled_thickness
+    )
+    plate = translate(plate, (0., 0., -oled_thickness / 2.0))
+    shape = union([shape, plate])
 
-    shape = sl.rotate(oled_mount_rotation_xyz)(shape)
-    shape = sl.translate(
+    shape = rotate(shape, oled_mount_rotation_xyz)
+    shape = translate(shape,
         (
             oled_mount_location_xyz[0],
             oled_mount_location_xyz[1],
             oled_mount_location_xyz[2],
         )
-    )(shape)
+    )
 
-    hole = sl.rotate(oled_mount_rotation_xyz)(hole)
-    hole = sl.translate(
+    hole = rotate(hole, oled_mount_rotation_xyz)
+    hole = translate(hole,
         (
             oled_mount_location_xyz[0],
             oled_mount_location_xyz[1],
             oled_mount_location_xyz[2],
         )
-    )(hole)
+    )
 
     return hole, shape
 
@@ -1994,59 +2339,58 @@ def oled_clip():
 
     oled_leg_depth = oled_mount_depth + oled_clip_z_gap
 
-    shape = sl.cube([mount_ext_width - .1, mount_ext_height - .1, oled_mount_bezel_thickness], center=True)
-    shape = sl.translate((0., 0., oled_mount_bezel_thickness / 2.))(shape)
+    shape = box(mount_ext_width - .1, mount_ext_height - .1, oled_mount_bezel_thickness)
+    shape = translate(shape, (0., 0., oled_mount_bezel_thickness / 2.))
 
-    hole_1 = sl.cube([
+    hole_1 = box(
         oled_screen_width + 2 * oled_mount_bezel_chamfer,
         oled_screen_length + 2 * oled_mount_bezel_chamfer,
         .01
-    ], center=True)
-    hole_2 = sl.cube([oled_screen_width, oled_screen_length, 2.05 * oled_mount_bezel_thickness], center=True)
-    hole = sl.hull()(hole_1, hole_2)
+    )
+    hole_2 = box(oled_screen_width, oled_screen_length, 2.05 * oled_mount_bezel_thickness)
+    hole = hull_from_shapes([hole_1, hole_2])
 
-    shape -= sl.translate((0., 0., oled_mount_bezel_thickness))(hole)
+    shape = difference(shape, [translate(hole, (0., 0., oled_mount_bezel_thickness))])
 
-    clip_leg = sl.cube([oled_clip_width, oled_clip_thickness, oled_leg_depth], center=True)
-    clip_leg = sl.translate((
+    clip_leg = box(oled_clip_width, oled_clip_thickness, oled_leg_depth)
+    clip_leg = translate(clip_leg, (
         0.,
         0.,
         # (oled_mount_height+2*oled_clip_overhang+oled_clip_thickness)/2,
         -oled_leg_depth / 2.
-    ))(clip_leg)
+    ))
 
-    latch_1 = sl.cube([
+    latch_1 = box(
         oled_clip_width,
         oled_clip_overhang + oled_clip_thickness,
         .01
-    ], center=True)
-    latch_2 = sl.cube([
+    )
+    latch_2 = box(
         oled_clip_width,
         oled_clip_thickness / 2,
         oled_clip_extension
-    ], center=True)
-    latch_2 = sl.translate((
+    )
+    latch_2 = translate(latch_2, (
         0.,
         -(-oled_clip_thickness / 2 + oled_clip_thickness + oled_clip_overhang) / 2,
         -oled_clip_extension / 2
-    ))(latch_2)
-    latch = sl.hull()(latch_1, latch_2)
-    latch = sl.translate((
+    ))
+    latch = hull_from_shapes([latch_1, latch_2])
+    latch = translate(latch, (
         0.,
         oled_clip_overhang / 2,
         -oled_leg_depth
-    ))(latch)
+    ))
 
-    clip_leg += latch
+    clip_leg = union([clip_leg, latch])
 
-    clip_leg = sl.translate((
+    clip_leg = translate(clip_leg, (
         0.,
         (oled_mount_height + 2 * oled_clip_overhang + oled_clip_thickness) / 2 - oled_clip_y_gap,
         0.
-    ))(clip_leg)
+    ))
 
-    shape += clip_leg
-    shape += sl.mirror((0., 1., 0.))(clip_leg)
+    shape = union([shape, clip_leg, mirror(clip_leg, 'XZ')])
 
     return shape
 
@@ -2054,104 +2398,104 @@ def oled_clip():
 def oled_undercut_mount_frame():
     mount_ext_width = oled_mount_width + 2 * oled_mount_rim
     mount_ext_height = oled_mount_height + 2 * oled_mount_rim
-    hole = sl.cube([mount_ext_width, mount_ext_height, oled_mount_cut_depth + .01], center=True)
+    hole = box(mount_ext_width, mount_ext_height, oled_mount_cut_depth + .01)
 
-    shape = sl.cube([mount_ext_width, mount_ext_height, oled_mount_depth], center=True)
-    shape = sl.difference()(
-        shape,
-        sl.cube([oled_mount_width, oled_mount_height, oled_mount_depth + .1], center=True)
-    )
-    undercut = sl.cube([
+    shape = box(mount_ext_width, mount_ext_height, oled_mount_depth)
+    shape = difference(shape, [box(oled_mount_width, oled_mount_height, oled_mount_depth + .1)])
+    undercut = box(
         oled_mount_width + 2 * oled_mount_undercut,
         oled_mount_height + 2 * oled_mount_undercut,
-        oled_mount_depth], center=True)
-    undercut = sl.translate((0., 0., -oled_mount_undercut_thickness))(undercut)
-    shape = sl.difference()(shape, undercut)
+        oled_mount_depth)
+    undercut = translate(undercut, (0., 0., -oled_mount_undercut_thickness))
+    shape = difference(shape, [undercut])
 
-    shape = sl.rotate(oled_mount_rotation_xyz)(shape)
-    shape = sl.translate(
-        (
+    shape = rotate(shape, oled_mount_rotation_xyz)
+    shape = translate(shape, (
             oled_mount_location_xyz[0],
             oled_mount_location_xyz[1],
             oled_mount_location_xyz[2],
         )
-    )(shape)
+    )
 
-    hole = sl.rotate(oled_mount_rotation_xyz)(hole)
-    hole = sl.translate(
-        (
+    hole = rotate(hole, oled_mount_rotation_xyz)
+    hole = translate(hole, (
             oled_mount_location_xyz[0],
             oled_mount_location_xyz[1],
             oled_mount_location_xyz[2],
         )
-    )(hole)
+    )
 
     return hole, shape
 
 
-teensy_width = 20
-teensy_height = 12
-teensy_length = 33
-teensy2_length = 53
-teensy_pcb_thickness = 2
-teensy_holder_width = 7 + teensy_pcb_thickness
-teensy_holder_height = 6 + teensy_width
-teensy_offset_height = 5
-teensy_holder_top_length = 18
-teensy_top_xy = key_position(wall_locate3(-1, 0), 0, centerrow - 1)
-teensy_bot_xy = key_position(wall_locate3(-1, 0), 0, centerrow + 1)
-teensy_holder_length = teensy_top_xy[1] - teensy_bot_xy[1]
-teensy_holder_offset = -teensy_holder_length / 2
-teensy_holder_top_offset = (teensy_holder_top_length / 2) - teensy_holder_length
+
+
+
 
 
 def teensy_holder():
-    s1 = sl.cube([3, teensy_holder_length, 6 + teensy_width], center=True)
-    s1 = sl.translate([1.5, teensy_holder_offset, 0])(s1)
+    print('teensy_holder()')
+    teensy_top_xy = key_position(wall_locate3(-1, 0), 0, centerrow - 1)
+    teensy_bot_xy = key_position(wall_locate3(-1, 0), 0, centerrow + 1)
+    teensy_holder_length = teensy_top_xy[1] - teensy_bot_xy[1]
+    teensy_holder_offset = -teensy_holder_length / 2
+    teensy_holder_top_offset = (teensy_holder_top_length / 2) - teensy_holder_length
 
-    s2 = sl.cube([teensy_pcb_thickness, teensy_holder_length, 3], center=True)
-    s2 = sl.translate(
-        [
-            (teensy_pcb_thickness / 2) + 3,
-            teensy_holder_offset,
-            -1.5 - (teensy_width / 2),
-        ]
-    )(s2)
+    s1 = box(3, teensy_holder_length, 6 + teensy_width)
+    s1 = translate(s1, [1.5, teensy_holder_offset, 0])
 
-    s3 = sl.cube([teensy_pcb_thickness, teensy_holder_top_length, 3], center=True)
-    s3 = sl.translate(
-        [
-            (teensy_pcb_thickness / 2) + 3,
-            teensy_holder_top_offset,
-            1.5 + (teensy_width / 2),
-        ]
-    )(s3)
+    s2 = box(teensy_pcb_thickness, teensy_holder_length, 3)
+    s2 = translate(s2,
+                   (
+                       (teensy_pcb_thickness / 2) + 3,
+                       teensy_holder_offset,
+                       -1.5 - (teensy_width / 2),
+                   )
+                   )
 
-    s4 = sl.cube([4, teensy_holder_top_length, 4], center=True)
-    s4 = sl.translate(
-        [teensy_pcb_thickness + 5, teensy_holder_top_offset, 1 + (teensy_width / 2)]
-    )(s4)
+    s3 = box(teensy_pcb_thickness, teensy_holder_top_length, 3)
+    s3 = translate(s3,
+                   [
+                       (teensy_pcb_thickness / 2) + 3,
+                       teensy_holder_top_offset,
+                       1.5 + (teensy_width / 2),
+                   ]
+                   )
 
-    shape = sl.union()(s1, s2, s3, s4)
+    s4 = box(4, teensy_holder_top_length, 4)
+    s4 = translate(s4,
+                   [teensy_pcb_thickness + 5, teensy_holder_top_offset, 1 + (teensy_width / 2)]
+                   )
 
-    shape = sl.translate([-teensy_holder_width, 0, 0])(shape)
-    shape = sl.translate([-1.4, 0, 0])(shape)
-    shape = sl.translate(
-        [teensy_top_xy[0], teensy_top_xy[1] - 1, (6 + teensy_width) / 2]
-    )(shape)
+    shape = union((s1, s2, s3, s4))
+
+    shape = translate(shape, [-teensy_holder_width, 0, 0])
+    shape = translate(shape, [-1.4, 0, 0])
+    shape = translate(shape,
+                      [teensy_top_xy[0], teensy_top_xy[1] - 1, (6 + teensy_width) / 2]
+                      )
 
     return shape
 
 
 def screw_insert_shape(bottom_radius, top_radius, height):
-    shape = sl.union()(
-        sl.cylinder(r1=bottom_radius, r2=top_radius, h=height, center=True),
-        sl.translate([0, 0, (height / 2)])(sl.sphere(top_radius)),
-    )
+    print('screw_insert_shape()')
+    if bottom_radius == top_radius:
+        base = translate(cylinder(radius=bottom_radius, height=height),
+            (0, 0, -height / 2)
+        )
+    else:
+        base = translate(cone(r1=bottom_radius, r2=top_radius, height=height), (0, 0, -height / 2))
+
+    shape = union((
+        base,
+        translate(sphere(top_radius), (0, 0, height / 2)),
+    ))
     return shape
 
 
 def screw_insert(column, row, bottom_radius, top_radius, height):
+    print('screw_insert()')
     shift_right = column == lastcol
     shift_left = column == 0
     shift_up = (not (shift_right or shift_left)) and (row == 0)
@@ -2202,172 +2546,293 @@ def screw_insert(column, row, bottom_radius, top_radius, height):
             row,
         )
 
-    # add z height below 0 due to 0 thickness skin covering the hole.
-    shape = screw_insert_shape(bottom_radius, top_radius, height + 5)
-    shape = sl.translate((position[0], position[1], height / 2 - 2.5))(shape)
+
+    shape = screw_insert_shape(bottom_radius, top_radius, height)
+    shape = translate(shape, [position[0], position[1], height / 2])
 
     return shape
 
+def screw_insert_thumb(bottom_radius, top_radius, height):
+    if thumb_style == 'MINI':
+        position = thumborigin()
+        position = list(np.array(position) + np.array([-29, -51, -16]))
+        position[2] = 0
 
-def screw_insert_all_shapes(bottom_radius, top_radius, height):
-    shape = sl.union()(
-        screw_insert(0, 0, bottom_radius, top_radius, height),
-        screw_insert(0, lastrow - 1, bottom_radius, top_radius, height),
-        screw_insert(3, lastrow, bottom_radius, top_radius, height),
-        screw_insert(3, 0, bottom_radius, top_radius, height),
-        screw_insert(lastcol, 0, bottom_radius, top_radius, height),
-        screw_insert(lastcol, lastrow - 1, bottom_radius, top_radius, height),
+    elif thumb_style == 'CARBONFET':
+        position = thumborigin()
+        position = list(np.array(position) + np.array([-48, -37, 0]))
+        position[2] = 0
+
+    else:
+        position = thumborigin()
+        position = list(np.array(position) + np.array([-25, -61, 0]))
+        position[2] = 0
+
+    shape = screw_insert_shape(bottom_radius, top_radius, height)
+    shape = translate(shape, [position[0], position[1], height / 2])
+    return shape
+
+def screw_insert_all_shapes(bottom_radius, top_radius, height, offset=0):
+    print('screw_insert_all_shapes()')
+    shape = (
+        translate(screw_insert(0, 0, bottom_radius, top_radius, height), (0, 0, offset)),
+        translate(screw_insert(0, lastrow-1, bottom_radius, top_radius, height), (0, 0, offset)),
+        translate(screw_insert(3, lastrow, bottom_radius, top_radius, height), (0, 0, offset)),
+        translate(screw_insert(3, 0, bottom_radius, top_radius, height), (0,0, offset)),
+        translate(screw_insert(lastcol, 0, bottom_radius, top_radius, height), (0, 0, offset)),
+        translate(screw_insert(lastcol, lastrow-1, bottom_radius, top_radius, height), (0, 0, offset)),
+        translate(screw_insert_thumb(bottom_radius, top_radius, height), (0, 0, offset)),
     )
 
     return shape
 
 
-screw_insert_height = 3.8
-screw_insert_bottom_radius = 5.31 / 2
-screw_insert_top_radius = 5.1 / 2
-screw_insert_holes = screw_insert_all_shapes(
-    screw_insert_bottom_radius, screw_insert_top_radius, screw_insert_height
-)
-screw_insert_outers = screw_insert_all_shapes(
-    screw_insert_bottom_radius + 1.6,
-    screw_insert_top_radius + 1.6,
-    screw_insert_height + 1.5,
-)
-screw_insert_screw_holes = screw_insert_all_shapes(1.7, 1.7, 350)
 
-wire_post_height = 7
-wire_post_overhang = 3.5
-wire_post_diameter = 2.6
+
+def screw_insert_holes():
+    return screw_insert_all_shapes(
+        screw_insert_bottom_radius, screw_insert_top_radius, screw_insert_height+.02, offset=-.01
+    )
+
+def screw_insert_outers():
+    return screw_insert_all_shapes(
+        screw_insert_bottom_radius + 1.6,
+        screw_insert_top_radius + 1.6,
+        screw_insert_height + 1.5,
+    )
+
+def screw_insert_screw_holes():
+    return screw_insert_all_shapes(1.7, 1.7, 350)
+
+
 
 
 def wire_post(direction, offset):
-    s1 = sl.cube(
-        [wire_post_diameter, wire_post_diameter, wire_post_height], center=True
+    print('wire_post()')
+    s1 = box(
+        wire_post_diameter, wire_post_diameter, wire_post_height
     )
-    s1 = sl.translate([0, -wire_post_diameter * 0.5 * direction, 0])(s1)
+    s1 = translate(s1, [0, -wire_post_diameter * 0.5 * direction, 0])
 
-    s2 = sl.cube(
-        [wire_post_diameter, wire_post_overhang, wire_post_diameter], center=True
+    s2 = box(
+        wire_post_diameter, wire_post_overhang, wire_post_diameter
     )
-    s2 = sl.translate(
-        [0, -wire_post_overhang * 0.5 * direction, -wire_post_height / 2]
-    )(s2)
+    s2 = translate(s2,
+                   [0, -wire_post_overhang * 0.5 * direction, -wire_post_height / 2]
+                   )
 
-    shape = sl.union()(s1, s2)
-    shape = sl.translate([0, -offset, (-wire_post_height / 2) + 3])(shape)
-    shape = sl.rotate(-alpha / 2, [1, 0, 0])(shape)
-    shape = sl.translate([3, -mount_height / 2, 0])(shape)
+    shape = union((s1, s2))
+    shape = translate(shape, [0, -offset, (-wire_post_height / 2) + 3])
+    shape = rotate(shape, [-alpha / 2, 0, 0])
+    shape = translate(shape, (3, -mount_height / 2, 0))
 
     return shape
 
 
 def wire_posts():
-    shape = thumb_ml_place(sl.translate([-5, 0, -2])(wire_post(1, 0)))
-    shape += thumb_ml_place(sl.translate([0, 0, -2.5])(wire_post(-1, 6)))
-    shape += thumb_ml_place(sl.translate([5, 0, -2])(wire_post(1, 0)))
+    print('wire_posts()')
+    shape = thumb_ml_place(wire_post(1, 0).translate([-5, 0, -2]))
+    shape = union([shape, thumb_ml_place(wire_post(-1, 6).translate([0, 0, -2.5]))])
+    shape = union([shape, thumb_ml_place(wire_post(1, 0).translate([5, 0, -2]))])
 
     for column in range(lastcol):
         for row in range(lastrow - 1):
-            shape += sl.union()(
-                key_place(sl.translate([-5, 0, 0])(wire_post(1, 0)), column, row),
-                key_place(sl.translate([0, 0, 0])(wire_post(-1, 6)), column, row),
-                key_place(sl.translate([5, 0, 0])(wire_post(1, 0)), column, row),
-            )
+            shape = union([
+                shape,
+                key_place(wire_post(1, 0).translate([-5, 0, 0]), column, row),
+                key_place(wire_post(-1, 6).translate([0, 0, 0]), column, row),
+                key_place(wire_post(1, 0).translate([5, 0, 0]), column, row),
+            ])
     return shape
 
 
 def model_side(side="right"):
-    shape = sl.union()(key_holes(side=side), connectors(), thumb(side=side), thumb_connectors(), )
-    pre_sub = []
-    adders = []
-    post_sub = [screw_insert_holes()]
+    print('model_right()')
+    shape = union([key_holes(side=side)])
+    if debug_exports:
+        export_file(shape=shape, fname=path.join(r"..", "things", r"debug_key_plates"))
+    connector_shape = connectors()
+    shape = union([shape, connector_shape])
+    if debug_exports:
+        export_file(shape=shape, fname=path.join(r"..", "things", r"debug_connector_shape"))
+    thumb_shape = thumb(side=side)
+    if debug_exports:
+        export_file(shape=thumb_shape, fname=path.join(r"..", "things", r"debug_thumb_shape"))
+    shape = union([shape, thumb_shape])
+    thumb_connector_shape = thumb_connectors()
+    shape = union([shape, thumb_connector_shape])
+    if debug_exports:
+        export_file(shape=shape, fname=path.join(r"..", "things", r"debug_thumb_connector_shape"))
+    walls_shape = case_walls()
+    if debug_exports:
+        export_file(shape=walls_shape, fname=path.join(r"..", "things", r"debug_walls_shape"))
+    s2 = union([walls_shape])
+    s2 = union([s2, *screw_insert_outers()])
 
     if controller_mount_type in ['RJ9_USB_TEENSY']:
-        adders.append(teensy_holder())
+        s2 = union([s2, teensy_holder()])
 
     if controller_mount_type in ['RJ9_USB_TEENSY', 'RJ9_USB_WALL']:
-        adders.append(usb_holder())
-        post_sub.append(usb_holder_hole())
+        s2 = union([s2, usb_holder()])
+        s2 = difference(s2, [usb_holder_hole()])
 
     if controller_mount_type in ['RJ9_USB_TEENSY', 'RJ9_USB_WALL']:
-        pre_sub.append(rj9_space())
-        adders.append(rj9_holder())
+        s2 = difference(s2, [rj9_space()])
 
     if controller_mount_type in ['EXTERNAL']:
-        post_sub.append(external_mount_hole())
+        s2 = difference(s2, [external_mount_hole()])
 
-    s2 = sl.union()(case_walls(), screw_insert_outers())
-    s2 = sl.difference()(s2, *pre_sub)
-    s2 = sl.union()(s2, *adders)
-    shape = sl.union()(shape, s2)
+    s2 = difference(s2, [union(screw_insert_holes())])
+    shape = union([shape, s2])
 
-    shape -= sl.translate([0, 0, -20])(sl.cube([350, 350, 40], center=True))
-
-    shape = sl.difference()(shape, *post_sub)
+    if controller_mount_type in ['RJ9_USB_TEENSY', 'RJ9_USB_WALL']:
+        shape = union([shape, rj9_holder()])
 
     if oled_mount_type == "UNDERCUT":
         hole, frame = oled_undercut_mount_frame()
-        shape -= hole
-        shape += frame
+        shape = difference(shape, [hole])
+        shape = union([shape, frame])
 
     elif oled_mount_type == "SLIDING":
         hole, frame = oled_sliding_mount_frame()
-        shape -= hole
-        shape += frame
+        shape = difference(shape, [hole])
+        shape = union([shape, frame])
 
     elif oled_mount_type == "CLIP":
         hole, frame = oled_clip_mount_frame()
-        shape -= hole
-        shape += frame
+        shape = difference(shape, [hole])
+        shape = union([shape, frame])
+
+    block = box(350, 350, 40)
+    block = translate(block, (0, 0, -20))
+    shape = difference(shape, [block])
+
+    if show_caps:
+        shape = add([shape, thumbcaps()])
+        shape = add([shape, caps()])
 
     if side == "left":
-        shape = sl.mirror([-1, 0, 0])(shape)
+        shape = mirror(shape, 'YZ')
 
     return shape
 
 
-mod_r = model_side(side="right")
-
-sl.scad_render_to_file(mod_r, path.join(r"..", "things", save_dir, config_name + r"_right.scad"))
-
-if symmetry == "asymmetric":
-    mod_l = model_side(side="left")
-    sl.scad_render_to_file(
-        mod_l, path.join(r"..", "things", save_dir, config_name + r"_left.scad")
-    )
-else:
-    sl.scad_render_to_file(
-        sl.mirror([-1, 0, 0])(mod_r), path.join(r"..", "things", save_dir, config_name + r"_left.scad")
-    )
-
-
+# NEEDS TO BE SPECIAL FOR CADQUERY
 def baseplate():
-    shape = sl.union()(
-        case_walls(),
-        screw_insert_outers(),
-    )
+    if ENGINE == 'cadquery':
+        # shape = mod_r
+        shape = union([case_walls(), *screw_insert_outers()])
+        # tool = translate(screw_insert_screw_holes(), [0, 0, -10])
+        tool = screw_insert_all_shapes(screw_hole_diameter/2., screw_hole_diameter/2., 350)
+        for item in tool:
+            item = translate(item, [0, 0, -10])
+            shape = difference(shape, [item])
 
-    tool = sl.translate([0, 0, -10])(screw_insert_screw_holes())
+        shape = translate(shape, (0, 0, -0.01))
 
-    shape = shape - tool
+        square = cq.Workplane('XY').rect(1000, 1000)
+        for wire in square.wires().objects:
+            plane = cq.Workplane('XY').add(cq.Face.makeFromWires(wire))
+        shape = intersect(shape, plane)
 
-    shape = sl.translate([0, 0, -0.01])(shape)
+        outside = shape.vertices(cq.DirectionMinMaxSelector(cq.Vector(1, 0, 0), True)).objects[0]
+        sizes = []
+        max_val = 0
+        inner_index = 0
+        base_wires = shape.wires().objects
+        for i_wire, wire in enumerate(base_wires):
+            is_outside = False
+            for vert in wire.Vertices():
+                if vert.toTuple() == outside.toTuple():
+                    outer_wire = wire
+                    outer_index = i_wire
+                    is_outside = True
+                    sizes.append(0)
+            if not is_outside:
+                sizes.append(len(wire.Vertices()))
+            if sizes[-1]>max_val:
+                inner_index = i_wire
+                max_val = sizes[-1]
+        print(sizes)
+        inner_wire = base_wires[inner_index]
 
-    return sl.projection(cut=True)(shape)
+        # inner_plate = cq.Workplane('XY').add(cq.Face.makeFromWires(inner_wire))
+
+        inner_shape = cq.Workplane('XY').add(cq.Solid.extrudeLinear(outerWire=inner_wire, innerWires=[], vecNormal=cq.Vector(0, 0, base_thickness)))
+        inner_shape = translate(inner_shape, (0, 0, -base_rim_thickness))
+
+        holes = []
+        for i in range(len(base_wires)):
+            if i not in [inner_index, outer_index]:
+                holes.append(base_wires[i])
+        cutout = [*holes, inner_wire]
+
+        shape = cq.Workplane('XY').add(cq.Solid.extrudeLinear(outer_wire, cutout, cq.Vector(0, 0, base_rim_thickness)))
+        hole_shapes=[]
+        for hole in holes:
+            loc = hole.Center()
+            hole_shapes.append(
+                translate(
+                    cylinder(screw_cbore_diameter, screw_cbore_depth),
+                    (loc.x, loc.y, 0)
+                    # (loc.x, loc.y, screw_cbore_depth/2)
+                )
+            )
+        shape = difference(shape, hole_shapes)
+        shape = translate(shape, (0, 0, -base_rim_thickness))
+        shape = union([shape, inner_shape])
 
 
-sl.scad_render_to_file(baseplate(), path.join(r"..", "things", save_dir, config_name + r"_plate.scad"))
+        return shape
+    else:
 
-if oled_mount_type == 'UNDERCUT':
-    sl.scad_render_to_file(oled_undercut_mount_frame()[1], path.join(r"..", "things", save_dir, config_name + r"_oled_undercut_test.scad"))
+        shape = union([
+            case_walls(),
+            *screw_insert_outers()
+        ])
 
-if oled_mount_type == 'SLIDING':
-    sl.scad_render_to_file(oled_sliding_mount_frame()[1], path.join(r"..", "things", save_dir, config_name + r"_oled_sliding_test.scad"))
+        tool = translate(union(screw_insert_screw_holes()), [0, 0, -10])
 
-if oled_mount_type == 'CLIP':
-    oled_mount_location_xyz = (0.0, 0.0, -oled_mount_depth / 2)
-    oled_mount_rotation_xyz = (0.0, 0.0, 0.0)
-    sl.scad_render_to_file(oled_clip(), path.join(r"..", "things", save_dir, config_name + r"_oled_clip.scad"))
-    sl.scad_render_to_file(oled_clip_mount_frame()[1], path.join(r"..", "things", save_dir, config_name + r"_oled_clip_test.scad"))
-    sl.scad_render_to_file(oled_clip_mount_frame()[1] + oled_clip(),
-                           path.join(r"..", "things", save_dir, config_name + r"_oled_clip_assy_test.scad"))
+        shape = shape - tool
+
+        shape = translate(shape, [0, 0, -0.01])
+
+        return sl.projection(cut=True)(shape)
+
+def run():
+
+    mod_r = model_side(side="right")
+    export_file(shape=mod_r, fname=path.join(r"..", "things", save_dir, config_name + r"_right"))
+
+    if symmetry == "asymmetric":
+        mod_l = model_side(side="left")
+        export_file(shape=mod_l, fname=path.join(r"..", "things", save_dir, config_name + r"_left"))
+
+    else:
+        export_file(shape=mirror(mod_r, 'YZ'), fname=path.join(r"..", "things", save_dir, config_name + r"_left"))
+
+
+    base = baseplate()
+    export_file(shape=base, fname=path.join(r"..", "things", save_dir, config_name + r"_plate"))
+    export_dxf(shape=base, fname=path.join(r"..", "things", save_dir, config_name + r"_plate"))
+
+
+    if oled_mount_type == 'UNDERCUT':
+        export_file(shape=oled_undercut_mount_frame()[1], fname=path.join(r"..", "things", save_dir, config_name + r"_oled_undercut_test"))
+
+    if oled_mount_type == 'SLIDING':
+        export_file(shape=oled_sliding_mount_frame()[1], fname=path.join(r"..", "things", save_dir, config_name + r"_oled_sliding_test"))
+
+    if oled_mount_type == 'CLIP':
+        oled_mount_location_xyz = (0.0, 0.0, -oled_mount_depth / 2)
+        oled_mount_rotation_xyz = (0.0, 0.0, 0.0)
+        export_file(shape=oled_clip(), fname=path.join(r"..", "things", save_dir, config_name + r"_oled_clip"))
+        export_file(shape=oled_clip_mount_frame()[1],
+                            fname=path.join(r"..", "things", save_dir, config_name + r"_oled_clip_test"))
+        export_file(shape=union((oled_clip_mount_frame()[1], oled_clip())),
+                            fname=path.join(r"..", "things", save_dir, config_name + r"_oled_clip_assy_test"))
+
+# base = baseplate()
+# export_file(shape=base, fname=path.join(r"..", "things", save_dir, config_name + r"_plate"))
+
+run()

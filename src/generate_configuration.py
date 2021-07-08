@@ -47,7 +47,7 @@ shape_config = {
     'pinky_1_5U': False,  # LEAVE AS FALSE, CURRENTLY BROKEN
     'first_1_5U_row': 0,
     'last_1_5U_row': 5,
-    'thumb_style':  'MINI', #'DEFAULT', 'MINI', 'CARBONFET'
+    'thumb_style':  'DEFAULT', #'DEFAULT', 'MINI', 'CARBONFET'
     ##############################
 
 
@@ -213,6 +213,19 @@ shape_config = {
 
     # Offset is from the top inner corner of the top inner key.
 
+    ###################################
+    ## Bottom Plate Dimensions
+    ###################################
+    # COMMON DIMENSION
+    'screw_hole_diameter': 2,
+    # USED FOR CADQUERY ONLY
+    'base_thickness': 3.0, # thickness in the middle of the plate
+    'base_offset': 3.0, # Both start flat/flush on the bottom.  This offsets the base up (if positive)
+    'base_rim_thickness': 5.0,  # thickness on the outer frame with screws
+    'screw_cbore_diameter': 4.0,
+    'screw_cbore_depth': 2.0,
+
+    # Offset is from the top inner corner of the top inner key.
 
     ###################################
     ## COLUMN OFFSETS
