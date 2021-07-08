@@ -84,9 +84,12 @@ shape_config = {
     # 'NUB' = original side nubs.
     # 'UNDERCUT' = snap fit undercut.  May require CLIP_THICKNESS and possibly CLIP_UNDERCUT tweaking
     #       and/or filing to get proper snap.
+    # 'NOTCH' = snap fit undercut only near switch clip.  May require CLIP_THICKNESS and possibly CLIP_UNDERCUT
+    #       tweaking and/or filing to get proper snap.
     # 'HS_NUB' = hot swap underside with nubs.
     # 'HS_UNDERCUT' = hot swap underside with undercut. Does not generate properly.  Hot swap step needs to be modified.
-    'plate_style':  'UNDERCUT',
+    # 'HS_NOTCH' = hot swap underside with notch.  Does not generate properly.  Hot swap step needs to be modified.
+    'plate_style':  'NOTCH',
 
     'hole_keyswitch_height':  14.0,
     'hole_keyswitch_width':  14.0,
@@ -94,12 +97,14 @@ shape_config = {
     'nub_keyswitch_height':  14.4,
     'nub_keyswitch_width':  14.4,
 
-    'undercut_keyswitch_height':  14.4,
-    'undercut_keyswitch_width':  14.4,
+    'undercut_keyswitch_height':  14.0,
+    'undercut_keyswitch_width':  14.0,
+    'notch_width': 5.0, # If using notch, it is identical to undecut, but only locally by the switch clip
 
     'sa_profile_key_height':  12.7,
-    'plate_thickness':  4,
+    'plate_thickness':  4+1.1,
 
+    'plate_rim': 1.5 + 0.5,
     # Undercut style dimensions
     'clip_thickness':  1.4,
     'clip_undercut':  1.0,
@@ -226,6 +231,16 @@ shape_config = {
     'screw_cbore_depth': 2.0,
 
     # Offset is from the top inner corner of the top inner key.
+
+    ###################################
+    ## EXPERIMENTAL
+    ###################################
+    'plate_holes':  True,
+    'plate_holes_xy_offset': (0.0, 0.0),
+    'plate_holes_width': 14.3,
+    'plate_holes_height': 14.3,
+    'plate_holes_diameter': 1.7,
+    'plate_holes_depth': 20.0,
 
     ###################################
     ## COLUMN OFFSETS

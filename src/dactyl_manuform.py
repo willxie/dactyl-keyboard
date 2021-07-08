@@ -14,12 +14,13 @@ def rad2deg(rad: float) -> float:
     return rad * 180 / pi
 
 ENGINE = 'solid'
-ENGINE = 'cadquery'
+# ENGINE = 'cadquery'
 debug_exports = False
 
 # if __name__=='__main__':
 #
-
+from src.generate_configuration import *
+save_config()
 
 ## IMPORT DEFAULT CONFIG IN CASE NEW PARAMETERS EXIST
 import src.generate_configuration as cfg
@@ -50,20 +51,20 @@ lastcol = ncols - 1
 if plate_style in ['NUB', 'HS_NUB']:
     keyswitch_height = nub_keyswitch_height
     keyswitch_width = nub_keyswitch_width
-elif plate_style in ['UNDERCUT', 'HS_UNDERCUT']:
+elif plate_style in ['UNDERCUT', 'HS_UNDERCUT', 'NOTCH', 'HS_NOTCH']:
     keyswitch_height = undercut_keyswitch_height
     keyswitch_width = undercut_keyswitch_width
 else:
     keyswitch_height = hole_keyswitch_height
     keyswitch_width = hole_keyswitch_width
 
-if plate_style in ['HS_UNDERCUT', 'HS_NUB', 'HS_HOLE']:
+if 'HS_' in plate_style:
     symmetry = "asymmetric"
     plate_file = path.join("..", "src", r"hot_swap_plate")
     plate_offset = 0.0
 
-mount_width = keyswitch_width + 3
-mount_height = keyswitch_height + 3
+mount_width = keyswitch_width + 2 * plate_rim
+mount_height = keyswitch_height + 2 * plate_rim
 mount_thickness = plate_thickness
 
 if oled_mount_type is not None:
@@ -418,6 +419,7 @@ else:
 ####################################################
 
 
+
 def single_plate(cylinder_segments=100, side="right"):
 
     if plate_style in ['NUB', 'HS_NUB']:
@@ -448,17 +450,32 @@ def single_plate(cylinder_segments=100, side="right"):
         plate = box(mount_width, mount_height, mount_thickness)
         plate = translate(plate, (0.0, 0.0, mount_thickness / 2.0))
 
-        shape_cut = box(keyswitch_width, keyswitch_height, mount_thickness * 2)
-        shape_cut = translate(shape_cut, (0.0, 0.0, mount_thickness))
+        shape_cut = box(keyswitch_width, keyswitch_height, mount_thickness * 2 +.02)
+        shape_cut = translate(shape_cut, (0.0, 0.0, mount_thickness-.01))
 
         plate = difference(plate, [shape_cut])
 
-    if plate_style in ['UNDERCUT', 'HS_UNDERCUT']:
-        undercut = box(
-            keyswitch_width + 2 * clip_undercut,
-            keyswitch_height + 2 * clip_undercut,
-            mount_thickness
-        )
+    if plate_style in ['UNDERCUT', 'HS_UNDERCUT', 'NOTCH', 'HS_NOTCH']:
+        if plate_style in ['UNDERCUT', 'HS_UNDERCUT']:
+            undercut = box(
+                keyswitch_width + 2 * clip_undercut,
+                keyswitch_height + 2 * clip_undercut,
+                mount_thickness
+            )
+
+        if plate_style in ['NOTCH', 'HS_NOTCH']:
+            undercut = box(
+                notch_width,
+                keyswitch_height + 2 * clip_undercut,
+                mount_thickness
+            )
+            undercut = union([undercut,
+                box(
+                    keyswitch_width + 2 * clip_undercut,
+                    notch_width,
+                    mount_thickness
+                )
+            ])
 
         undercut = translate(undercut, (0.0, 0.0, -clip_thickness + mount_thickness / 2.0))
 
@@ -471,6 +488,32 @@ def single_plate(cylinder_segments=100, side="right"):
         socket = import_file(plate_file)
         socket = translate(socket, [0, 0, plate_thickness + plate_offset])
         plate = union([plate, socket])
+
+
+    if plate_holes:
+        half_width = plate_holes_width/2.
+        half_height = plate_holes_height/2.
+        x_off = plate_holes_xy_offset[0]
+        y_off = plate_holes_xy_offset[1]
+        holes = [
+            translate(
+                cylinder(radius=plate_holes_diameter/2, height=plate_holes_depth+.01),
+                (x_off+half_width, y_off+half_height, plate_holes_depth/2-.01)
+            ),
+            translate(
+                cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth+.01),
+                (x_off-half_width, y_off+half_height, plate_holes_depth/2-.01)
+            ),
+            translate(
+                cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth+.01),
+                (x_off-half_width, y_off-half_height, plate_holes_depth/2-.01)
+            ),
+            translate(
+                cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth+.01),
+                (x_off+half_width, y_off-half_height, plate_holes_depth/2-.01)
+            ),
+        ]
+        plate = difference(plate, holes)
 
     if side == "left":
         plate = mirror(plate, 'YZ')
@@ -2565,7 +2608,7 @@ def screw_insert_thumb(bottom_radius, top_radius, height):
 
     else:
         position = thumborigin()
-        position = list(np.array(position) + np.array([-25, -61, 0]))
+        position = list(np.array(position) + np.array([-21, -58, 0]))
         position[2] = 0
 
     shape = screw_insert_shape(bottom_radius, top_radius, height)
@@ -2813,9 +2856,12 @@ def run():
 
 
     base = baseplate()
-    export_file(shape=base, fname=path.join(r"..", "things", save_dir, config_name + r"_plate"))
-    export_dxf(shape=base, fname=path.join(r"..", "things", save_dir, config_name + r"_plate"))
+    export_file(shape=base, fname=path.join(r"..", "things", save_dir, config_name + r"_right_plate"))
+    export_dxf(shape=base, fname=path.join(r"..", "things", save_dir, config_name + r"_right_plate"))
 
+    lbase = mirror(base, 'YZ')
+    export_file(shape=lbase, fname=path.join(r"..", "things", save_dir, config_name + r"_left_plate"))
+    export_dxf(shape=lbase, fname=path.join(r"..", "things", save_dir, config_name + r"_left_plate"))
 
     if oled_mount_type == 'UNDERCUT':
         export_file(shape=oled_undercut_mount_frame()[1], fname=path.join(r"..", "things", save_dir, config_name + r"_oled_undercut_test"))
