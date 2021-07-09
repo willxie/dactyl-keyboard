@@ -19,11 +19,11 @@ debug_exports = False
 
 # if __name__=='__main__':
 #
-from src.generate_configuration import *
+from generate_configuration import *
 save_config()
 
 ## IMPORT DEFAULT CONFIG IN CASE NEW PARAMETERS EXIST
-import src.generate_configuration as cfg
+import generate_configuration as cfg
 for item in cfg.shape_config:
     locals()[item] = cfg.shape_config[item]
 
@@ -118,9 +118,9 @@ def column_offset(column: int) -> list:
 ####################################################
 
 if ENGINE == 'cadquery':
-    from src.helpers_cadquery import *
+    from helpers_cadquery import *
 else:
-    from src.helpers_solid import *
+    from helpers_solid import *
 
 ####################################################
 # END HELPER FUNCTIONS

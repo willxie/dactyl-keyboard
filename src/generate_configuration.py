@@ -266,5 +266,17 @@ def save_config():
     with open('run_config.json', mode='w') as fid:
         json.dump(shape_config, fid, indent=4)
 
+def update_config(fname, fname_out=None):
+    if fname_out is None:
+        fname_out == "updated_config.json"
+    # Open existing config, update with any new parameters, and save to updated_config.json
+    with open(fname, mode='r') as fid:
+        last_shape_config = json.load(fid)
+    shape_config.update(last_shape_config)
+
+    with open(fname_out, mode='w') as fid:
+        json.dump(shape_config, fid, indent=4)
+
+
 if __name__ == '__main__':
     save_config()

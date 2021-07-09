@@ -1,7 +1,7 @@
 import os
 import copy
 import importlib
-from src.generate_configuration import *
+from generate_configuration import *
 
 ENGINE = 'solid'
 # ENGINE = 'cadquery'
@@ -119,7 +119,7 @@ for config in configurations:
         json.dump(shape_config, fid, indent=4)
 
         if init:
-            import src.dactyl_manuform as dactyl_manuform
+            import dactyl_manuform as dactyl_manuform
         else:
             importlib.reload(dactyl_manuform)
 
