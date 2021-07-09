@@ -40,6 +40,7 @@ shape_config = {
         9  # controls overall height# original=9 with centercol=3# use 16 for centercol=2
     ),
 
+    'thumb_style': 'DEFAULT',  # 'DEFAULT', 'MINI', 'CARBONFET'
 
     ##############################
     # NEW TEST PARAMETERS
@@ -47,7 +48,6 @@ shape_config = {
     'pinky_1_5U': False,  # LEAVE AS FALSE, CURRENTLY BROKEN
     'first_1_5U_row': 0,
     'last_1_5U_row': 5,
-    'thumb_style':  'DEFAULT', #'DEFAULT', 'MINI', 'CARBONFET'
     ##############################
 
 
@@ -235,7 +235,7 @@ shape_config = {
     ###################################
     ## EXPERIMENTAL
     ###################################
-    'plate_holes':  True,
+    'plate_holes':  False,
     'plate_holes_xy_offset': (0.0, 0.0),
     'plate_holes_width': 14.3,
     'plate_holes_height': 14.3,

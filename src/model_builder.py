@@ -118,17 +118,9 @@ for config in configurations:
     with open('run_config.json', mode='w') as fid:
         json.dump(shape_config, fid, indent=4)
 
-    for ENGINE in ['solid', 'cadquery']:
-        if ENGINE == 'solid':
-            if init:
-                import src.dactyl_manuform_solid as dactyl_manuform
-            else:
-                importlib.reload(dactyl_manuform)
-
-        if ENGINE == 'cadquery':
-            if init:
-                import src.dactyl_manuform as dactyl_manuform_cadquery
-            else:
-                importlib.reload(dactyl_manuform_cadquery)
+        if init:
+            import src.dactyl_manuform as dactyl_manuform
+        else:
+            importlib.reload(dactyl_manuform)
 
     init = False

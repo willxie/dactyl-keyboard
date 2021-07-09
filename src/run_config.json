@@ -1,8 +1,8 @@
 {
-    "save_dir": ".",
-    "config_name": "DM",
+    "save_dir": "6x6_Basic",
+    "config_name": "6x6_Basic",
     "show_caps": false,
-    "nrows": 5,
+    "nrows": 6,
     "ncols": 6,
     "alpha": 0.26179916666666664,
     "beta": 0.08726638888888888,
@@ -18,10 +18,10 @@
         7
     ],
     "keyboard_z_offset": 9,
+    "thumb_style": "DEFAULT",
     "pinky_1_5U": false,
     "first_1_5U_row": 0,
     "last_1_5U_row": 5,
-    "thumb_style": "DEFAULT",
     "extra_width": 2.5,
     "extra_height": 1.0,
     "wall_z_offset": 15,
@@ -77,7 +77,7 @@
     "undercut_transition": 0.2,
     "plate_file": null,
     "plate_offset": 0.0,
-    "oled_mount_type": "CLIP",
+    "oled_mount_type": null,
     "oled_configurations": {
         "UNDERCUT": {
             "oled_mount_width": 15.0,
@@ -165,7 +165,7 @@
     "post_size": 0.1,
     "post_adj": 0,
     "screws_offset": "INSIDE",
-    "controller_mount_type": "EXTERNAL",
+    "controller_mount_type": "RJ9_USB_WALL",
     "external_holder_height": 12.5,
     "external_holder_width": 28.75,
     "external_holder_xoffset": -5.0,
