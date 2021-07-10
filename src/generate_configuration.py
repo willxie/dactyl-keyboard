@@ -7,7 +7,7 @@ r2d = 180 / pi
 
 shape_config = {
 
-    # 'ENGINE': 'solid', # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
+    'ENGINE': 'solid', # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
     # 'ENGINE':  'cadquery', # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
 
 
@@ -25,8 +25,8 @@ shape_config = {
 
     'alpha':  pi / 12.0,  # curvature of the columns
     'beta':  pi / 36.0,  # curvature of the rows
-    'centerrow_offset':  3,  # rows from max, controls front_back tilt
     'centercol':  3,  # controls left_right tilt / tenting (higher number is more tenting)
+    'centerrow_offset':  3,  # rows from max, controls front_back tilt
     'tenting_angle':  pi / 12.0,  # or, change this for more precise tenting control
 
     # symmetry states if it is a symmetric or asymmetric build.  If asymmetric it doubles the generation time.
@@ -40,7 +40,7 @@ shape_config = {
         9  # controls overall height# original=9 with centercol=3# use 16 for centercol=2
     ),
 
-    'thumb_style': 'DEFAULT',  # 'DEFAULT', 'MINI', 'CARBONFET'
+    'thumb_style': 'CARBONFET',  # 'DEFAULT', 'MINI', 'CARBONFET'
 
     ##############################
     # NEW TEST PARAMETERS
@@ -125,6 +125,9 @@ shape_config = {
     # 'CLIP' = Features to set the OLED in a frame a snap a bezel down to hold it in place.
 
     'oled_mount_type':  'CLIP',
+    'oled_center_row': 1.5, # if not None, this will override the oled_mount_location_xyz and oled_mount_rotation_xyz settings
+    'oled_translation_offset': (0, 0, 4), # Z offset tweaks are expected depending on curvature and OLED mount choice.
+    'oled_rotation_offset': (0, 0, 0),
 
     'oled_configurations': {
         'UNDERCUT':{
@@ -134,8 +137,8 @@ shape_config = {
             'oled_mount_rim': 3.0,
             'oled_mount_depth': 6.0,
             'oled_mount_cut_depth': 20.0,
-            'oled_mount_location_xyz': (-80.0, 20.0, 45.0),
-            'oled_mount_rotation_xyz': (13.0, 0.0, -6.0),
+            'oled_mount_location_xyz': (-80.0, 20.0, 45.0), # will be overwritten if oled_center_row is not None
+            'oled_mount_rotation_xyz': (13.0, 0.0, -6.0), # will be overwritten if oled_center_row is not None
             'oled_left_wall_x_offset_override': 28.0,
             'oled_left_wall_z_offset_override': 0.0,
 
@@ -150,8 +153,8 @@ shape_config = {
             'oled_mount_rim': 2.5,
             'oled_mount_depth': 8.0,
             'oled_mount_cut_depth': 20.0,
-            'oled_mount_location_xyz': (-78.0, 10.0, 41.0),
-            'oled_mount_rotation_xyz': (6.0, 0.0, -3.0),
+            'oled_mount_location_xyz': (-78.0, 10.0, 41.0), # will be overwritten if oled_center_row is not None
+            'oled_mount_rotation_xyz': (6.0, 0.0, -3.0), # will be overwritten if oled_center_row is not None
             'oled_left_wall_x_offset_override': 24.0,
             'oled_left_wall_z_offset_override': 0.0,
 
@@ -170,8 +173,8 @@ shape_config = {
             'oled_mount_rim': 2.0,
             'oled_mount_depth': 7.0,
             'oled_mount_cut_depth': 20.0,
-            'oled_mount_location_xyz': (-78.0, 20.0, 42.0),
-            'oled_mount_rotation_xyz': (12.0, 0.0, -6.0),
+            'oled_mount_location_xyz': (-78.0, 20.0, 42.0), # will be overwritten if oled_center_row is not None
+            'oled_mount_rotation_xyz': (12.0, 0.0, -6.0), # will be overwritten if oled_center_row is not None
             'oled_left_wall_x_offset_override': 24.0,
             'oled_left_wall_z_offset_override': 0.0,
 
@@ -251,9 +254,9 @@ shape_config = {
         [0, 0, 0],
         [0, 2.82, -4.5],
         [0, 0, 0],
-        [0, -12, 5.64],
-        [0, -12, 5.64],
-        [0, -12, 5.64],
+        [0, -6, 5],# REDUCED STAGGER
+        [0, -6, 5],# REDUCED STAGGER
+        [0, -6, 5],# NOT USED IN MOST FORMATS (7th column)
     ],
 
 }

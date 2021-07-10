@@ -2,6 +2,14 @@ import cadquery as cq
 from scipy.spatial import ConvexHull as sphull
 import numpy as np
 
+
+debug_trace = False
+
+def debugprint(info):
+    if debug_trace:
+        print(info)
+
+
 def box(width, height, depth):
     return cq.Workplane("XY").box(width, height, depth)
 
@@ -32,12 +40,12 @@ def translate(shape, vector):
 
 
 def mirror(shape, plane=None):
-    print('mirror()')
+    debugprint('mirror()')
     return shape.mirror(mirrorPlane=plane)
 
 
 def union(shapes):
-    print('union()')
+    debugprint('union()')
     shape = None
     for item in shapes:
         if shape is None:
@@ -48,7 +56,7 @@ def union(shapes):
 
 
 def add(shapes):
-    print('union()')
+    debugprint('union()')
     shape = None
     for item in shapes:
         if shape is None:
@@ -59,7 +67,7 @@ def add(shapes):
 
 
 def difference(shape, shapes):
-    print('difference()')
+    debugprint('difference()')
     for item in shapes:
         shape = shape.cut(item)
     return shape
@@ -70,7 +78,7 @@ def intersect(shape1, shape2):
 
 
 def face_from_points(points):
-    # print('face_from_points()')
+    # debugprint('face_from_points()')
     edges = []
     num_pnts = len(points)
     for i in range(len(points)):
@@ -89,7 +97,7 @@ def face_from_points(points):
 
 
 def hull_from_points(points):
-    # print('hull_from_points()')
+    # debugprint('hull_from_points()')
     hull_calc = sphull(points)
     n_faces = len(hull_calc.simplices)
 
@@ -107,7 +115,7 @@ def hull_from_points(points):
 
 
 def hull_from_shapes(shapes, points=None):
-    # print('hull_from_shapes()')
+    # debugprint('hull_from_shapes()')
     vertices = []
     for shape in shapes:
         verts = shape.vertices()
@@ -122,7 +130,7 @@ def hull_from_shapes(shapes, points=None):
 
 
 def tess_hull(shapes, sl_tol=.5, sl_angTol=1):
-    # print('hull_from_shapes()')
+    # debugprint('hull_from_shapes()')
     vertices = []
     solids = []
     for wp in shapes:
@@ -139,7 +147,7 @@ def tess_hull(shapes, sl_tol=.5, sl_angTol=1):
 
 
 def triangle_hulls(shapes):
-    print('triangle_hulls()')
+    debugprint('triangle_hulls()')
     hulls = [cq.Workplane('XY')]
     for i in range(len(shapes) - 2):
         hulls.append(hull_from_shapes(shapes[i: (i + 3)]))
@@ -175,10 +183,12 @@ def import_file(filename):
 
 
 def export_file(shape, fname):
+    print("IMPORTING FROM {}".format(fname))
     cq.exporters.export(w=shape, fname=fname + ".step",
                         exportType='STEP')
 
 
 def export_dxf(shape, fname):
+    print("EXPORTING TO {}".format(fname))
     cq.exporters.export(w=shape, fname=fname + ".dxf",
                         exportType='DXF')

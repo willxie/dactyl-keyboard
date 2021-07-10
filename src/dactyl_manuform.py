@@ -13,12 +13,11 @@ def deg2rad(degrees: float) -> float:
 def rad2deg(rad: float) -> float:
     return rad * 180 / pi
 
-ENGINE = 'solid'
-# ENGINE = 'cadquery'
-debug_exports = False
 
-# if __name__=='__main__':
-#
+###############################################
+# EXTREMELY UGLY BUT FUNCTIONAL BOOTSTRAP
+###############################################
+
 from generate_configuration import *
 save_config()
 
@@ -32,6 +31,41 @@ with open('run_config.json', mode='r') as fid:
     data = json.load(fid)
 for item in data:
     locals()[item] = data[item]
+
+# Really rough setup.  Check for ENGINE, set it not present from configuration.
+try:
+    print('Current Engine = {}'.format(ENGINE))
+except Exception:
+    print('Current Engine = {}'.format('None'))
+    ENGINE = 'solid'
+    # ENGINE = 'cadquery'
+    print('Setting Current Engine = {}'.format(ENGINE))
+
+###############################################
+# END EXTREMELY UGLY BOOTSTRAP
+###############################################
+
+####################################################
+# HELPER FUNCTIONS TO MERGE CADQUERY AND OPENSCAD
+####################################################
+
+if ENGINE == 'cadquery':
+    from helpers_cadquery import *
+else:
+    from helpers_solid import *
+
+####################################################
+# END HELPER FUNCTIONS
+####################################################
+
+
+debug_exports = False
+debug_trace = False
+
+def debugprint(info):
+    if debug_trace:
+        print(info)
+
 
 if oled_mount_type is not None:
     for item in oled_configurations[oled_mount_type]:
@@ -113,19 +147,6 @@ def column_offset(column: int) -> list:
     return column_offsets[column]
 
 # column_style='fixed'
-####################################################
-# HELPER FUNCTIONS TO MERGE CADQUERY AND OPENSCAD
-####################################################
-
-if ENGINE == 'cadquery':
-    from helpers_cadquery import *
-else:
-    from helpers_solid import *
-
-####################################################
-# END HELPER FUNCTIONS
-####################################################
-
 
 
 def single_plate(cylinder_segments=100, side="right"):
@@ -289,7 +310,7 @@ def sa_cap(Usize=1):
 
 
 def rotate_around_x(position, angle):
-    # print('rotate_around_x()')
+    # debugprint('rotate_around_x()')
     t_matrix = np.array(
         [
             [1, 0, 0],
@@ -301,7 +322,7 @@ def rotate_around_x(position, angle):
 
 
 def rotate_around_y(position, angle):
-    # print('rotate_around_y()')
+    # debugprint('rotate_around_y()')
     t_matrix = np.array(
         [
             [np.cos(angle), 0, np.sin(angle)],
@@ -323,7 +344,8 @@ def apply_key_geometry(
         row,
         column_style=column_style,
 ):
-    print('apply_key_geometry()')
+
+    debugprint('apply_key_geometry()')
 
     column_angle = beta * (centercol - column)
 
@@ -363,22 +385,22 @@ def apply_key_geometry(
 
 
 def x_rot(shape, angle):
-    # print('x_rot()')
+    # debugprint('x_rot()')
     return rotate(shape, [rad2deg(angle), 0, 0])
 
 
 def y_rot(shape, angle):
-    # print('y_rot()')
+    # debugprint('y_rot()')
     return rotate(shape, [0, rad2deg(angle), 0])
 
 
 def key_place(shape, column, row):
-    print('key_place()')
+    debugprint('key_place()')
     return apply_key_geometry(shape, translate, x_rot, y_rot, column, row)
 
 
 def add_translate(shape, xyz):
-    print('add_translate()')
+    debugprint('add_translate()')
     vals = []
     for i in range(len(shape)):
         vals.append(shape[i] + xyz[i])
@@ -386,14 +408,14 @@ def add_translate(shape, xyz):
 
 
 def key_position(position, column, row):
-    print('key_position()')
+    debugprint('key_position()')
     return apply_key_geometry(
         position, add_translate, rotate_around_x, rotate_around_y, column, row
     )
 
 
 def key_holes(side="right"):
-    print('key_holes()')
+    debugprint('key_holes()')
     # hole = single_plate()
     holes = []
     for column in range(ncols):
@@ -426,7 +448,7 @@ def caps():
 
 
 def web_post():
-    print('web_post()')
+    debugprint('web_post()')
     post = box(post_size, post_size, web_thickness)
     post = translate(post, (0, 0, plate_thickness - (web_thickness / 2)))
     return post
@@ -467,7 +489,7 @@ def web_post_br(wide=False):
 
 
 def connectors():
-    print('connectors()')
+    debugprint('connectors()')
     hulls = []
     for column in range(ncols - 1):
         for row in range(lastrow):  # need to consider last_row?
@@ -508,7 +530,7 @@ def connectors():
 
 
 def thumborigin():
-    # print('thumborigin()')
+    # debugprint('thumborigin()')
     origin = key_position([mount_width / 2, -(mount_height / 2), 0], 1, cornerrow)
     for i in range(len(origin)):
         origin[i] = origin[i] + thumb_offsets[i]
@@ -516,7 +538,7 @@ def thumborigin():
 
 
 def thumb_tr_place(shape):
-    print('thumb_tr_place()')
+    debugprint('thumb_tr_place()')
     shape = rotate(shape, [10, -23, 10])
     shape = translate(shape, thumborigin())
     shape = translate(shape, [-12, -16, 3])
@@ -524,7 +546,7 @@ def thumb_tr_place(shape):
 
 
 def thumb_tl_place(shape):
-    print('thumb_tl_place()')
+    debugprint('thumb_tl_place()')
     shape = rotate(shape, [10, -23, 10])
     shape = translate(shape, thumborigin())
     shape = translate(shape, [-32, -15, -2])
@@ -532,7 +554,7 @@ def thumb_tl_place(shape):
 
 
 def thumb_mr_place(shape):
-    print('thumb_mr_place()')
+    debugprint('thumb_mr_place()')
     shape = rotate(shape, [-6, -34, 48])
     shape = translate(shape, thumborigin())
     shape = translate(shape, [-29, -40, -13])
@@ -540,7 +562,7 @@ def thumb_mr_place(shape):
 
 
 def thumb_ml_place(shape):
-    print('thumb_ml_place()')
+    debugprint('thumb_ml_place()')
     shape = rotate(shape, [6, -34, 40])
     shape = translate(shape, thumborigin())
     shape = translate(shape, [-51, -25, -12])
@@ -548,7 +570,7 @@ def thumb_ml_place(shape):
 
 
 def thumb_br_place(shape):
-    print('thumb_br_place()')
+    debugprint('thumb_br_place()')
     shape = rotate(shape, [-16, -33, 54])
     shape = translate(shape, thumborigin())
     shape = translate(shape, [-37.8, -55.3, -25.3])
@@ -556,7 +578,7 @@ def thumb_br_place(shape):
 
 
 def thumb_bl_place(shape):
-    print('thumb_bl_place()')
+    debugprint('thumb_bl_place()')
     shape = rotate(shape, [-4, -35, 52])
     shape = translate(shape, thumborigin())
     shape = translate(shape, [-56.3, -43.3, -23.5])
@@ -564,7 +586,7 @@ def thumb_bl_place(shape):
 
 
 def thumb_1x_layout(shape, cap=False):
-    print('thumb_1x_layout()')
+    debugprint('thumb_1x_layout()')
     if cap:
         shapes = thumb_mr_place(shape)
         shapes = shapes.add(thumb_ml_place(shape))
@@ -583,7 +605,7 @@ def thumb_1x_layout(shape, cap=False):
 
 
 def thumb_15x_layout(shape, cap=False):
-    print('thumb_15x_layout()')
+    debugprint('thumb_15x_layout()')
     if cap:
         shape = rotate(shape, (0, 0, 90))
         return add([thumb_tr_place(shape), thumb_tl_place(shape).solids().objects[0]])
@@ -591,7 +613,7 @@ def thumb_15x_layout(shape, cap=False):
         return union([thumb_tr_place(shape), thumb_tl_place(shape)])
 
 def double_plate_half():
-    print('double_plate()')
+    debugprint('double_plate()')
     plate_height = (sa_double_length - mount_height) / 3
     top_plate = box(mount_width, plate_height, web_thickness)
     top_plate = translate(top_plate,
@@ -600,7 +622,7 @@ def double_plate_half():
     return top_plate
 
 def double_plate():
-    print('double_plate()')
+    debugprint('double_plate()')
     top_plate = double_plate_half()
     return union((top_plate, mirror(top_plate, 'XZ')))
 
@@ -647,28 +669,28 @@ def default_thumb(side="right"):
 
 
 def thumb_post_tr():
-    print('thumb_post_tr()')
+    debugprint('thumb_post_tr()')
     return translate(web_post(),
                      [(mount_width / 2) - post_adj, (mount_height / 1.15) - post_adj, 0]
                      )
 
 
 def thumb_post_tl():
-    print('thumb_post_tl()')
+    debugprint('thumb_post_tl()')
     return translate(web_post(),
                      [-(mount_width / 2) + post_adj, (mount_height / 1.15) - post_adj, 0]
                      )
 
 
 def thumb_post_bl():
-    print('thumb_post_bl()')
+    debugprint('thumb_post_bl()')
     return translate(web_post(),
                      [-(mount_width / 2) + post_adj, -(mount_height / 1.15) + post_adj, 0]
                      )
 
 
 def thumb_post_br():
-    print('thumb_post_br()')
+    debugprint('thumb_post_br()')
     return translate(web_post(),
                      [(mount_width / 2) - post_adj, -(mount_height / 1.15) + post_adj, 0]
                      )
@@ -867,7 +889,7 @@ def mini_thumb_15x_layout(shape):
 
 def mini_thumbcaps():
     t1 = mini_thumb_1x_layout(sa_cap(1))
-    t15 = mini_thumb_15x_layout(rotate(sa_cap(1) , pi / 2, [0, 0, 1]))
+    t15 = mini_thumb_15x_layout(rotate(sa_cap(1), pi / 2, [0, 0, 1]))
     return t1.add(t15)
 
 
@@ -1294,7 +1316,7 @@ def carbonfet_thumb_connectors():
 
 
 def bottom_hull(p, height=0.001):
-    print("bottom_hull()")
+    debugprint("bottom_hull()")
     if ENGINE == 'cadquery':
         shape = None
         for item in p:
@@ -1341,7 +1363,7 @@ def bottom_hull(p, height=0.001):
 
 
 def left_key_position(row, direction):
-    print("left_key_position()")
+    debugprint("left_key_position()")
     pos = np.array(
         key_position([-mount_width * 0.5, direction * mount_height * 0.5, 0], 0, row)
     )
@@ -1349,23 +1371,23 @@ def left_key_position(row, direction):
 
 
 def left_key_place(shape, row, direction):
-    print("left_key_place()")
+    debugprint("left_key_place()")
     pos = left_key_position(row, direction)
     return translate(shape, pos)
 
 
 def wall_locate1(dx, dy):
-    print("wall_locate1()")
+    debugprint("wall_locate1()")
     return [dx * wall_thickness, dy * wall_thickness, -1]
 
 
 def wall_locate2(dx, dy):
-    print("wall_locate2()")
+    debugprint("wall_locate2()")
     return [dx * wall_x_offset, dy * wall_y_offset, -wall_z_offset]
 
 
 def wall_locate3(dx, dy, back=False):
-    print("wall_locate3()")
+    debugprint("wall_locate3()")
     if back:
         return [
             dx * (wall_x_offset + wall_base_x_thickness),
@@ -1386,7 +1408,7 @@ def wall_locate3(dx, dy, back=False):
 
 
 def wall_brace(place1, dx1, dy1, post1, place2, dx2, dy2, post2, back=False):
-    print("wall_brace()")
+    debugprint("wall_brace()")
     hulls = []
 
     hulls.append(place1(post1))
@@ -1412,7 +1434,7 @@ def wall_brace(place1, dx1, dy1, post1, place2, dx2, dy2, post2, back=False):
 
 
 def key_wall_brace(x1, y1, dx1, dy1, post1, x2, y2, dx2, dy2, post2, back=False):
-    print("key_wall_brace()")
+    debugprint("key_wall_brace()")
     return wall_brace(
         (lambda shape: key_place(shape, x1, y1)),
         dx1,
@@ -1844,14 +1866,14 @@ rj9_position = (rj9_start[0], rj9_start[1], 11)
 
 
 def rj9_cube():
-    print('rj9_cube()')
+    debugprint('rj9_cube()')
     shape = box(14.78, 13, 22.38)
 
     return shape
 
 
 def rj9_space():
-    print('rj9_space()')
+    debugprint('rj9_space()')
     return translate(rj9_cube(), rj9_position)
 
 
@@ -1889,7 +1911,7 @@ def usb_holder():
 
 
 def usb_holder_hole():
-    print('usb_holder_hole()')
+    debugprint('usb_holder_hole()')
     shape = box(*usb_holder_size)
     shape = translate(shape,
         (
@@ -1925,6 +1947,24 @@ def external_mount_hole():
     )
     return shape
 
+if oled_center_row is not None:
+    base_pt1 = key_position(
+        list(np.array([-mount_width/2, 0, 0]) + np.array([0, (mount_height / 2), 0])), 0, oled_center_row-1
+    )
+    base_pt2 = key_position(
+        list(np.array([-mount_width/2, 0, 0]) + np.array([0, (mount_height / 2), 0])), 0, oled_center_row+1
+    )
+    base_pt0 = key_position(
+        list(np.array([-mount_width / 2, 0, 0]) + np.array([0, (mount_height / 2), 0])), 0, oled_center_row
+    )
+
+    oled_mount_location_xyz = (np.array(base_pt1)+np.array(base_pt2))/2. + np.array(((-left_wall_x_offset/2), 0, 0)) + np.array(oled_translation_offset)
+    oled_mount_location_xyz[2] = (oled_mount_location_xyz[2] + base_pt0[2])/2
+
+    angle_x = np.arctan2(base_pt1[2] - base_pt2[2], base_pt1[1] - base_pt2[1])
+    angle_z = np.arctan2(base_pt1[0] - base_pt2[0], base_pt1[1] - base_pt2[1])
+
+    oled_mount_rotation_xyz = (rad2deg(angle_x), 0, -rad2deg(angle_z)) + np.array(oled_rotation_offset)
 
 
 def oled_sliding_mount_frame():
@@ -2230,7 +2270,7 @@ def teensy_holder():
 
 
 def screw_insert_shape(bottom_radius, top_radius, height):
-    print('screw_insert_shape()')
+    debugprint('screw_insert_shape()')
     if bottom_radius == top_radius:
         base = translate(cylinder(radius=bottom_radius, height=height),
             (0, 0, -height / 2)
@@ -2246,28 +2286,28 @@ def screw_insert_shape(bottom_radius, top_radius, height):
 
 
 def screw_insert(column, row, bottom_radius, top_radius, height):
-    print('screw_insert()')
+    debugprint('screw_insert()')
     shift_right = column == lastcol
     shift_left = column == 0
     shift_up = (not (shift_right or shift_left)) and (row == 0)
     shift_down = (not (shift_right or shift_left)) and (row >= lastrow)
 
     if screws_offset == 'INSIDE':
-        # print('Shift Inside')
+        # debugprint('Shift Inside')
         shift_left_adjust = wall_base_x_thickness
         shift_right_adjust = -wall_base_x_thickness/2
         shift_down_adjust = -wall_base_y_thickness/2
         shift_up_adjust = -wall_base_y_thickness/3
 
     elif screws_offset == 'OUTSIDE':
-        print('Shift Outside')
+        debugprint('Shift Outside')
         shift_left_adjust = 0
         shift_right_adjust = wall_base_x_thickness/2
         shift_down_adjust = wall_base_y_thickness*2/3
         shift_up_adjust = wall_base_y_thickness*2/3
 
     else:
-        # print('Shift Origin')
+        # debugprint('Shift Origin')
         shift_left_adjust = 0
         shift_right_adjust = 0
         shift_down_adjust = 0
@@ -2359,7 +2399,7 @@ def screw_insert_screw_holes():
 
 
 def wire_post(direction, offset):
-    print('wire_post()')
+    debugprint('wire_post()')
     s1 = box(
         wire_post_diameter, wire_post_diameter, wire_post_height
     )
@@ -2381,7 +2421,7 @@ def wire_post(direction, offset):
 
 
 def wire_posts():
-    print('wire_posts()')
+    debugprint('wire_posts()')
     shape = thumb_ml_place(wire_post(1, 0).translate([-5, 0, -2]))
     shape = union([shape, thumb_ml_place(wire_post(-1, 6).translate([0, 0, -2.5]))])
     shape = union([shape, thumb_ml_place(wire_post(1, 0).translate([5, 0, -2]))])
@@ -2504,7 +2544,7 @@ def baseplate():
             if sizes[-1]>max_val:
                 inner_index = i_wire
                 max_val = sizes[-1]
-        print(sizes)
+        debugprint(sizes)
         inner_wire = base_wires[inner_index]
 
         # inner_plate = cq.Workplane('XY').add(cq.Face.makeFromWires(inner_wire))
@@ -2588,5 +2628,5 @@ def run():
 
 # base = baseplate()
 # export_file(shape=base, fname=path.join(r"..", "things", save_dir, config_name + r"_plate"))
-
-run()
+if __name__ == '__main__':
+    run()

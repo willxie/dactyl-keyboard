@@ -1,5 +1,10 @@
 import solid as sl
 
+debug_trace = False
+
+def debugprint(info):
+    if debug_trace:
+        print(info)
 
 def box(width, height, depth):
     return sl.cube([width, height, depth], center=True)
@@ -26,7 +31,7 @@ def translate(shape, vector):
 
 
 def mirror(shape, plane=None):
-    print('mirror()')
+    debugprint('mirror()')
     planes = {
         'XY': [0, 0, 1],
         'YX': [0, 0, -1],
@@ -39,7 +44,7 @@ def mirror(shape, plane=None):
 
 
 def union(shapes):
-    print('union()')
+    debugprint('union()')
     shape = None
     for item in shapes:
         if shape is None:
@@ -50,7 +55,7 @@ def union(shapes):
 
 
 def add(shapes):
-    print('union()')
+    debugprint('union()')
     shape = None
     for item in shapes:
         if shape is None:
@@ -61,7 +66,7 @@ def add(shapes):
 
 
 def difference(shape, shapes):
-    print('difference()')
+    debugprint('difference()')
     for item in shapes:
         shape -= item
     return shape
@@ -89,7 +94,7 @@ def tess_hull(shapes, sl_tol=.5, sl_angTol=1):
 
 
 def triangle_hulls(shapes):
-    print('triangle_hulls()')
+    debugprint('triangle_hulls()')
     hulls = []
     for i in range(len(shapes) - 2):
         hulls.append(hull_from_shapes(shapes[i: (i + 3)]))
@@ -114,11 +119,12 @@ def extrude_poly(outer_poly, inner_polys=None, height=1):
 
 
 def import_file(fname):
+    print("IMPORTING FROM {}".format(fname))
     return sl.import_(fname + ".stl")
 
 
 def export_file(shape, fname):
-    print("EXPORTING TO {}".format(fname + ".scad"))
+    print("EXPORTING TO {}".format(fname))
     sl.scad_render_to_file(shape, fname + ".scad")
 
 
