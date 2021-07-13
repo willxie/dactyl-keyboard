@@ -13,12 +13,35 @@ As part of the effort to create a new engine I converted the code to cadquery/Op
 
 ## Added Features
 
+### Refactored
+Your settings are now created by `generate_configuration.py` or by direct modification fo the `run_config.json` file.  
+This allows you to save `run_config.json` to share your configuration.
+
+Additionally, the OpenSCAD/solid python and OpenCASCADE/cadquery versions are merged with separate helper functions 
+to decouple the generator from the target library.  This also lets me stay sane by only modifying one file for most updates.
+Running `dactyl_manuform.py` will automatically load the `run_config.json` file. 
+
+### Everyone gets a thumb cluster!
+
+Added support of for the thumb clusters in the [carbonfet Dactyl library](https://github.com/carbonfet/dactyl-manuform).
+These are the "mini" and "carbonfet" thumb clusters. Feel free to try them out with by setting `'thumb_style'` to 
+`'DEFAULT'`, `'MINI'`, or `'CARBONFET'`.
+
+Rendered and actual images to be added in future commits.
+
 ### Clippable switch mounting
 
-Tired of hot glue and constraining the socket with "nubs"?  I've added an adjustable undercut for using the clips on the sockets.  May require some tweaking and little filing, but I have my DM built without any glue and you can too.  Just use `plate_style = 'UNDERCUT'`.
+Tired of hot glue and constraining the socket with "nubs"?  I've added an adjustable undercut for using the clips on 
+the sockets.  May require some tweaking and little filing, but I have my DM built without any glue and you can too.  
+Just use `plate_style = 'UNDERCUT'`.  I've also added an improved local undercut using `plate_style = 'NOTCH'`.
 
 ### Kailh Hotswap
-Added a new switch for hot swap and a way to include any additional geometry in the key plate by use of an imported file.  For hot swap just use `plate_style = 'HS_HOLE'` or `plate_style = 'HS_NUB'`.  To import an arbitrary geometry set the `plate_file = None` and `plate_offset = 0.0`.  The file must be .step for OpenCascade / cadquery and .stl for openSCAD / solid python.  The zero reference should be the key center (XY), and the top of the plate (Z).  Plate offset is a Z-axis translation for minor adjustments without modifying the geometry file.  
+Added a new switch for hot swap and a way to include any additional geometry in the key plate by use of an imported file.
+For hot swap just use `plate_style = 'HS_NOTCH'`, `plate_style = 'HS_HOLE'`, or `plate_style = 'HS_NUB'`.  
+To import an arbitrary geometry set the `plate_file = None` and `plate_offset = 0.0`.  
+The file must be .step for OpenCascade / cadquery and .stl for openSCAD / solid python.  
+The zero reference should be the key center (XY), and the top of the plate (Z).  
+Plate offset is a Z-axis translation for minor adjustments without modifying the geometry file.  
 
 **DISCLAIMER:  I have not built the hot swap version and cannot speak to the geometry.  I found it running around in various places and don't know the origin.  At least one user has claimed it works.**  
 
@@ -87,7 +110,7 @@ This is now a bit of a monster of many minds and yet continues to bear fruit.  I
 * ~~Run `python dactyl_manuform_cadquery.py` or `python3 dactyl_manuform_cadquery.py`~~ 
 * ~~Run `python dactyl_manuform.py` or `python3 dactyl_manuform.py`~~
 * Run `generate_configuration.py` or directly edit `run_config.json` to configure the design
-* Run `run.py` to create the geometry (ENGINE variable in run determines method)
+* Run `dactyl_manuform.py` to create the geometry (ENGINE variable in run determines method)
 * This will regenerate the `things/` files (or in subdirectory if defined in config)
     * `*left.*`
     * `*right.*`
@@ -188,6 +211,8 @@ This site also shows connections for the Arduino Pro Micro controllers.
 
 ## License
 
-Copyright © 2015-2020 Matthew Adereth, Tom Short, and Joshua Shreve
+General Code Copyright © 2015-2021 Matthew Adereth, Tom Short, and Joshua Shreve
+Mini thumb cluster Copyright © 2015-2018 Matthew Adereth, Tom Short, and Leo Lou
+Carbonfet thumb cluster © 2015-2018 Matthew Adereth, Tom Short, and carbonfet (github username)
 
 The source code for generating the models (everything excluding the [things/](things/) and [resources/](resources/) directories is distributed under the [GNU AFFERO GENERAL PUBLIC LICENSE Version 3](LICENSE).  The generated models and PCB designs are distributed under the [Creative Commons Attribution-NonCommercial-ShareAlike License Version 3.0](LICENSE-models).

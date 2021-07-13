@@ -18,15 +18,12 @@ def rad2deg(rad: float) -> float:
 # EXTREMELY UGLY BUT FUNCTIONAL BOOTSTRAP
 ###############################################
 
-from generate_configuration import *
-save_config()
-
 ## IMPORT DEFAULT CONFIG IN CASE NEW PARAMETERS EXIST
 import generate_configuration as cfg
 for item in cfg.shape_config:
     locals()[item] = cfg.shape_config[item]
 
-## LOAD RUN CONFIGURATION FILE
+## LOAD RUN CONFIGURATION FILE AND WRITE TO ANY VARIABLES IN FILE.
 with open('run_config.json', mode='r') as fid:
     data = json.load(fid)
 for item in data:
@@ -34,9 +31,9 @@ for item in data:
 
 # Really rough setup.  Check for ENGINE, set it not present from configuration.
 try:
-    print('Current Engine = {}'.format(ENGINE))
+    print('Found Current Engine in Config = {}'.format(ENGINE))
 except Exception:
-    print('Current Engine = {}'.format('None'))
+    print('Engine Not Found in Config')
     ENGINE = 'solid'
     # ENGINE = 'cadquery'
     print('Setting Current Engine = {}'.format(ENGINE))
@@ -1025,7 +1022,25 @@ def mini_thumb_connectors():
             ]
         )
     )
+    hulls.append(
+        triangle_hulls(
+            [
+                key_place(web_post_tr(), 3, lastrow),
+                key_place(web_post_br(), 3, lastrow),
+                key_place(web_post_bl(), 4, cornerrow),
+            ]
+        )
+    )
 
+    hulls.append(
+        triangle_hulls(
+            [
+                key_place(web_post_tr(), 3, lastrow),
+                key_place(web_post_br(), 3, cornerrow),
+                key_place(web_post_bl(), 4, cornerrow),
+            ]
+        )
+    )
     hulls.append(
         triangle_hulls(
             [
@@ -2460,10 +2475,10 @@ def model_side(side="right"):
     s2 = union([walls_shape])
     s2 = union([s2, *screw_insert_outers()])
 
-    if controller_mount_type in ['RJ9_USB_TEENSY']:
+    if controller_mount_type in ['RJ9_USB_TEENSY', 'USB_TEENSY']:
         s2 = union([s2, teensy_holder()])
 
-    if controller_mount_type in ['RJ9_USB_TEENSY', 'RJ9_USB_WALL']:
+    if controller_mount_type in ['RJ9_USB_TEENSY', 'RJ9_USB_WALL', 'USB_WALL', 'USB_TEENSY']:
         s2 = union([s2, usb_holder()])
         s2 = difference(s2, [usb_holder_hole()])
 
@@ -2472,6 +2487,9 @@ def model_side(side="right"):
 
     if controller_mount_type in ['EXTERNAL']:
         s2 = difference(s2, [external_mount_hole()])
+
+    if controller_mount_type in ['None']:
+        0 # do nothing, only here to expressly state inaction.
 
     s2 = difference(s2, [union(screw_insert_holes())])
     shape = union([shape, s2])

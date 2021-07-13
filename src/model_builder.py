@@ -70,7 +70,7 @@ configurations = [
         'save_dir': '6x6_CtrlTray',
         'nrows': 6,  # key rows
         'ncols': 6,  # key columns
-        'oled_mount_type': 'CLIP',
+        'oled_mount_type': None,
         'controller_mount_type': 'EXTERNAL',
     },
     {
@@ -79,7 +79,7 @@ configurations = [
         'nrows': 4,  # key rows
         'ncols': 5,  # key columns
         'oled_mount_type': None,
-        'controller_mount_type': 'EXTERNAL',
+        'controller_mount_type': 'RJ9_USB_WALL',
     },
     {
         'config_name': '4x6_Basic',
@@ -107,20 +107,28 @@ configurations = [
     }
 ]
 
-init = True
 
+
+# ENGINES = ['solid', 'cadquery']
+ENGINES = ['cadquery']
+
+init = True
 for config in configurations:
     shape_config = copy.deepcopy(base)
     for item in config:
         shape_config[item] = config[item]
 
-
-    with open('run_config.json', mode='w') as fid:
-        json.dump(shape_config, fid, indent=4)
+    for engine in ENGINES:
+        shape_config['ENGINE'] = engine
+        with open('run_config.json', mode='w') as fid:
+            json.dump(shape_config, fid, indent=4)
 
         if init:
             import dactyl_manuform as dactyl_manuform
+            dactyl_manuform.run()
+            init = False
         else:
             importlib.reload(dactyl_manuform)
+            dactyl_manuform.run()
 
-    init = False
+

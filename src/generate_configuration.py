@@ -20,8 +20,8 @@ shape_config = {
 
     'show_caps':  False,
 
-    'nrows':  5,  # key rows
-    'ncols':  6,  # key columns
+    'nrows':  5, #5,  # key rows
+    'ncols':  6, #6,  # key columns
 
     'alpha':  pi / 12.0,  # curvature of the columns
     'beta':  pi / 36.0,  # curvature of the rows
@@ -37,13 +37,13 @@ shape_config = {
 
     'thumb_offsets':  [6, -3, 7],
     'keyboard_z_offset':  (
-        9  # controls overall height# original=9 with centercol=3# use 16 for centercol=2
+        13  # controls overall height# original=9 with centercol=3# use 16 for centercol=2
     ),
 
-    'thumb_style': 'CARBONFET',  # 'DEFAULT', 'MINI', 'CARBONFET'
+    'thumb_style': 'DEFAULT',  # 'DEFAULT', 'MINI', 'CARBONFET'
 
     ##############################
-    # NEW TEST PARAMETERS
+    # EXPERIMENTAL PARAMETERS
     ##############################
     'pinky_1_5U': False,  # LEAVE AS FALSE, CURRENTLY BROKEN
     'first_1_5U_row': 0,
@@ -208,10 +208,11 @@ shape_config = {
     ###################################
     # connector options are
     # 'RJ9_USB_WALL' = Standard internal plate with RJ9 opening and square cutout for connection.
+    # 'USB_WALL' = Standard internal plate with a square cutout for connection, no RJ9.
     # 'RJ9_USB_TEENSY' = Teensy holder
-    # 'EXTERNAL' = square cutout for a holder such as the on from lolligagger.
-    # controller_mount_type = 'RJ9_USB_WALL'
-    # controller_mount_type = 'RJ9_USB_TEENSY'
+    # 'USB_TEENSY' = Teensy holder, no RJ9
+    # 'EXTERNAL' = square cutout for a holder such as the one from lolligagger.
+    # 'NONE' = No openings in the back.
     'controller_mount_type':  'EXTERNAL',
 
     'external_holder_height':  12.5,
@@ -283,3 +284,5 @@ def update_config(fname, fname_out=None):
 
 if __name__ == '__main__':
     save_config()
+    from dactyl_manuform import *
+    run()
