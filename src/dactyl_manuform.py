@@ -586,28 +586,48 @@ def thumb_1x_layout(shape, cap=False):
     debugprint('thumb_1x_layout()')
     if cap:
         shapes = thumb_mr_place(shape)
-        shapes = shapes.add(thumb_ml_place(shape))
-        shapes = shapes.add(thumb_br_place(shape))
-        shapes = shapes.add(thumb_bl_place(shape))
+        shapes = shapes.add(thumb_ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])))
+        shapes = shapes.add(thumb_br_place(rotate(shape, [0, 0, thumb_plate_br_rotation])))
+        shapes = shapes.add(thumb_bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])))
     else:
         shapes = union(
             [
-                thumb_mr_place(shape),
-                thumb_ml_place(shape),
-                thumb_br_place(shape),
-                thumb_bl_place(shape),
+                thumb_mr_place(rotate(shape, [0, 0, thumb_plate_mr_rotation])),
+                thumb_ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])),
+                thumb_br_place(rotate(shape, [0, 0, thumb_plate_br_rotation])),
+                thumb_bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
             ]
         )
     return shapes
 
 
-def thumb_15x_layout(shape, cap=False):
+def thumb_15x_layout(shape, cap=False, plate=True):
     debugprint('thumb_15x_layout()')
-    if cap:
-        shape = rotate(shape, (0, 0, 90))
-        return add([thumb_tr_place(shape), thumb_tl_place(shape).solids().objects[0]])
+    if plate:
+        if cap:
+            shape = rotate(shape, (0, 0, 90))
+            return add([
+                thumb_tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])),
+                thumb_tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])).solids().objects[0]
+            ])
+        else:
+            return union([
+                thumb_tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])),
+                thumb_tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])),
+            ])
     else:
-        return union([thumb_tr_place(shape), thumb_tl_place(shape)])
+        if cap:
+            shape = rotate(shape, (0, 0, 90))
+            return add([
+                thumb_tr_place(shape),
+                thumb_tl_place(shape).solids().objects[0]
+            ])
+        else:
+            return union([
+                thumb_tr_place(shape),
+                thumb_tl_place(shape),
+            ])
+
 
 def double_plate_half():
     debugprint('double_plate()')
@@ -661,7 +681,7 @@ def default_thumb(side="right"):
     print('thumb()')
     shape = thumb_1x_layout(rotate(single_plate(side=side), (0, 0, -90)))
     shape = union([shape, thumb_15x_layout(rotate(single_plate(side=side), (0, 0, -90)))])
-    shape = union([shape, thumb_15x_layout(double_plate())])
+    shape = union([shape, thumb_15x_layout(double_plate(), plate=False)])
     return shape
 
 
@@ -873,15 +893,15 @@ def mini_thumb_bl_place(shape):
 
 def mini_thumb_1x_layout(shape):
     return union([
-        mini_thumb_mr_place(shape),
-        mini_thumb_br_place(shape),
-        mini_thumb_tl_place(shape),
-        mini_thumb_bl_place(shape),
+        mini_thumb_mr_place(rotate(shape, [0, 0, thumb_plate_mr_rotation])),
+        mini_thumb_br_place(rotate(shape, [0, 0, thumb_plate_br_rotation])),
+        mini_thumb_tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])),
+        mini_thumb_bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
     ])
 
 
 def mini_thumb_15x_layout(shape):
-    return union([mini_thumb_tr_place(shape)] )
+    return union([mini_thumb_tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation]))])
 
 
 def mini_thumbcaps():
@@ -1101,18 +1121,24 @@ def carbonfet_thumb_bl_place(shape):
 
 def carbonfet_thumb_1x_layout(shape):
     return union([
-        carbonfet_thumb_tr_place(shape),
-        carbonfet_thumb_mr_place(shape),
-        carbonfet_thumb_br_place(shape),
-        carbonfet_thumb_tl_place(shape),
+        carbonfet_thumb_tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])),
+        carbonfet_thumb_mr_place(rotate(shape, [0, 0, thumb_plate_mr_rotation])),
+        carbonfet_thumb_br_place(rotate(shape, [0, 0, thumb_plate_br_rotation])),
+        carbonfet_thumb_tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])),
     ])
 
 
-def carbonfet_thumb_15x_layout(shape):
-    return union([
-        carbonfet_thumb_bl_place(shape),
-        carbonfet_thumb_ml_place(shape)
-    ])
+def carbonfet_thumb_15x_layout(shape, plate=True):
+    if plate:
+        return union([
+            carbonfet_thumb_bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
+            carbonfet_thumb_ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation]))
+        ])
+    else:
+        return union([
+            carbonfet_thumb_bl_place(shape),
+            carbonfet_thumb_ml_place(shape)
+        ])
 
 
 def carbonfet_thumbcaps():
@@ -1122,10 +1148,8 @@ def carbonfet_thumbcaps():
 
 
 def carbonfet_thumb(side="right"):
-    # shape = thumb_1x_layout(sl.rotate([0.0, 0.0, -90])(single_plate(side=side)))
-    # shape += thumb_15x_layout(sl.rotate([0.0, 0.0, -90])(single_plate(side=side)))
     shape = carbonfet_thumb_1x_layout(single_plate(side=side))
-    shape = union([shape, carbonfet_thumb_15x_layout(double_plate_half())])
+    shape = union([shape, carbonfet_thumb_15x_layout(double_plate_half(), plate=False)])
     shape = union([shape, carbonfet_thumb_15x_layout(single_plate(side=side))])
 
     return shape

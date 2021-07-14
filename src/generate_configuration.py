@@ -40,7 +40,18 @@ shape_config = {
         13  # controls overall height# original=9 with centercol=3# use 16 for centercol=2
     ),
 
+    ##############################
+    # THUMB PARAMETERS
+    ##############################
     'thumb_style': 'DEFAULT',  # 'DEFAULT', 'MINI', 'CARBONFET'
+
+    # Thumb plate rotations, anything other than 90 degree increments WILL NOT WORK.
+    'thumb_plate_tr_rotation': 0.0,  # Top right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
+    'thumb_plate_tl_rotation': 0.0,  # Top left plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
+    'thumb_plate_mr_rotation': 0.0,  # Mid right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
+    'thumb_plate_ml_rotation': 0.0,  # Mid left plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
+    'thumb_plate_br_rotation': 0.0,  # Bottom right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
+    'thumb_plate_bl_rotation': 0.0,  # Bottom right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
 
     ##############################
     # EXPERIMENTAL PARAMETERS
@@ -89,7 +100,7 @@ shape_config = {
     # 'HS_NUB' = hot swap underside with nubs.
     # 'HS_UNDERCUT' = hot swap underside with undercut. Does not generate properly.  Hot swap step needs to be modified.
     # 'HS_NOTCH' = hot swap underside with notch.  Does not generate properly.  Hot swap step needs to be modified.
-    'plate_style':  'NOTCH',
+    'plate_style':  'HS_NOTCH',
 
     'hole_keyswitch_height':  14.0,
     'hole_keyswitch_width':  14.0,
