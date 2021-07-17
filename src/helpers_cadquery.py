@@ -176,14 +176,15 @@ def extrude_poly(outer_poly, inner_polys=None, height=1):  # vector=(0,0,1)):
         cq.Solid.extrudeLinear(outerWire=outer_wires, innerWires=inner_wires, vecNormal=cq.Vector(0, 0, height)))
 
 
-def import_file(filename):
+def import_file(fname):
+    print("IMPORTING FROM {}".format(fname))
     return cq.Workplane('XY').add(cq.importers.importShape(
         cq.exporters.ExportTypes.STEP,
-        filename + ".step"))
+        fname + ".step"))
 
 
 def export_file(shape, fname):
-    print("IMPORTING FROM {}".format(fname))
+    print("EXPORTING TO {}".format(fname))
     cq.exporters.export(w=shape, fname=fname + ".step",
                         exportType='STEP')
 

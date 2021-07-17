@@ -129,4 +129,5 @@ def export_file(shape, fname):
 
 
 def export_dxf(shape, fname):
+    print("NO DXF EXPORT FOR SOLID".format(fname))
     pass

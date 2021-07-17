@@ -29,7 +29,7 @@ shape_config = {
     'centerrow_offset':  3,  # rows from max, controls front_back tilt
     'tenting_angle':  pi / 12.0,  # or, change this for more precise tenting control
 
-    # symmetry states if it is a symmetric or asymmetric build.  If asymmetric it doubles the generation time.
+    # symmetry states if it is a symmetric or asymmetric bui.  If asymmetric it doubles the generation time.
     'symmetry':  "symmetric",  # "asymmetric" or "symmetric"
 
     'column_style_gt5':  "orthographic",
@@ -278,6 +278,7 @@ shape_config = {
     ####################################
 
 def save_config():
+    print("Saving Configuration")
     with open('run_config.json', mode='w') as fid:
         json.dump(shape_config, fid, indent=4)
 
@@ -295,5 +296,5 @@ def update_config(fname, fname_out=None):
 
 if __name__ == '__main__':
     save_config()
-    from dactyl_manuform import *
-    run()
+    # from dactyl_manuform import *
+    # run()

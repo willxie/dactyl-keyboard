@@ -38,6 +38,11 @@ except Exception:
     # ENGINE = 'cadquery'
     print('Setting Current Engine = {}'.format(ENGINE))
 
+if save_dir in ['', None, '.']:
+    save_path = os.path.join(r"..", "things")
+else:
+    save_path = os.path.join(r"..", "things", save_dir)
+
 ###############################################
 # END EXTREMELY UGLY BOOTSTRAP
 ###############################################
@@ -135,9 +140,9 @@ screw_insert_bottom_radius = 5.31 / 2
 screw_insert_top_radius = 5.1 / 2
 
 
-spath =  path.join("..", "things", save_dir)
-if not path.isdir(spath):
-    os.mkdir(spath)
+# save_path = path.join("..", "things", save_dir)
+if not path.isdir(save_path):
+    os.mkdir(save_path)
 
 
 def column_offset(column: int) -> list:
@@ -2635,40 +2640,40 @@ def baseplate():
 def run():
 
     mod_r = model_side(side="right")
-    export_file(shape=mod_r, fname=path.join(r"..", "things", save_dir, config_name + r"_right"))
+    export_file(shape=mod_r, fname=path.join(save_path, config_name + r"_right"))
 
     if symmetry == "asymmetric":
         mod_l = model_side(side="left")
-        export_file(shape=mod_l, fname=path.join(r"..", "things", save_dir, config_name + r"_left"))
+        export_file(shape=mod_l, fname=path.join(save_path, config_name + r"_left"))
 
     else:
-        export_file(shape=mirror(mod_r, 'YZ'), fname=path.join(r"..", "things", save_dir, config_name + r"_left"))
+        export_file(shape=mirror(mod_r, 'YZ'), fname=path.join(save_path, config_name + r"_left"))
 
 
     base = baseplate()
-    export_file(shape=base, fname=path.join(r"..", "things", save_dir, config_name + r"_right_plate"))
-    export_dxf(shape=base, fname=path.join(r"..", "things", save_dir, config_name + r"_right_plate"))
+    export_file(shape=base, fname=path.join(save_path, config_name + r"_right_plate"))
+    export_dxf(shape=base, fname=path.join(save_path, config_name + r"_right_plate"))
 
     lbase = mirror(base, 'YZ')
-    export_file(shape=lbase, fname=path.join(r"..", "things", save_dir, config_name + r"_left_plate"))
-    export_dxf(shape=lbase, fname=path.join(r"..", "things", save_dir, config_name + r"_left_plate"))
+    export_file(shape=lbase, fname=path.join(save_path, config_name + r"_left_plate"))
+    export_dxf(shape=lbase, fname=path.join(save_path, config_name + r"_left_plate"))
 
     if oled_mount_type == 'UNDERCUT':
-        export_file(shape=oled_undercut_mount_frame()[1], fname=path.join(r"..", "things", save_dir, config_name + r"_oled_undercut_test"))
+        export_file(shape=oled_undercut_mount_frame()[1], fname=path.join(save_path, config_name + r"_oled_undercut_test"))
 
     if oled_mount_type == 'SLIDING':
-        export_file(shape=oled_sliding_mount_frame()[1], fname=path.join(r"..", "things", save_dir, config_name + r"_oled_sliding_test"))
+        export_file(shape=oled_sliding_mount_frame()[1], fname=path.join(save_path, config_name + r"_oled_sliding_test"))
 
     if oled_mount_type == 'CLIP':
         oled_mount_location_xyz = (0.0, 0.0, -oled_mount_depth / 2)
         oled_mount_rotation_xyz = (0.0, 0.0, 0.0)
-        export_file(shape=oled_clip(), fname=path.join(r"..", "things", save_dir, config_name + r"_oled_clip"))
+        export_file(shape=oled_clip(), fname=path.join(save_path, config_name + r"_oled_clip"))
         export_file(shape=oled_clip_mount_frame()[1],
-                            fname=path.join(r"..", "things", save_dir, config_name + r"_oled_clip_test"))
+                            fname=path.join(save_path, config_name + r"_oled_clip_test"))
         export_file(shape=union((oled_clip_mount_frame()[1], oled_clip())),
-                            fname=path.join(r"..", "things", save_dir, config_name + r"_oled_clip_assy_test"))
+                            fname=path.join(save_path, config_name + r"_oled_clip_assy_test"))
 
 # base = baseplate()
-# export_file(shape=base, fname=path.join(r"..", "things", save_dir, config_name + r"_plate"))
+# export_file(shape=base, fname=path.join(save_path, config_name + r"_plate"))
 if __name__ == '__main__':
     run()
