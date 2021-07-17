@@ -18,7 +18,7 @@
         -3,
         7
     ],
-    "keyboard_z_offset": 13,
+    "keyboard_z_offset": 11,
     "thumb_style": "DEFAULT",
     "thumb_plate_tr_rotation": 0.0,
     "thumb_plate_tl_rotation": 0.0,
@@ -68,7 +68,7 @@
         17.5
     ],
     "fixed_tenting": 0.0,
-    "plate_style": "HS_NOTCH",
+    "plate_style": "NOTCH",
     "hole_keyswitch_height": 14.0,
     "hole_keyswitch_width": 14.0,
     "nub_keyswitch_height": 14.4,

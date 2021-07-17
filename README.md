@@ -13,7 +13,21 @@ As part of the effort to create a new engine I converted the code to cadquery/Op
 
 ## Added Features
 
+### Docker Autobuild
+![Docker Support!](./resources/docker_containers.png)
+At the excellent suggestion of [martint17r](https://github.com/joshreve/dactyl-keyboard/issues?q=is%3Apr+author%3Amartint17r) 
+I have added docker configurations with an Windows batch file to assist with getting setup. 
+If there is sufficient interest I can add a .sh file as well.  If you have 
+[docker desktop](https://www.docker.com/products/docker-desktop) installed, the batch file will create the 
+dactyl-keyboard image and 3 containers:  DM-run: runs the dactyl_manuform.py, DM-config: runs generate_configuration.py,
+and DM-shell:  just starts an interactive session to manually run from shell (tip: run bash after entering to get the better 
+shell environment).  All apps bindmount the src and things directory to allow editing in the host and running in the
+container.  While not exactly hard drive space efficient, this hopefully this helps those having issue getting
+cadquery running and prevents local Python conflicts.  It works well on my computer, but I don't use
+docker often, so please let me know if you find any issues with the approach.
+
 ### Refactored
+
 Your settings are now created by `generate_configuration.py` or by direct modification fo the `run_config.json` file.  
 This allows you to save `run_config.json` to share your configuration.
 

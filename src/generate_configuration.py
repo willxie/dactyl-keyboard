@@ -37,7 +37,7 @@ shape_config = {
 
     'thumb_offsets':  [6, -3, 7],
     'keyboard_z_offset':  (
-        13  # controls overall height# original=9 with centercol=3# use 16 for centercol=2
+        11  # controls overall height# original=9 with centercol=3# use 16 for centercol=2
     ),
 
     ##############################
@@ -100,7 +100,7 @@ shape_config = {
     # 'HS_NUB' = hot swap underside with nubs.
     # 'HS_UNDERCUT' = hot swap underside with undercut. Does not generate properly.  Hot swap step needs to be modified.
     # 'HS_NOTCH' = hot swap underside with notch.  Does not generate properly.  Hot swap step needs to be modified.
-    'plate_style':  'HS_NOTCH',
+    'plate_style':  'NOTCH',
 
     'hole_keyswitch_height':  14.0,
     'hole_keyswitch_width':  14.0,
@@ -298,5 +298,5 @@ def update_config(fname, fname_out=None):
 
 if __name__ == '__main__':
     save_config()
-    # from dactyl_manuform import *
-    # run()
+    from dactyl_manuform import *
+    run()
