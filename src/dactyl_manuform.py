@@ -102,6 +102,7 @@ if 'HS_' in plate_style:
 mount_width = keyswitch_width + 2 * plate_rim
 mount_height = keyswitch_height + 2 * plate_rim
 mount_thickness = plate_thickness
+double_plate_height = (sa_double_length - mount_height) / 3
 
 if oled_mount_type is not None:
     left_wall_x_offset = oled_left_wall_x_offset_override
@@ -256,8 +257,7 @@ def single_plate(cylinder_segments=100, side="right"):
 ## SA Keycaps ##
 ################
 
-sa_length = 18.25
-sa_double_length = 37.5
+
 
 
 def sa_cap(Usize=1):
@@ -636,10 +636,9 @@ def thumb_15x_layout(shape, cap=False, plate=True):
 
 def double_plate_half():
     debugprint('double_plate()')
-    plate_height = (sa_double_length - mount_height) / 3
-    top_plate = box(mount_width, plate_height, web_thickness)
+    top_plate = box(mount_width, double_plate_height, web_thickness)
     top_plate = translate(top_plate,
-                          [0, (plate_height + mount_height) / 2, plate_thickness - (web_thickness / 2)]
+                          [0, (double_plate_height + mount_height) / 2, plate_thickness - (web_thickness / 2)]
                           )
     return top_plate
 
@@ -693,28 +692,28 @@ def default_thumb(side="right"):
 def thumb_post_tr():
     debugprint('thumb_post_tr()')
     return translate(web_post(),
-                     [(mount_width / 2) - post_adj, (mount_height / 1.15) - post_adj, 0]
+                     [(mount_width / 2) - post_adj, ((mount_height/2) + double_plate_height) - post_adj, 0]
                      )
 
 
 def thumb_post_tl():
     debugprint('thumb_post_tl()')
     return translate(web_post(),
-                     [-(mount_width / 2) + post_adj, (mount_height / 1.15) - post_adj, 0]
+                     [-(mount_width / 2) + post_adj, ((mount_height/2) + double_plate_height) - post_adj, 0]
                      )
 
 
 def thumb_post_bl():
     debugprint('thumb_post_bl()')
     return translate(web_post(),
-                     [-(mount_width / 2) + post_adj, -(mount_height / 1.15) + post_adj, 0]
+                     [-(mount_width / 2) + post_adj, -((mount_height/2) + double_plate_height) + post_adj, 0]
                      )
 
 
 def thumb_post_br():
     debugprint('thumb_post_br()')
     return translate(web_post(),
-                     [(mount_width / 2) - post_adj, -(mount_height / 1.15) + post_adj, 0]
+                     [(mount_width / 2) - post_adj, -((mount_height/2) + double_plate_height) + post_adj, 0]
                      )
 
 

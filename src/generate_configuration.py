@@ -113,6 +113,8 @@ shape_config = {
     'notch_width': 5.0, # If using notch, it is identical to undecut, but only locally by the switch clip
 
     'sa_profile_key_height':  12.7,
+    'sa_length': 18.25,
+    'sa_double_length': 37.5,
     'plate_thickness':  4+1.1,
 
     'plate_rim': 1.5 + 0.5,
