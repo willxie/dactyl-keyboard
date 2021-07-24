@@ -1147,7 +1147,7 @@ def carbonfet_thumb_15x_layout(shape, plate=True):
 
 def carbonfet_thumbcaps():
     t1 = carbonfet_thumb_1x_layout(sa_cap(1))
-    t15 = carbonfet_thumb_15x_layout(rotate(sa_cap(1.5), pi / 2, [0, 0, 1]))
+    t15 = carbonfet_thumb_15x_layout(rotate(sa_cap(1.5), [0, 0, rad2deg(pi / 2)]))
     return t1.add(t15)
 
 
