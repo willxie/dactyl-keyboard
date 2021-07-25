@@ -18,7 +18,7 @@ shape_config = {
     'save_dir': '.',
     'config_name':  "DM",
 
-    'show_caps':  False,
+    'show_caps':  True,
 
     'nrows':  5, #5,  # key rows
     'ncols':  6, #6,  # key columns
@@ -44,7 +44,7 @@ shape_config = {
     # THUMB PARAMETERS
     ##############################
     'thumb_style': 'DEFAULT',  # 'DEFAULT', 'MINI', 'CARBONFET'
-
+    'default_1U_cluster': True, # only used with default, makes top right thumb cluster key 1U
     # Thumb plate rotations, anything other than 90 degree increments WILL NOT WORK.
     'thumb_plate_tr_rotation': 0.0,  # Top right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
     'thumb_plate_tl_rotation': 0.0,  # Top left plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
@@ -70,6 +70,8 @@ shape_config = {
     'wall_y_offset':  6,  # offset in the x and/or y direction for the first downward_sloping part of the wall (negative)
     'left_wall_x_offset':  12,  # specific values for the left side due to the minimal wall.
     'left_wall_z_offset':  3,  # specific values for the left side due to the minimal wall.
+    'left_wall_lower_y_offset': 0,  # specific values for the lower left corner.
+    'left_wall_lower_z_offset': 0,
     'wall_thickness':  4.5,  # wall thickness parameter used on upper/mid stage of the wall
     'wall_base_y_thickness':  4.5,  # wall thickness at the lower stage
     'wall_base_x_thickness':  4.5,  # wall thickness at the lower stage
@@ -154,6 +156,8 @@ shape_config = {
             'oled_mount_rotation_xyz': (13.0, 0.0, -6.0), # will be overwritten if oled_center_row is not None
             'oled_left_wall_x_offset_override': 28.0,
             'oled_left_wall_z_offset_override': 0.0,
+            'oled_left_wall_lower_y_offset': 12.0,
+            'oled_left_wall_lower_z_offset': 5.0,
 
             # 'UNDERCUT' Parameters
             'oled_mount_undercut': 1.0,
@@ -170,6 +174,8 @@ shape_config = {
             'oled_mount_rotation_xyz': (6.0, 0.0, -3.0), # will be overwritten if oled_center_row is not None
             'oled_left_wall_x_offset_override': 24.0,
             'oled_left_wall_z_offset_override': 0.0,
+            'oled_left_wall_lower_y_offset': 12.0,
+            'oled_left_wall_lower_z_offset': 5.0,
 
             # 'SLIDING' Parameters
             'oled_thickness': 4.2,  # thickness of OLED, plus clearance.  Must include components
@@ -190,6 +196,8 @@ shape_config = {
             'oled_mount_rotation_xyz': (12.0, 0.0, -6.0), # will be overwritten if oled_center_row is not None
             'oled_left_wall_x_offset_override': 24.0,
             'oled_left_wall_z_offset_override': 0.0,
+            'oled_left_wall_lower_y_offset': 12.0,
+            'oled_left_wall_lower_z_offset': 5.0,
 
             # 'CLIP' Parameters
             'oled_thickness': 4.2,  # thickness of OLED, plus clearance.  Must include components
