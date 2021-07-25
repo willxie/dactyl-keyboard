@@ -69,7 +69,7 @@ def debugprint(info):
         print(info)
 
 
-if oled_mount_type is not None:
+if oled_mount_type is not None and oled_mount_type != "NONE":
     for item in oled_configurations[oled_mount_type]:
         locals()[item] = oled_configurations[oled_mount_type][item]
 
@@ -104,7 +104,7 @@ mount_height = keyswitch_height + 2 * plate_rim
 mount_thickness = plate_thickness
 double_plate_height = (sa_double_length - mount_height) / 3
 
-if oled_mount_type is not None:
+if oled_mount_type is not None and oled_mount_type != "NONE":
     left_wall_x_offset = oled_left_wall_x_offset_override
     left_wall_z_offset = oled_left_wall_z_offset_override
 
