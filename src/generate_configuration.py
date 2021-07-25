@@ -18,7 +18,7 @@ shape_config = {
     'save_dir': '.',
     'config_name':  "DM",
 
-    'show_caps':  False,
+    'show_caps':  True,
 
     'nrows':  5, #5,  # key rows
     'ncols':  6, #6,  # key columns

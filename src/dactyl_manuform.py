@@ -106,7 +106,7 @@ mount_thickness = plate_thickness
 if default_1U_cluster:
     double_plate_height = (.7*sa_double_length - mount_height) / 3
 else:
-    double_plate_height = (sa_double_length - mount_height) / 3
+    double_plate_height = (.95*sa_double_length - mount_height) / 3
 
 if oled_mount_type is not None:
     left_wall_x_offset = oled_left_wall_x_offset_override
@@ -554,7 +554,7 @@ def thumb_tr_place(shape):
 
 def thumb_tl_place(shape):
     debugprint('thumb_tl_place()')
-    shape = rotate(shape, [10, -18, 10])
+    shape = rotate(shape, [7.5, -18, 10])
     shape = translate(shape, thumborigin())
     shape = translate(shape, [-32.5, -14.5, -2.5])
     return shape
@@ -595,12 +595,17 @@ def thumb_bl_place(shape):
 def thumb_1x_layout(shape, cap=False):
     debugprint('thumb_1x_layout()')
     if cap:
-        shapes = thumb_mr_place(shape)
-        shapes = shapes.add(thumb_ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])))
-        shapes = shapes.add(thumb_br_place(rotate(shape, [0, 0, thumb_plate_br_rotation])))
-        shapes = shapes.add(thumb_bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])))
+        shape_list = [
+            thumb_mr_place(rotate(shape, [0, 0, thumb_plate_mr_rotation])),
+            thumb_ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])),
+            thumb_br_place(rotate(shape, [0, 0, thumb_plate_br_rotation])),
+            thumb_bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
+        ]
+
         if default_1U_cluster:
-            shapes = shapes.add(thumb_tr_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, thumb_plate_tr_rotation])))
+            shape_list.append(thumb_tr_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, thumb_plate_tr_rotation])))
+            shape_list.append(thumb_tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])))
+        shapes = add(shape_list)
 
     else:
         shape_list = [
@@ -621,8 +626,7 @@ def thumb_15x_layout(shape, cap=False, plate=True):
         if cap:
             shape = rotate(shape, (0, 0, 90))
             cap_list = [thumb_tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation]))]
-            if not default_1U_cluster:
-                cap_list.append(thumb_tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])))
+            cap_list.append(thumb_tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])))
             return add(cap_list)
         else:
             shape_list = [thumb_tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation]))]
@@ -633,15 +637,14 @@ def thumb_15x_layout(shape, cap=False, plate=True):
         if cap:
             shape = rotate(shape, (0, 0, 90))
             shape_list = [
-                thumb_tl_place(shape),#.solids().objects[0]
+                thumb_tl_place(shape),
             ]
-            if not default_1U_cluster:
-                shape_list.append(thumb_tr_place(shape))
+            shape_list.append(thumb_tr_place(shape))
 
             return add(shape_list)
         else:
             shape_list = [
-                thumb_tl_place(shape),#.solids().objects[0]
+                thumb_tl_place(shape),
             ]
             if not default_1U_cluster:
                 shape_list.append(thumb_tr_place(shape))
@@ -693,7 +696,8 @@ def thumb_connectors():
 
 def default_thumbcaps():
     t1 = thumb_1x_layout(sa_cap(1), cap=True)
-    t1.add(thumb_15x_layout(sa_cap(1.5), cap=True))
+    if not default_1U_cluster:
+        t1.add(thumb_15x_layout(sa_cap(1.5), cap=True))
     return t1
 
 

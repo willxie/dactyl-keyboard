@@ -2,7 +2,7 @@
     "ENGINE": "solid",
     "save_dir": ".",
     "config_name": "DM",
-    "show_caps": false,
+    "show_caps": true,
     "nrows": 5,
     "ncols": 6,
     "alpha": 0.26179916666666664,
