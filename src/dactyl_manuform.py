@@ -103,10 +103,12 @@ mount_width = keyswitch_width + 2 * plate_rim
 mount_height = keyswitch_height + 2 * plate_rim
 mount_thickness = plate_thickness
 
-if default_1U_cluster:
+if default_1U_cluster and thumb_style=='DEFAULT':
     double_plate_height = (.7*sa_double_length - mount_height) / 3
-else:
+elif thumb_style=='DEFAULT':
     double_plate_height = (.95*sa_double_length - mount_height) / 3
+else:
+    double_plate_height = (sa_double_length - mount_height) / 3
 
 if oled_mount_type is not None and oled_mount_type != "NONE":
     left_wall_x_offset = oled_left_wall_x_offset_override
@@ -2671,7 +2673,7 @@ def baseplate(wedge_angle=None):
                 loc = hole.Center()
                 hole_shapes.append(
                     translate(
-                        cylinder(screw_cbore_diameter, screw_cbore_depth),
+                        cylinder(screw_cbore_diameter/2.0, screw_cbore_depth),
                         (loc.x, loc.y, 0)
                         # (loc.x, loc.y, screw_cbore_depth/2)
                     )
