@@ -69,7 +69,7 @@ def debugprint(info):
         print(info)
 
 
-if oled_mount_type is not None:
+if oled_mount_type is not None and oled_mount_type != "NONE":
     for item in oled_configurations[oled_mount_type]:
         locals()[item] = oled_configurations[oled_mount_type][item]
 
@@ -108,7 +108,7 @@ if default_1U_cluster:
 else:
     double_plate_height = (.95*sa_double_length - mount_height) / 3
 
-if oled_mount_type is not None:
+if oled_mount_type is not None and oled_mount_type != "NONE":
     left_wall_x_offset = oled_left_wall_x_offset_override
     left_wall_z_offset = oled_left_wall_z_offset_override
     left_wall_lower_y_offset = oled_left_wall_lower_y_offset
@@ -988,7 +988,7 @@ def mini_thumb_15x_layout(shape):
 
 def mini_thumbcaps():
     t1 = mini_thumb_1x_layout(sa_cap(1))
-    t15 = mini_thumb_15x_layout(rotate(sa_cap(1), pi / 2, [0, 0, 1]))
+    t15 = mini_thumb_15x_layout(rotate(sa_cap(1), [0, 0, rad2deg(pi / 2)]))
     return t1.add(t15)
 
 
@@ -1225,7 +1225,7 @@ def carbonfet_thumb_15x_layout(shape, plate=True):
 
 def carbonfet_thumbcaps():
     t1 = carbonfet_thumb_1x_layout(sa_cap(1))
-    t15 = carbonfet_thumb_15x_layout(rotate(sa_cap(1.5), pi / 2, [0, 0, 1]))
+    t15 = carbonfet_thumb_15x_layout(rotate(sa_cap(1.5), [0, 0, rad2deg(pi / 2)]))
     return t1.add(t15)
 
 
