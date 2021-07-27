@@ -99,7 +99,7 @@ This is a new feature so any feedback is appreciated.  If you have issues, messa
 ### Screw Post Locations
 
 You can now have slightly better control of screw mounts.  Set to `'screws_offset':'INSIDE'`, `'screws_offset':'OUTSIDE'` or `'screws_offset': 'ORIGINAL'` to control screw locations relative to the wall. 
-![Inside Screws](./resources/inside_screw_posts.PNG)
+![Inside Screws](./resources/inside_screw_posts.png)
 
 ## Status / Future
 This is now a bit of a monster of many minds and yet continues to bear fruit.  I plan to continue to use this code to try new geometries and features to share.  I am still working on a new generator, but feel this one can continue to evolve and inform the other effort.

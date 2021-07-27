@@ -608,6 +608,7 @@ def thumb_1x_layout(shape, cap=False):
 
         if default_1U_cluster:
             shape_list.append(thumb_tr_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, thumb_plate_tr_rotation])))
+            shape_list.append(thumb_tr_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, thumb_plate_tr_rotation])))
             shape_list.append(thumb_tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])))
         shapes = add(shape_list)
 
@@ -1242,29 +1243,32 @@ def minidox_thumb(side="right"):
 
     return shape
 
-#
 # def minidox_thumb_post_tr():
+#     debugprint('thumb_post_tr()')
 #     return translate(web_post(),
-#         [(mount_width / 2) - post_adj, (mount_height / 1.15) - post_adj, 0]
-#     )
+#                      [(mount_width / 2) - post_adj, ((mount_height/2) + double_plate_height) - post_adj, 0]
+#                      )
 #
 #
 # def minidox_thumb_post_tl():
+#     debugprint('thumb_post_tl()')
 #     return translate(web_post(),
-#         [-(mount_width / 2) + post_adj, (mount_height / 1.15) - post_adj, 0]
-#     )
+#                      [-(mount_width / 2) + post_adj, ((mount_height/2) + double_plate_height) - post_adj, 0]
+#                      )
 #
 #
 # def minidox_thumb_post_bl():
+#     debugprint('thumb_post_bl()')
 #     return translate(web_post(),
-#         [-(mount_width / 2) + post_adj, -(mount_height / 1.15) + post_adj, 0]
-#     )
+#                      [-(mount_width / 2) + post_adj, -((mount_height/2) + double_plate_height) + post_adj, 0]
+#                      )
 #
 #
 # def minidox_thumb_post_br():
+#     debugprint('thumb_post_br()')
 #     return translate(web_post(),
-#         [(mount_width / 2) - post_adj, -(mount_height / 1.15) + post_adj, 0]
-#     )
+#                      [(mount_width / 2) - post_adj, -((mount_height/2) + double_plate_height) + post_adj, 0]
+#                      )
 
 
 def minidox_thumb_connectors():
