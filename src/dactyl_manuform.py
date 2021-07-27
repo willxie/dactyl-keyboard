@@ -2082,7 +2082,8 @@ def minidox_thumb_walls():
 
     # thumb, walls
     shape = union([wall_brace(minidox_thumb_tr_place, 0, -1, web_post_br(), minidox_thumb_tr_place, 0, -1, web_post_bl())])
-    shape = union([shape, wall_brace(minidox_thumb_tr_place, 0, -1, web_post_bl(), minidox_thumb_tl_place, 0, -1, web_post_bl())])
+    shape = union([shape, wall_brace(minidox_thumb_tr_place, 0, -1, web_post_bl(), minidox_thumb_tl_place, 0, -1, web_post_br())])
+    shape = union([shape, wall_brace(minidox_thumb_tl_place, 0, -1, web_post_br(), minidox_thumb_tl_place, 0, -1, web_post_bl())])
     shape = union([shape, wall_brace(minidox_thumb_tl_place, 0, -1, web_post_bl(), minidox_thumb_ml_place, -1, -1, web_post_br())])
     shape = union([shape, wall_brace(minidox_thumb_ml_place, -1, -1, web_post_br(), minidox_thumb_ml_place, 0, -1, web_post_bl())])
     shape = union([shape, wall_brace(minidox_thumb_ml_place, 0, -1, web_post_bl(), minidox_thumb_ml_place, -1, 0, web_post_bl())])
