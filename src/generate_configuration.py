@@ -18,7 +18,7 @@ shape_config = {
     'save_dir': '.',
     'config_name':  "DM",
 
-    'show_caps':  True,
+    'show_caps':  False,
 
     'nrows':  5, #5,  # key rows
     'ncols':  6, #6,  # key columns
@@ -43,7 +43,7 @@ shape_config = {
     ##############################
     # THUMB PARAMETERS
     ##############################
-    'thumb_style': 'DEFAULT',  # 'DEFAULT', 'MINI', 'CARBONFET'
+    'thumb_style': 'MINIDOX',  # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key
     'default_1U_cluster': True, # only used with default, makes top right thumb cluster key 1U
     # Thumb plate rotations, anything other than 90 degree increments WILL NOT WORK.
     'thumb_plate_tr_rotation': 0.0,  # Top right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
@@ -102,7 +102,8 @@ shape_config = {
     # 'HS_NUB' = hot swap underside with nubs.
     # 'HS_UNDERCUT' = hot swap underside with undercut. Does not generate properly.  Hot swap step needs to be modified.
     # 'HS_NOTCH' = hot swap underside with notch.  Does not generate properly.  Hot swap step needs to be modified.
-    'plate_style':  'NOTCH',
+    'plate_style':  'HS_NUB',
+    # 'plate_style': 'HS_NOTCH',
 
     'hole_keyswitch_height':  14.0,
     'hole_keyswitch_width':  14.0,
