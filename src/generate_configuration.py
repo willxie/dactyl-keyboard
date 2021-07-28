@@ -18,7 +18,7 @@ shape_config = {
     'save_dir': '.',
     'config_name':  "DM",
 
-    'show_caps':  False,
+    'show_caps':  True,
 
     'nrows':  5, #5,  # key rows
     'ncols':  6, #6,  # key columns
@@ -45,6 +45,7 @@ shape_config = {
     ##############################
     'thumb_style': 'MINIDOX',  # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key
     'default_1U_cluster': True, # only used with default, makes top right thumb cluster key 1U
+    'minidox_Usize': 1.2, # Thumb key size.  May need slight oversizing, check w/ caps.  If over 1.5 need to shift thumb offsets y value.
     # Thumb plate rotations, anything other than 90 degree increments WILL NOT WORK.
     'thumb_plate_tr_rotation': 0.0,  # Top right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
     'thumb_plate_tl_rotation': 0.0,  # Top left plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
@@ -116,7 +117,7 @@ shape_config = {
     'notch_width': 5.0, # If using notch, it is identical to undecut, but only locally by the switch clip
 
     'sa_profile_key_height':  12.7,
-    'sa_length': 18.25,
+    'sa_length': 18.5,
     'sa_double_length': 37.5,
     'plate_thickness':  4+1.1,
 
