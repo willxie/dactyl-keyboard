@@ -543,8 +543,13 @@ def connectors():
 def thumborigin():
     # debugprint('thumborigin()')
     origin = key_position([mount_width / 2, -(mount_height / 2), 0], 1, cornerrow)
+
     for i in range(len(origin)):
         origin[i] = origin[i] + thumb_offsets[i]
+
+    if thumb_style == 'MINIDOX':
+        origin[1] = origin[1] - .4*(minidox_Usize-1)*sa_length
+
     return origin
 
 
@@ -2754,7 +2759,8 @@ def screw_insert_thumb(bottom_radius, top_radius, height):
 
     if thumb_style == 'MINIDOX':
         position = thumborigin()
-        position = list(np.array(position) + np.array([-40, -33, -16]))
+        position = list(np.array(position) + np.array([-37, -35, -16]))
+        position[1] = position[1] - .4 * (minidox_Usize - 1) * sa_length
         position[2] = 0
 
     elif thumb_style == 'CARBONFET':

@@ -45,7 +45,8 @@ shape_config = {
     ##############################
     'thumb_style': 'MINIDOX',  # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key
     'default_1U_cluster': True, # only used with default, makes top right thumb cluster key 1U
-    'minidox_Usize': 1.2, # Thumb key size.  May need slight oversizing, check w/ caps.  If over 1.5 need to shift thumb offsets y value.
+    'minidox_Usize': 2, # Thumb key size.  May need slight oversizing, check w/ caps.  Additional spacing will be automatically added for larger keys.
+
     # Thumb plate rotations, anything other than 90 degree increments WILL NOT WORK.
     'thumb_plate_tr_rotation': 0.0,  # Top right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
     'thumb_plate_tl_rotation': 0.0,  # Top left plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
