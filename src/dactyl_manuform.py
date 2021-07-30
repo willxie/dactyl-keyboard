@@ -173,11 +173,11 @@ def single_plate(cylinder_segments=100, side="right"):
         left_wall = translate(left_wall, ((lr_border / 2) + (keyswitch_width / 2), 0, plate_thickness / 2))
 
         side_nub = cylinder(radius=1, height=2.75)
-        side_nub = translate(side_nub, (0, 0, -2.75 / 2.0))
         side_nub = rotate(side_nub, (90, 0, 0))
         side_nub = translate(side_nub, (keyswitch_width / 2, 0, 1))
+
         nub_cube = box(1.5, 2.75, plate_thickness)
-        nub_cube = translate(nub_cube, ((1.5 / 2) + (keyswitch_width / 2), 0, plate_thickness / 2))
+        nub_cube = translate(nub_cube, ((1.5 / 2) + (keyswitch_width / 2),  0, plate_thickness / 2))
 
         side_nub2 = tess_hull(shapes=(side_nub, nub_cube))
         side_nub2 = union([side_nub2, side_nub, nub_cube])
@@ -1027,9 +1027,6 @@ def mini_thumbcaps():
 
 
 def mini_thumb(side="right"):
-
-    # shape = thumb_1x_layout(sl.rotate([0.0, 0.0, -90])(single_plate(side=side)))
-    # shape += thumb_15x_layout(sl.rotate([0.0, 0.0, -90])(single_plate(side=side)))
     shape = mini_thumb_1x_layout(single_plate(side=side))
     shape = union([shape, mini_thumb_15x_layout(single_plate(side=side))])
 
@@ -1259,10 +1256,10 @@ def minidox_thumbcaps():
 
 def minidox_thumb(side="right"):
 
-    shape = minidox_thumb_fx_layout(sl.rotate([0.0, 0.0, -90])(single_plate(side=side)))
+    shape = minidox_thumb_fx_layout(rotate(single_plate(side=side), [0.0, 0.0, -90]))
     shape = union([shape, minidox_thumb_fx_layout(adjustable_plate(minidox_Usize))])
-    # shape += thumb_15x_layout(sl.rotate([0.0, 0.0, -90])(single_plate(side=side)))
     # shape = minidox_thumb_1x_layout(single_plate(side=side))
+
 
 
     return shape
@@ -1667,10 +1664,6 @@ def bottom_hull(p, height=0.001):
     if ENGINE == 'cadquery':
         shape = None
         for item in p:
-            # proj = sl.projection()(p)
-            # t_shape = sl.linear_extrude(height=height, twist=0, convexity=0, center=True)(
-            #      proj
-            # )
             vertices = []
             verts = item.faces('<Z').vertices()
             for vert in verts.objects:
@@ -2439,7 +2432,6 @@ def oled_sliding_mount_frame():
     )
     top_chamfer_1 = translate(top_chamfer_1, (0, 0, -oled_edge_chamfer - .05))
 
-    # top_chamfer_1 = sl.hull()(top_chamfer_1, top_chamfer_2)
     top_chamfer_1 = hull_from_shapes([top_chamfer_1, top_chamfer_2])
 
     top_chamfer_1 = translate(top_chamfer_1, (

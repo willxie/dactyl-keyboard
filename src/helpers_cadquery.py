@@ -15,7 +15,9 @@ def box(width, height, depth):
 
 
 def cylinder(radius, height, segments=100):
-    return cq.Workplane("XY").union(cq.Solid.makeCylinder(radius=radius, height=height))
+    shape = cq.Workplane("XY").union(cq.Solid.makeCylinder(radius=radius, height=height))
+    shape = translate(shape, (0, 0, -height/2))
+    return shape
 
 
 def sphere(radius):
