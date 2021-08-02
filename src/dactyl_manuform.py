@@ -141,13 +141,13 @@ teensy_holder_height = 6 + teensy_width
 
 
 
-wire_post_height = 7
-wire_post_overhang = 3.5
-wire_post_diameter = 2.6
-
-screw_insert_height = 3.8
-screw_insert_bottom_radius = 5.31 / 2
-screw_insert_top_radius = 5.1 / 2
+# wire_post_height = 7
+# wire_post_overhang = 3.5
+# wire_post_diameter = 2.6
+#
+# screw_insert_height = 3.8
+# screw_insert_bottom_radius = 5.31 / 2
+# screw_insert_top_radius = 5.1 / 2
 
 
 # save_path = path.join("..", "things", save_dir)

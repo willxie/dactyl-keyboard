@@ -18,7 +18,7 @@ shape_config = {
     'save_dir': '.',
     'config_name':  "DM",
 
-    'show_caps':  True,
+    'show_caps':  False,
 
     'nrows':  5, #5,  # key rows
     'ncols':  6, #6,  # key columns
@@ -105,8 +105,8 @@ shape_config = {
     # 'HS_NUB' = hot swap underside with nubs.
     # 'HS_UNDERCUT' = hot swap underside with undercut. Does not generate properly.  Hot swap step needs to be modified.
     # 'HS_NOTCH' = hot swap underside with notch.  Does not generate properly.  Hot swap step needs to be modified.
-    'plate_style':  'HS_NUB',
-    # 'plate_style': 'HS_NOTCH',
+    # 'plate_style':  'NUB',
+    'plate_style': 'NOTCH',
 
     'hole_keyswitch_height':  14.0,
     'hole_keyswitch_width':  14.0,
@@ -144,7 +144,7 @@ shape_config = {
     # 'CLIP' = Features to set the OLED in a frame a snap a bezel down to hold it in place.
 
     'oled_mount_type':  'CLIP',
-    'oled_center_row': 1.5, # if not None, this will override the oled_mount_location_xyz and oled_mount_rotation_xyz settings
+    'oled_center_row': 1.25, # if not None, this will override the oled_mount_location_xyz and oled_mount_rotation_xyz settings
     'oled_translation_offset': (0, 0, 4), # Z offset tweaks are expected depending on curvature and OLED mount choice.
     'oled_rotation_offset': (0, 0, 0),
 
@@ -227,6 +227,15 @@ shape_config = {
     # post_adj':  post_size / 2
     'post_adj':  0,
     'screws_offset': 'INSIDE', #'OUTSIDE', 'INSIDE', 'ORIGINAL'
+
+    'screw_insert_height': 3.8,
+    'screw_insert_bottom_radius': 5.31 / 2,
+    'screw_insert_top_radius': 5.1 / 2,
+
+    # Does anyone even use these?  I think they just get in the way.
+    'wire_post_height': 7,
+    'wire_post_overhang': 3.5,
+    'wire_post_diameter': 2.6,
 
     ###################################
     ## Controller Mount / Connectors ##

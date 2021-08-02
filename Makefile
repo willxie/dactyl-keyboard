@@ -39,11 +39,20 @@ config: check-requirements ## Generate configuration.
 .PHONY: config
 
 build-models: check-requirements ## Build models.
-	@echo "\nGenerate models..\n" && \
+	@echo "\nGenerate configured model..\n" && \
 	cd ${current_dir} && \
 	${DOCKER_CMD} run --rm --name DM-run -v ${source_dir}:/app/src -v ${artifact_dir}:/app/things dactyl-keyboard python3 -i dactyl_manuform.py && \
 	echo "Done"
 .PHONY: config
+
+build-models: check-requirements ## Build models.
+	@echo "\nGenerate release models..\n" && \
+	cd ${current_dir} && \
+	${DOCKER_CMD} run --rm --name DM-release-build -v ${source_dir}:/app/src -v ${artifact_dir}:/app/things dactyl-keyboard python3 -i model_builder.py && \
+	echo "Done"
+.PHONY: config
+docker run --name DM-release-build -d -v "%cd%/src:/app/src" -v "%cd%/things:/app/things" dactyl-keyboard python3 -i model_builder.py
+
 
 shell: check-requirements ## Open an interactive shell inside a container.
 	@${DOCKER_CMD} run --rm -it --name DM-shell -v "src:/app/src" -v "things:/app/things" dactyl-keyboard bash && \
