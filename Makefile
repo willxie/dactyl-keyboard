@@ -51,7 +51,6 @@ build-models: check-requirements ## Build models.
 	${DOCKER_CMD} run --rm --name DM-release-build -v ${source_dir}:/app/src -v ${artifact_dir}:/app/things dactyl-keyboard python3 -i model_builder.py && \
 	echo "Done"
 .PHONY: config
-docker run --name DM-release-build -d -v "%cd%/src:/app/src" -v "%cd%/things:/app/things" dactyl-keyboard python3 -i model_builder.py
 
 
 shell: check-requirements ## Open an interactive shell inside a container.
