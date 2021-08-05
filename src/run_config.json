@@ -1,10 +1,10 @@
 {
     "ENGINE": "solid",
-    "save_dir": "DM_4x5_NOTCHPLT_DEFTMB_NOLED_EXTCTRL",
-    "config_name": "DM_4x5_NOTCHPLT_DEFTMB_NOLED_EXTCTRL",
-    "show_caps": false,
-    "nrows": 4,
-    "ncols": 5,
+    "save_dir": ".",
+    "config_name": "DM",
+    "show_caps": true,
+    "nrows": 5,
+    "ncols": 6,
     "alpha": 0.26179916666666664,
     "beta": 0.08726638888888888,
     "centercol": 3,
@@ -19,8 +19,8 @@
         7
     ],
     "keyboard_z_offset": 11,
-    "thumb_style": "DEFAULT",
-    "default_1U_cluster": true,
+    "thumb_style": "MINIDOX",
+    "default_1U_cluster": false,
     "minidox_Usize": 1.6,
     "thumb_plate_tr_rotation": 0.0,
     "thumb_plate_tl_rotation": 0.0,
@@ -28,6 +28,41 @@
     "thumb_plate_ml_rotation": 0.0,
     "thumb_plate_br_rotation": 0.0,
     "thumb_plate_bl_rotation": 0.0,
+    "trackball_in_wall": true,
+    "tbiw_hole_diameter": 40,
+    "tbiw_hole_height": 40,
+    "tbiw_ball_center_row": 0.2,
+    "tbiw_translational_offset": [
+        -2.0,
+        0.0,
+        3
+    ],
+    "tbiw_rotation_offset": [
+        0.0,
+        0.0,
+        0.0
+    ],
+    "tbiw_left_wall_x_offset_override": 46.0,
+    "tbiw_left_wall_z_offset_override": 0.0,
+    "tbiw_left_wall_lower_y_offset": 0.0,
+    "tbiw_left_wall_lower_z_offset": 0.0,
+    "tbiw_oled_center_row": 0.75,
+    "tbiw_oled_translation_offset": [
+        -2.5,
+        0,
+        0
+    ],
+    "tbiw_oled_rotation_offset": [
+        0,
+        0,
+        0
+    ],
+    "trackball_Usize": 1.5,
+    "trackball_rotation": 0.0,
+    "ball_side": "right",
+    "ball_diameter": 34.0,
+    "ball_wall_thickness": 3.0,
+    "ball_z_offset": -3.75,
     "pinky_1_5U": false,
     "first_1_5U_row": 0,
     "last_1_5U_row": 5,
@@ -90,7 +125,7 @@
     "undercut_transition": 0.2,
     "plate_file": null,
     "plate_offset": 0.0,
-    "oled_mount_type": "NONE",
+    "oled_mount_type": "CLIP",
     "oled_center_row": 1.25,
     "oled_translation_offset": [
         0,

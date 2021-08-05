@@ -118,6 +118,8 @@ if oled_mount_type is not None and oled_mount_type != "NONE":
     left_wall_lower_y_offset = oled_left_wall_lower_y_offset
     left_wall_lower_z_offset = oled_left_wall_lower_z_offset
 
+
+
 cap_top_height = plate_thickness + sa_profile_key_height
 row_radius = ((mount_height + extra_height) / 2) / (np.sin(alpha / 2)) + cap_top_height
 column_radius = (
@@ -263,6 +265,26 @@ def single_plate(cylinder_segments=100, side="right"):
 
     return plate
 
+def trackball_cutout(segments=100, side="right"):
+    shape = cylinder(tbiw_hole_diameter / 2 , tbiw_hole_height)
+    return shape
+
+def trackball_socket(segments=100, side="right"):
+    # shape = sphere(ball_diameter / 2)
+    # cyl = cylinder(ball_diameter / 2 + 4, 20)
+    # cyl = translate(cyl, (0, 0, -8))
+    # shape = union([shape, cyl])
+    tb_file = path.join("..", "src", r"ball_socket_v00")
+    shape = import_file(tb_file)
+    shape = translate(shape, (0, 0, ball_z_offset))
+
+    return shape
+
+def trackball_ball(segments=100, side="right"):
+    shape = sphere(ball_diameter / 2)
+    shape = translate(shape, (0, 0, ball_z_offset))
+
+    return shape
 
 ################
 ## SA Keycaps ##
@@ -548,7 +570,7 @@ def thumborigin():
         origin[i] = origin[i] + thumb_offsets[i]
 
     if thumb_style == 'MINIDOX':
-        origin[1] = origin[1] - .4*(minidox_Usize-1)*sa_length
+        origin[1] = origin[1] - .4*(trackball_Usize-1)*sa_length
 
     return origin
 
@@ -695,13 +717,15 @@ def double_plate():
     return union((top_plate, mirror(top_plate, 'XZ')))
 
 
-def thumbcaps():
+def thumbcaps(side='right'):
     if thumb_style == "MINI":
         return mini_thumbcaps()
     elif thumb_style == "MINIDOX":
         return minidox_thumbcaps()
     elif thumb_style == "CARBONFET":
         return carbonfet_thumbcaps()
+    elif thumb_style == "TRACKBALL":
+        return trackball_thumbcaps()
     else:
         return default_thumbcaps()
 
@@ -713,17 +737,24 @@ def thumb(side="right"):
         return minidox_thumb(side)
     elif thumb_style == "CARBONFET":
         return carbonfet_thumb(side)
+    elif thumb_style == "TRACKBALL":
+        if side == ball_side:
+            return trackball_thumb(side)
+        else:
+            return default_thumb(side)
     else:
         return default_thumb(side)
 
 
-def thumb_connectors():
+def thumb_connectors(side='right'):
     if thumb_style == "MINI":
         return mini_thumb_connectors()
     elif thumb_style == "MINIDOX":
         return minidox_thumb_connectors()
     elif thumb_style == "CARBONFET":
         return carbonfet_thumb_connectors()
+    elif thumb_style == "TRACKBALL":
+        return trackball_thumb_connectors()
     else:
         return default_thumb_connectors()
 
@@ -1654,6 +1685,320 @@ def carbonfet_thumb_connectors():
     return union(hulls)
 
 
+############################
+# Trackball (Ball + 4-key) THUMB CLUSTER
+############################
+
+def trackball_place(shape):
+    shape = rotate(shape, [10, -15, 5])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-42, -20, -5])
+    return shape
+
+
+def trackball_thumb_tl_place(shape):
+    debugprint('thumb_tr_place()')
+    shape = rotate(shape, [10, -5, 25])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-14, -10, 0])
+    return shape
+
+def trackball_thumb_mr_place(shape):
+    debugprint('thumb_mr_place()')
+    shape = rotate(shape, [-7, -20, 75])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-13, -32, -5])
+    return shape
+
+def trackball_thumb_br_place(shape):
+    debugprint('thumb_br_place()')
+    shape = rotate(shape, [-10, -25, 90])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-40, -48, -16])
+    return shape
+
+
+def trackball_thumb_bl_place(shape):
+    debugprint('thumb_bl_place()')
+    shape = rotate(shape, [0, -25, 45])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-60.5, -38.5, -18])
+    return shape
+
+
+def trackball_thumb_tlold_place(shape):
+    debugprint('thumb_tl_place()')
+    shape = rotate(shape, [7.5, -10, 10])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-32.5, -14.5, -4])
+    return shape
+
+
+def trackball_thumb_mlold_place(shape):
+    debugprint('thumb_ml_place()')
+    shape = rotate(shape, [6, -34, 40])
+    shape = translate(shape, thumborigin())
+    shape = translate(shape, [-51, -25, -12])
+    return shape
+
+
+def trackball_thumb_1x_layout(shape):
+    return union([
+        trackball_thumb_tl_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])),
+        # trackball_thumb_tlold_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])),
+        # trackball_thumb_mlold_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])),
+        trackball_thumb_mr_place(rotate(shape, [0, 0, thumb_plate_mr_rotation])),
+        trackball_thumb_bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
+        trackball_thumb_br_place(rotate(shape, [0, 0, thumb_plate_br_rotation])),
+    ])
+
+
+def trackball_thumb_fx_layout(shape):
+    return union([
+        # trackball_thumb_tl_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])),
+        # trackball_thumb_tlold_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])),
+        # trackball_thumb_mlold_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])),
+        # trackball_thumb_mr_place(rotate(shape, [0, 0, thumb_plate_mr_rotation])),
+        # trackball_thumb_bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
+        # trackball_thumb_br_place(rotate(shape, [0, 0, thumb_plate_br_rotation])),
+    ])
+
+def trackball_layout(shape):
+    return union([
+        trackball_place(rotate(shape, [0, 0, trackball_rotation])),
+    ])
+
+
+def trackball_thumbcaps():
+    t1 = trackball_thumb_1x_layout(sa_cap(1))
+    # t1.add(trackball_thumb_15x_layout(rotate(sa_cap(1), [0, 0, rad2deg(pi / 2)])))
+    return t1
+
+
+def trackball_thumb(side="right"):
+    shape = trackball_thumb_fx_layout(rotate(single_plate(side=side), [0.0, 0.0, -90]))
+    shape = union([shape, trackball_thumb_fx_layout(double_plate())])
+    shape = union([shape, trackball_thumb_1x_layout(single_plate(side=side))])
+
+    shape = union([shape, trackball_layout(trackball_socket())])
+    # shape = trackball_thumb_1x_layout(single_plate(side=side))
+    return shape
+
+
+def trackball_thumb_post_tr():
+    debugprint('thumb_post_tr()')
+    return translate(web_post(),
+                     [(mount_width / 2) - post_adj, ((mount_height/2) + adjustable_plate_size(trackball_Usize)) - post_adj, 0]
+                     )
+
+
+def trackball_thumb_post_tl():
+    debugprint('thumb_post_tl()')
+    return translate(web_post(),
+                     [-(mount_width / 2) + post_adj, ((mount_height/2) + adjustable_plate_size(trackball_Usize)) - post_adj, 0]
+                     )
+
+
+def trackball_thumb_post_bl():
+    debugprint('thumb_post_bl()')
+    return translate(web_post(),
+                     [-(mount_width / 2) + post_adj, -((mount_height/2) + adjustable_plate_size(trackball_Usize)) + post_adj, 0]
+                     )
+
+
+def trackball_thumb_post_br():
+    debugprint('thumb_post_br()')
+    return translate(web_post(),
+                     [(mount_width / 2) - post_adj, -((mount_height/2) + adjustable_plate_size(trackball_Usize)) + post_adj, 0]
+                     )
+
+
+def trackball_post_r():
+    debugprint('trackball_post_r()')
+    radius = ball_diameter/2+ball_wall_thickness
+    return translate(web_post(),
+                     [1.0*(radius - post_adj), 0.0*(radius - post_adj), 0]
+                     )
+
+
+def trackball_post_tr():
+    debugprint('trackball_post_tr()')
+    radius = ball_diameter/2+ball_wall_thickness
+    return translate(web_post(),
+                     [0.5*(radius - post_adj), 0.866*(radius - post_adj), 0]
+                     )
+
+
+def trackball_post_tl():
+    debugprint('trackball_post_tl()')
+    radius = ball_diameter/2+ball_wall_thickness
+    return translate(web_post(),
+                     [-0.5*(radius - post_adj), 0.866*(radius - post_adj), 0]
+                     )
+
+
+def trackball_post_l():
+    debugprint('trackball_post_l()')
+    radius = ball_diameter/2+ball_wall_thickness
+    return translate(web_post(),
+                     [-1.0*(radius - post_adj), 0.0*(radius - post_adj), 0]
+                     )
+
+def trackball_post_bl():
+    debugprint('trackball_post_bl()')
+    radius = ball_diameter/2+ball_wall_thickness
+    return translate(web_post(),
+                     [-0.5*(radius - post_adj), -0.866*(radius - post_adj), 0]
+                     )
+
+
+def trackball_post_br():
+    debugprint('trackball_post_br()')
+    radius = ball_diameter/2+ball_wall_thickness
+    return translate(web_post(),
+                     [0.5*(radius - post_adj), -0.866*(radius - post_adj), 0]
+                     )
+
+
+
+def trackball_thumb_connectors():
+    print('thumb_connectors()')
+    hulls = []
+
+    # # Top two
+    # hulls.append(
+    #     triangle_hulls(
+    #         [
+    #             trackball_thumb_tlold_place(trackball_thumb_post_tr()),
+    #             trackball_thumb_tlold_place(trackball_thumb_post_br()),
+    #             trackball_thumb_tl_place(web_post_tl()),
+    #             trackball_thumb_tl_place(web_post_bl()),
+    #         ]
+    #     )
+    # )
+    #
+    # # bottom two on the right
+    # hulls.append(
+    #     triangle_hulls(
+    #         [
+    #             trackball_thumb_br_place(web_post_tr()),
+    #             trackball_thumb_br_place(web_post_br()),
+    #             trackball_thumb_mr_place(web_post_tl()),
+    #             trackball_thumb_mr_place(web_post_bl()),
+    #         ]
+    #     )
+    # )
+    #
+    # # bottom two on the left
+    # hulls.append(
+    #     triangle_hulls(
+    #         [
+    #             trackball_thumb_br_place(web_post_tr()),
+    #             trackball_thumb_br_place(web_post_br()),
+    #             trackball_thumb_mr_place(web_post_tl()),
+    #             trackball_thumb_mr_place(web_post_bl()),
+    #         ]
+    #     )
+    # )
+    # # centers of the bottom four
+    # hulls.append(
+    #     triangle_hulls(
+    #         [
+    #             trackball_thumb_bl_place(web_post_tr()),
+    #             trackball_thumb_bl_place(web_post_br()),
+    #             trackball_thumb_mlold_place(web_post_tl()),
+    #             trackball_thumb_mlold_place(web_post_bl()),
+    #         ]
+    #     )
+    # )
+    #
+    # # top two to the middle two, starting on the left
+    # hulls.append(
+    #     triangle_hulls(
+    #         [
+    #             trackball_thumb_br_place(web_post_tl()),
+    #             trackball_thumb_bl_place(web_post_bl()),
+    #             trackball_thumb_br_place(web_post_tr()),
+    #             trackball_thumb_bl_place(web_post_br()),
+    #             trackball_thumb_mr_place(web_post_tl()),
+    #             trackball_thumb_mlold_place(web_post_bl()),
+    #             trackball_thumb_mr_place(web_post_tr()),
+    #             trackball_thumb_mlold_place(web_post_br()),
+    #         ]
+    #     )
+    # )
+    #
+    #
+    # hulls.append(
+    #     triangle_hulls(
+    #         [
+    #             trackball_thumb_tlold_place(trackball_thumb_post_tl()),
+    #             trackball_thumb_mlold_place(web_post_tr()),
+    #             trackball_thumb_tlold_place(trackball_thumb_post_bl()),
+    #             trackball_thumb_mlold_place(web_post_br()),
+    #             trackball_thumb_tlold_place(trackball_thumb_post_br()),
+    #             trackball_thumb_mr_place(web_post_tr()),
+    #             trackball_thumb_tl_place(web_post_bl()),
+    #             trackball_thumb_mr_place(web_post_br()),
+    #             trackball_thumb_tl_place(web_post_br()),
+    #         ]
+    #     )
+    # )
+    hulls.append(
+        triangle_hulls(
+            [
+                # trackball_thumb_tlold_place(trackball_thumb_post_tl()),
+                key_place(web_post_bl(), 0, cornerrow),
+                trackball_thumb_tlold_place(trackball_thumb_post_tr()),
+                key_place(web_post_br(), 0, cornerrow),
+                trackball_thumb_tl_place(web_post_tl()),
+                key_place(web_post_bl(), 1, cornerrow),
+                trackball_thumb_tl_place(web_post_tr()),
+                key_place(web_post_br(), 1, cornerrow),
+                key_place(web_post_tl(), 2, lastrow),
+                key_place(web_post_bl(), 2, lastrow),
+                trackball_thumb_tl_place(web_post_tr()),
+                key_place(web_post_bl(), 2, lastrow),
+                trackball_thumb_tl_place(web_post_br()),
+                key_place(web_post_br(), 2, lastrow),
+                key_place(web_post_bl(), 3, lastrow),
+                key_place(web_post_tr(), 2, lastrow),
+                key_place(web_post_tl(), 3, lastrow),
+                key_place(web_post_bl(), 3, cornerrow),
+                key_place(web_post_tr(), 3, lastrow),
+                key_place(web_post_br(), 3, cornerrow),
+                key_place(web_post_bl(), 4, cornerrow),
+            ]
+        )
+    )
+
+    hulls.append(
+        triangle_hulls(
+            [
+                key_place(web_post_br(), 1, cornerrow),
+                key_place(web_post_tl(), 2, lastrow),
+                key_place(web_post_bl(), 2, cornerrow),
+                key_place(web_post_tr(), 2, lastrow),
+                key_place(web_post_br(), 2, cornerrow),
+                key_place(web_post_bl(), 3, cornerrow),
+            ]
+        )
+    )
+
+    hulls.append(
+        triangle_hulls(
+            [
+                key_place(web_post_tr(), 3, lastrow),
+                key_place(web_post_br(), 3, lastrow),
+                key_place(web_post_tr(), 3, lastrow),
+                key_place(web_post_bl(), 4, cornerrow),
+            ]
+        )
+    )
+
+    return union(hulls)
+
+
 ##########
 ## Case ##
 ##########
@@ -1702,11 +2047,17 @@ def bottom_hull(p, height=0.001):
         return shape
 
 
-def left_key_position(row, direction, low_corner=False):
+def left_key_position(row, direction, low_corner=False, side='right'):
     debugprint("left_key_position()")
     pos = np.array(
         key_position([-mount_width * 0.5, direction * mount_height * 0.5, 0], 0, row)
     )
+    if trackball_in_wall and side==ball_side:
+        left_wall_x_offset = tbiw_left_wall_x_offset_override
+        left_wall_z_offset = tbiw_left_wall_z_offset_override
+        left_wall_lower_y_offset = tbiw_left_wall_lower_y_offset
+        left_wall_lower_z_offset = tbiw_left_wall_lower_z_offset
+
     if low_corner:
         y_offset = left_wall_lower_y_offset
         z_offset = left_wall_lower_z_offset
@@ -1717,9 +2068,9 @@ def left_key_position(row, direction, low_corner=False):
     return list(pos - np.array([left_wall_x_offset, -y_offset, left_wall_z_offset + z_offset]))
 
 
-def left_key_place(shape, row, direction, low_corner=False):
+def left_key_place(shape, row, direction, low_corner=False, side='right'):
     debugprint("left_key_place()")
-    pos = left_key_position(row, direction, low_corner=low_corner)
+    pos = left_key_position(row, direction, low_corner=low_corner, side=side)
     return translate(shape, pos)
 
 
@@ -1838,30 +2189,30 @@ def right_wall():
     return shape
 
 
-def left_wall():
+def left_wall(side='right'):
     print('left_wall()')
     shape = union([wall_brace(
         (lambda sh: key_place(sh, 0, 0)), 0, 1, web_post_tl(),
-        (lambda sh: left_key_place(sh, 0, 1)), 0, 1, web_post(),
+        (lambda sh: left_key_place(sh, 0, 1, side=side)), 0, 1, web_post(),
     )])
 
     shape = union([shape, wall_brace(
-        (lambda sh: left_key_place(sh, 0, 1)), 0, 1, web_post(),
-        (lambda sh: left_key_place(sh, 0, 1)), -1, 0, web_post(),
+        (lambda sh: left_key_place(sh, 0, 1, side=side)), 0, 1, web_post(),
+        (lambda sh: left_key_place(sh, 0, 1, side=side)), -1, 0, web_post(),
     )])
 
     for i in range(lastrow):
         y = i
         low = (y == (lastrow-1))
         temp_shape1 = wall_brace(
-            (lambda sh: left_key_place(sh, y, 1,)), -1, 0, web_post(),
-            (lambda sh: left_key_place(sh, y, -1, low_corner=low)), -1, 0, web_post(),
+            (lambda sh: left_key_place(sh, y, 1, side=side)), -1, 0, web_post(),
+            (lambda sh: left_key_place(sh, y, -1, low_corner=low, side=side)), -1, 0, web_post(),
         )
         temp_shape2 = hull_from_shapes((
             key_place(web_post_tl(), 0, y),
             key_place(web_post_bl(), 0, y),
-            left_key_place(web_post(), y, 1),
-            left_key_place(web_post(), y, -1, low_corner=low),
+            left_key_place(web_post(), y, 1, side=side),
+            left_key_place(web_post(), y, -1, low_corner=low, side=side),
         ))
         shape = union([shape, temp_shape1])
         shape = union([shape, temp_shape2])
@@ -1870,14 +2221,14 @@ def left_wall():
         y = i + 1
         low = (y == (lastrow-1))
         temp_shape1 = wall_brace(
-            (lambda sh: left_key_place(sh, y - 1, -1)), -1, 0, web_post(),
-            (lambda sh: left_key_place(sh, y, 1)), -1, 0, web_post(),
+            (lambda sh: left_key_place(sh, y - 1, -1, side=side)), -1, 0, web_post(),
+            (lambda sh: left_key_place(sh, y, 1, side=side)), -1, 0, web_post(),
         )
         temp_shape2 = hull_from_shapes((
             key_place(web_post_tl(), 0, y),
             key_place(web_post_bl(), 0, y - 1),
-            left_key_place(web_post(), y, 1),
-            left_key_place(web_post(), y - 1, -1),
+            left_key_place(web_post(), y, 1, side=side),
+            left_key_place(web_post(), y - 1, -1, side=side),
         ))
         shape = union([shape, temp_shape1])
         shape = union([shape, temp_shape2])
@@ -1918,18 +2269,22 @@ def thumb_walls():
         return minidox_thumb_walls()
     elif thumb_style == "CARBONFET":
         return carbonfet_thumb_walls()
+    elif thumb_style == "TRACKBALL":
+        return trackball_thumb_walls()
     else:
         return default_thumb_walls()
 
-def thumb_connection():
+def thumb_connection(side='right'):
     if thumb_style == "MINI":
-        return mini_thumb_connection()
+        return mini_thumb_connection(side=side)
     if thumb_style == "MINIDOX":
-        return minidox_thumb_connection()
+        return minidox_thumb_connection(side=side)
     elif thumb_style == "CARBONFET":
-        return carbonfet_thumb_connection()
+        return carbonfet_thumb_connection(side=side)
+    elif thumb_style == "TRACKBALL":
+        return trackball_thumb_connection(side=side)
     else:
-        return default_thumb_connection()
+        return default_thumb_connection(side=side)
 
 def default_thumb_walls():
     print('thumb_walls()')
@@ -1959,13 +2314,13 @@ def default_thumb_walls():
     return shape
 
 
-def default_thumb_connection():
+def default_thumb_connection(side='right'):
     print('thumb_connection()')
     # clunky bit on the top left thumb connection  (normal connectors don't work well)
     shape = union([bottom_hull(
         [
-            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True),
-            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True),
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True, side=side),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True, side=side),
             thumb_ml_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
             thumb_ml_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
         ]
@@ -1974,8 +2329,8 @@ def default_thumb_connection():
     shape = union([shape,
         hull_from_shapes(
             [
-                left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True),
-                left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True),
+                left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True, side=side),
+                left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True, side=side),
                 thumb_ml_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
                 thumb_ml_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
                 thumb_tl_place(thumb_post_tl()),
@@ -1985,17 +2340,17 @@ def default_thumb_connection():
 
     shape = union([shape, hull_from_shapes(
         [
-            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True),
-            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True),
-            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True),
+            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True, side=side),
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True, side=side),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True, side=side),
             thumb_tl_place(thumb_post_tl()),
         ]
     )])
 
     shape = union([shape, hull_from_shapes(
         [
-            left_key_place(web_post(), cornerrow, -1, low_corner=True),
-            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True),
+            left_key_place(web_post(), cornerrow, -1, low_corner=True, side=side),
+            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True, side=side),
             key_place(web_post_bl(), 0, cornerrow),
             thumb_tl_place(thumb_post_tl()),
         ]
@@ -2010,6 +2365,88 @@ def default_thumb_connection():
             thumb_tl_place(thumb_post_tl()),
         ]
     )])
+
+    return shape
+
+def trackball_thumb_walls():
+    print('thumb_walls()')
+    # thumb, walls
+    # shape = union([wall_brace(trackball_thumb_mr_place, 0, -1, web_post_br(), trackball_thumb_tl_place, 0, -1, web_post_br())])
+    # shape = union([shape, wall_brace(trackball_thumb_mr_place, 0, -1, web_post_br(), trackball_thumb_mr_place, 0, -1, web_post_bl())])
+    # shape = union([shape, wall_brace(trackball_thumb_br_place, 0, -1, web_post_br(), trackball_thumb_br_place, 0, -1, web_post_bl())])
+    # shape = union([shape, wall_brace(trackball_thumb_mlold_place, -0.3, 1, web_post_tr(), trackball_thumb_mlold_place, 0, 1, web_post_tl())])
+    # shape = union([shape, wall_brace(trackball_thumb_bl_place, 0, 1, web_post_tr(), trackball_thumb_bl_place, 0, 1, web_post_tl())])
+    # shape = union([shape, wall_brace(trackball_thumb_br_place, -1, 0, web_post_tl(), trackball_thumb_br_place, -1, 0, web_post_bl())])
+    # shape = union([shape, wall_brace(trackball_thumb_bl_place, -1, 0, web_post_tl(), trackball_thumb_bl_place, -1, 0, web_post_bl())])
+    # # thumb, corners
+    # shape = union([shape, wall_brace(trackball_thumb_br_place, -1, 0, web_post_bl(), trackball_thumb_br_place, 0, -1, web_post_bl())])
+    # shape = union([shape, wall_brace(trackball_thumb_bl_place, -1, 0, web_post_tl(), trackball_thumb_bl_place, 0, 1, web_post_tl())])
+    # # thumb, tweeners
+    # shape = union([shape, wall_brace(trackball_thumb_mr_place, 0, -1, web_post_bl(), trackball_thumb_br_place, 0, -1, web_post_br())])
+    # shape = union([shape, wall_brace(trackball_thumb_mlold_place, 0, 1, web_post_tl(), trackball_thumb_bl_place, 0, 1, web_post_tr())])
+    # shape = union([shape, wall_brace(trackball_thumb_bl_place, -1, 0, web_post_bl(), trackball_thumb_br_place, -1, 0, web_post_tl())])
+    # shape = union([shape, wall_brace(trackball_thumb_tl_place, 0, -1, web_post_br(), (lambda sh: key_place(sh, 3, lastrow)), 0, -1, web_post_bl())])
+
+    shape = wall_brace(trackball_thumb_tl_place, 0, -1, web_post_br(), (lambda sh: key_place(sh, 3, lastrow)), 0,
+                              -1, web_post_bl())
+
+    return shape
+
+
+def trackball_thumb_connection(side='right'):
+    print('thumb_connection()')
+    # clunky bit on the top left thumb connection  (normal connectors don't work well)
+
+    shape = box(.1,.1,.1)
+
+    # shape = union([bottom_hull(
+    #     [
+    #         left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True),
+    #         left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True),
+    #         trackball_thumb_mlold_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
+    #         trackball_thumb_mlold_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
+    #     ]
+    # )])
+
+    # shape = union([shape,
+    #     hull_from_shapes(
+    #         [
+    #             left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True),
+    #             left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True),
+    #             trackball_thumb_mlold_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
+    #             trackball_thumb_mlold_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
+    #             trackball_thumb_tlold_place(trackball_thumb_post_tl()),
+    #         ]
+    #     )
+    # ])  # )
+    #
+    # shape = union([shape, hull_from_shapes(
+    #     [
+    #         left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True),
+    #         left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True),
+    #         left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True),
+    #         trackball_thumb_tlold_place(trackball_thumb_post_tl()),
+    #     ]
+    # )])
+    #
+    # shape = union([shape, hull_from_shapes(
+    #     [
+    #         left_key_place(web_post(), cornerrow, -1, low_corner=True),
+    #         left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True),
+    #         key_place(web_post_bl(), 0, cornerrow),
+    #         trackball_thumb_tlold_place(trackball_thumb_post_tl()),
+    #     ]
+    # )])
+    #
+    # shape = union([shape, hull_from_shapes(
+    #     [
+    #         trackball_thumb_mlold_place(web_post_tr()),
+    #         trackball_thumb_mlold_place(translate(web_post_tr(), wall_locate1(-0.3, 1))),
+    #         trackball_thumb_mlold_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
+    #         trackball_thumb_mlold_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
+    #         trackball_thumb_tlold_place(trackball_thumb_post_tl()),
+    #     ]
+    # )])
 
     return shape
 
@@ -2031,12 +2468,12 @@ def mini_thumb_walls():
 
     return shape
 
-def mini_thumb_connection():
+def mini_thumb_connection(side='right'):
     # clunky bit on the top left thumb connection  (normal connectors don't work well)
     shape = union([bottom_hull(
         [
-            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True),
-            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True),
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True, side=side),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True, side=side),
             mini_thumb_bl_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
             mini_thumb_bl_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
         ]
@@ -2045,8 +2482,8 @@ def mini_thumb_connection():
     shape = union([shape,
         hull_from_shapes(
         [
-            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True),
-            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True),
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True, side=side),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True, side=side),
             mini_thumb_bl_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
             mini_thumb_bl_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
             mini_thumb_tl_place(web_post_tl()),
@@ -2056,10 +2493,10 @@ def mini_thumb_connection():
     shape = union([shape,
         hull_from_shapes(
         [
-            left_key_place(web_post(), cornerrow, -1, low_corner=True),
-            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True),
-            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True),
-            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True),
+            left_key_place(web_post(), cornerrow, -1, low_corner=True, side=side),
+            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True, side=side),
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True, side=side),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True, side=side),
             mini_thumb_tl_place(web_post_tl()),
         ]
     )])
@@ -2067,8 +2504,8 @@ def mini_thumb_connection():
     shape = union([shape,
         hull_from_shapes(
         [
-            left_key_place(web_post(), cornerrow, -1, low_corner=True),
-            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True),
+            left_key_place(web_post(), cornerrow, -1, low_corner=True, side=side),
+            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True, side=side),
             key_place(web_post_bl(), 0, cornerrow),
             mini_thumb_tl_place(web_post_tl()),
         ]
@@ -2106,12 +2543,12 @@ def minidox_thumb_walls():
 
     return shape
 
-def minidox_thumb_connection():
+def minidox_thumb_connection(side='right'):
     # clunky bit on the top left thumb connection  (normal connectors don't work well)
     shape = union([bottom_hull(
         [
-            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True),
-            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True),
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True, side=side),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True, side=side),
             minidox_thumb_bl_place(translate(minidox_thumb_post_tr(), wall_locate2(-0.3, 1))),
             minidox_thumb_bl_place(translate(minidox_thumb_post_tr(), wall_locate3(-0.3, 1))),
         ]
@@ -2120,8 +2557,8 @@ def minidox_thumb_connection():
     shape = union([shape,
         hull_from_shapes(
         [
-            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True),
-            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True),
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True, side=side),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True, side=side),
             minidox_thumb_ml_place(translate(minidox_thumb_post_tr(), wall_locate2(-0.3, 1))),
             minidox_thumb_ml_place(translate(minidox_thumb_post_tr(), wall_locate3(-0.3, 1))),
             minidox_thumb_tl_place(minidox_thumb_post_tl()),
@@ -2131,10 +2568,10 @@ def minidox_thumb_connection():
     shape = union([shape,
         hull_from_shapes(
         [
-            left_key_place(web_post(), cornerrow, -1, low_corner=True),
-            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True),
-            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True),
-            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True),
+            left_key_place(web_post(), cornerrow, -1, low_corner=True, side=side),
+            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True, side=side),
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True, side=side),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True, side=side),
             minidox_thumb_tl_place(minidox_thumb_post_tl()),
         ]
     )])
@@ -2142,8 +2579,8 @@ def minidox_thumb_connection():
     shape = union([shape,
         hull_from_shapes(
         [
-            left_key_place(web_post(), cornerrow, -1, low_corner=True),
-            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True),
+            left_key_place(web_post(), cornerrow, -1, low_corner=True, side=side),
+            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True, side=side),
             key_place(web_post_bl(), 0, cornerrow),
             # key_place(translate(web_post_bl(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True),
             minidox_thumb_tl_place(minidox_thumb_post_tl()),
@@ -2182,12 +2619,12 @@ def carbonfet_thumb_walls():
     shape = union([shape, wall_brace(carbonfet_thumb_tr_place, 0, -1, web_post_br(), (lambda sh: key_place(sh, 3, lastrow)), 0, -1, web_post_bl())])
     return shape
 
-def carbonfet_thumb_connection():
+def carbonfet_thumb_connection(side='right'):
     # clunky bit on the top left thumb connection  (normal connectors don't work well)
     shape = bottom_hull(
         [
-            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True),
-            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True),
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True, side=side),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True, side=side),
             carbonfet_thumb_bl_place(translate(thumb_post_tr(), wall_locate2(-0.3, 1))),
             carbonfet_thumb_bl_place(translate(thumb_post_tr(), wall_locate3(-0.3, 1))),
         ]
@@ -2196,8 +2633,8 @@ def carbonfet_thumb_connection():
     shape = union([shape,
         hull_from_shapes(
         [
-            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True),
-            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True),
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True, side=side),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True, side=side),
             carbonfet_thumb_bl_place(translate(thumb_post_tr(), wall_locate2(-0.3, 1))),
             carbonfet_thumb_bl_place(translate(thumb_post_tr(), wall_locate3(-0.3, 1))),
             carbonfet_thumb_ml_place(thumb_post_tl()),
@@ -2207,10 +2644,10 @@ def carbonfet_thumb_connection():
     shape = union([shape,
         hull_from_shapes(
         [
-            left_key_place(web_post(), cornerrow, -1, low_corner=True),
-            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True),
-            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True),
-            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True),
+            left_key_place(web_post(), cornerrow, -1, low_corner=True, side=side),
+            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True, side=side),
+            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True, side=side),
+            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True, side=side),
             carbonfet_thumb_ml_place(thumb_post_tl()),
         ]
     )])
@@ -2218,8 +2655,8 @@ def carbonfet_thumb_connection():
     shape = union([shape,
         hull_from_shapes(
         [
-            left_key_place(web_post(), cornerrow, -1, low_corner=True),
-            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True),
+            left_key_place(web_post(), cornerrow, -1, low_corner=True, side=side),
+            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True, side=side),
             key_place(web_post_bl(), 0, cornerrow),
             carbonfet_thumb_ml_place(thumb_post_tl()),
         ]
@@ -2238,16 +2675,16 @@ def carbonfet_thumb_connection():
 
     return shape
 
-def case_walls():
+def case_walls(side='right'):
     print('case_walls()')
     return (
         union([
             back_wall(),
-            left_wall(),
+            left_wall(side=side),
             right_wall(),
             front_wall(),
             thumb_walls(),
-            thumb_connection(),
+            thumb_connection(side=side),
         ])
     )
 
@@ -2348,27 +2785,83 @@ def external_mount_hole():
     )
     return shape
 
-if oled_center_row is not None:
+def generate_trackball_in_wall():
+    pos, rot = tbiw_position_rotation()
+    cutout = trackball_cutout()
+    cutout = rotate(cutout, rot)
+    cutout = translate(cutout, pos)
+
+    shape = trackball_socket()
+    shape = rotate(shape, rot)
+    shape = translate(shape, pos)
+
+    ball = trackball_ball()
+    ball = rotate(ball, rot)
+    ball = translate(ball, pos)
+
+    return shape, cutout, ball
+
+def tbiw_position_rotation():
     base_pt1 = key_position(
-        list(np.array([-mount_width/2, 0, 0]) + np.array([0, (mount_height / 2), 0])), 0, oled_center_row-1
+        list(np.array([-mount_width/2, 0, 0]) + np.array([0, (mount_height / 2), 0])),
+        0, cornerrow - tbiw_ball_center_row - 1
     )
     base_pt2 = key_position(
-        list(np.array([-mount_width/2, 0, 0]) + np.array([0, (mount_height / 2), 0])), 0, oled_center_row+1
+        list(np.array([-mount_width/2, 0, 0]) + np.array([0, (mount_height / 2), 0])),
+        0, cornerrow - tbiw_ball_center_row + 1
     )
     base_pt0 = key_position(
-        list(np.array([-mount_width / 2, 0, 0]) + np.array([0, (mount_height / 2), 0])), 0, oled_center_row
+        list(np.array([-mount_width / 2, 0, 0]) + np.array([0, (mount_height / 2), 0])),
+        0, cornerrow - tbiw_ball_center_row
     )
 
-    oled_mount_location_xyz = (np.array(base_pt1)+np.array(base_pt2))/2. + np.array(((-left_wall_x_offset/2), 0, 0)) + np.array(oled_translation_offset)
-    oled_mount_location_xyz[2] = (oled_mount_location_xyz[2] + base_pt0[2])/2
+    left_wall_x_offset = tbiw_left_wall_x_offset_override
+
+    tbiw_mount_location_xyz = (np.array(base_pt1)+np.array(base_pt2))/2. + np.array(((-left_wall_x_offset/2), 0, 0)) + np.array(tbiw_translational_offset)
+    # tbiw_mount_location_xyz[2] = (oled_translation_offset[2] + base_pt0[2])/2
 
     angle_x = np.arctan2(base_pt1[2] - base_pt2[2], base_pt1[1] - base_pt2[1])
     angle_z = np.arctan2(base_pt1[0] - base_pt2[0], base_pt1[1] - base_pt2[1])
+    tbiw_mount_rotation_xyz = (0, rad2deg(angle_x), -90) + np.array(tbiw_rotation_offset)
 
-    oled_mount_rotation_xyz = (rad2deg(angle_x), 0, -rad2deg(angle_z)) + np.array(oled_rotation_offset)
+    return tbiw_mount_location_xyz, tbiw_mount_rotation_xyz
 
 
-def oled_sliding_mount_frame():
+
+def oled_position_rotation(side='right'):
+    if trackball_in_wall and side == ball_side:
+        oled_center_row = tbiw_oled_center_row
+        oled_translation_offset = tbiw_oled_translation_offset
+        oled_rotation_offset = tbiw_oled_rotation_offset
+    if oled_center_row is not None:
+        base_pt1 = key_position(
+            list(np.array([-mount_width/2, 0, 0]) + np.array([0, (mount_height / 2), 0])), 0, oled_center_row-1
+        )
+        base_pt2 = key_position(
+            list(np.array([-mount_width/2, 0, 0]) + np.array([0, (mount_height / 2), 0])), 0, oled_center_row+1
+        )
+        base_pt0 = key_position(
+            list(np.array([-mount_width / 2, 0, 0]) + np.array([0, (mount_height / 2), 0])), 0, oled_center_row
+        )
+
+        if trackball_in_wall and side==ball_side:
+            left_wall_x_offset = tbiw_left_wall_x_offset_override
+
+        oled_mount_location_xyz = (np.array(base_pt1)+np.array(base_pt2))/2. + np.array(((-left_wall_x_offset/2), 0, 0)) + np.array(oled_translation_offset)
+        oled_mount_location_xyz[2] = (oled_mount_location_xyz[2] + base_pt0[2])/2
+
+        angle_x = np.arctan2(base_pt1[2] - base_pt2[2], base_pt1[1] - base_pt2[1])
+        angle_z = np.arctan2(base_pt1[0] - base_pt2[0], base_pt1[1] - base_pt2[1])
+        if trackball_in_wall and side == ball_side:
+            # oled_mount_rotation_xyz = (0, rad2deg(angle_x), -rad2deg(angle_z)-90) + np.array(oled_rotation_offset)
+            # oled_mount_rotation_xyz = (rad2deg(angle_x)*.707, rad2deg(angle_x)*.707, -45) + np.array(oled_rotation_offset)
+            oled_mount_rotation_xyz = (0, rad2deg(angle_x), -90) + np.array(oled_rotation_offset)
+        else:
+            oled_mount_rotation_xyz = (rad2deg(angle_x), 0, -rad2deg(angle_z)) + np.array(oled_rotation_offset)
+
+    return oled_mount_location_xyz, oled_mount_rotation_xyz
+
+def oled_sliding_mount_frame(side='right'):
     mount_ext_width = oled_mount_width + 2 * oled_mount_rim
     mount_ext_height = (
             oled_mount_height + 2 * oled_edge_overlap_end
@@ -2444,6 +2937,8 @@ def oled_sliding_mount_frame():
 
     shape = difference(shape, [conn_hole, top_hole, end_hole])
 
+    oled_mount_location_xyz, oled_mount_rotation_xyz = oled_position_rotation(side=side)
+
     shape = rotate(shape, oled_mount_rotation_xyz)
     shape = translate(shape,
         (
@@ -2464,7 +2959,7 @@ def oled_sliding_mount_frame():
     return hole, shape
 
 
-def oled_clip_mount_frame():
+def oled_clip_mount_frame(side='right'):
     mount_ext_width = oled_mount_width + 2 * oled_mount_rim
     mount_ext_height = (
             oled_mount_height + 2 * oled_clip_thickness
@@ -2499,6 +2994,8 @@ def oled_clip_mount_frame():
     )
     plate = translate(plate, (0., 0., -oled_thickness / 2.0))
     shape = union([shape, plate])
+
+    oled_mount_location_xyz, oled_mount_rotation_xyz = oled_position_rotation(side=side)
 
     shape = rotate(shape, oled_mount_rotation_xyz)
     shape = translate(shape,
@@ -2586,7 +3083,7 @@ def oled_clip():
     return shape
 
 
-def oled_undercut_mount_frame():
+def oled_undercut_mount_frame(side='right'):
     mount_ext_width = oled_mount_width + 2 * oled_mount_rim
     mount_ext_height = oled_mount_height + 2 * oled_mount_rim
     hole = box(mount_ext_width, mount_ext_height, oled_mount_cut_depth + .01)
@@ -2599,6 +3096,8 @@ def oled_undercut_mount_frame():
         oled_mount_depth)
     undercut = translate(undercut, (0., 0., -oled_mount_undercut_thickness))
     shape = difference(shape, [undercut])
+
+    oled_mount_location_xyz, oled_mount_rotation_xyz = oled_position_rotation(side=side)
 
     shape = rotate(shape, oled_mount_rotation_xyz)
     shape = translate(shape, (
@@ -2860,7 +3359,7 @@ def model_side(side="right"):
     shape = union([shape, thumb_connector_shape])
     if debug_exports:
         export_file(shape=shape, fname=path.join(r"..", "things", r"debug_thumb_connector_shape"))
-    walls_shape = case_walls()
+    walls_shape = case_walls(side=side)
     if debug_exports:
         export_file(shape=walls_shape, fname=path.join(r"..", "things", r"debug_walls_shape"))
     s2 = union([walls_shape])
@@ -2889,26 +3388,33 @@ def model_side(side="right"):
         shape = union([shape, rj9_holder()])
 
     if oled_mount_type == "UNDERCUT":
-        hole, frame = oled_undercut_mount_frame()
+        hole, frame = oled_undercut_mount_frame(side=side)
         shape = difference(shape, [hole])
         shape = union([shape, frame])
 
     elif oled_mount_type == "SLIDING":
-        hole, frame = oled_sliding_mount_frame()
+        hole, frame = oled_sliding_mount_frame(side=side)
         shape = difference(shape, [hole])
         shape = union([shape, frame])
 
     elif oled_mount_type == "CLIP":
-        hole, frame = oled_clip_mount_frame()
+        hole, frame = oled_clip_mount_frame(side=side)
         shape = difference(shape, [hole])
         shape = union([shape, frame])
+
+    if trackball_in_wall and side == ball_side:
+        tb, cutout, ball = generate_trackball_in_wall()
+        shape = difference(shape, [cutout])
+        shape = union([shape, tb])
+        if show_caps:
+            shape = add([shape, ball])
 
     block = box(350, 350, 40)
     block = translate(block, (0, 0, -20))
     shape = difference(shape, [block])
 
     if show_caps:
-        shape = add([shape, thumbcaps()])
+        shape = add([shape, thumbcaps(side=side)])
         shape = add([shape, caps()])
 
     if side == "left":
