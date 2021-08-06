@@ -2814,7 +2814,9 @@ def generate_trackball_in_wall():
     cutout = translate(cutout, (0, 0, ball_z_offset))
     cutout = rotate(cutout, rot)
     cutout = translate(cutout, pos)
-    #
+
+    # Small adjustment due to line to line surface / minute numerical error issues
+    # Creates small overlap to assist engines in union function later
     sensor = translate(sensor, (0, 0, ball_z_offset+.001))
     sensor = rotate(sensor, rot)
     sensor = translate(sensor, pos)
@@ -3432,12 +3434,12 @@ def model_side(side="right"):
         tbprecut, tb, tbcutout, sensor, ball = generate_trackball_in_wall()
 
         shape = difference(shape, [tbprecut])
-        export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_1"))
+        # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_1"))
         shape = union([shape, tb])
-        export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_2"))
+        # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_2"))
         shape = difference(shape, [tbcutout])
-        export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_3a"))
-        export_file(shape=add([shape, sensor]), fname=path.join(save_path, config_name + r"_test_3b"))
+        # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_3a"))
+        # export_file(shape=add([shape, sensor]), fname=path.join(save_path, config_name + r"_test_3b"))
         shape = union([shape, sensor])
 
         if show_caps:

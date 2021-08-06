@@ -76,6 +76,7 @@ shape_config = {
 
     'trackball_Usize': 1.5,  # size for inner key near trackball
     'trackball_rotation': 0.0,  # used to rotate the sensor direction around z.
+    # 'trackball_sensor_rotation': 0.0,  # used to rotate the sensor direction around z.
     'ball_side': 'right',
     'ball_diameter': 34.0,
     'ball_wall_thickness': 3.0,  # should not be changed unless the import models are changed.
