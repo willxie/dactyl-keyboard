@@ -1,8 +1,8 @@
 {
-    "ENGINE": "solid",
+    "ENGINE": "cadquery",
     "save_dir": ".",
     "config_name": "DM",
-    "show_caps": true,
+    "show_caps": false,
     "nrows": 5,
     "ncols": 6,
     "alpha": 0.26179916666666664,
@@ -29,7 +29,7 @@
     "thumb_plate_br_rotation": 0.0,
     "thumb_plate_bl_rotation": 0.0,
     "trackball_in_wall": true,
-    "tbiw_hole_diameter": 40,
+    "tbiw_hole_diameter": 36,
     "tbiw_hole_height": 40,
     "tbiw_ball_center_row": 0.2,
     "tbiw_translational_offset": [
@@ -62,7 +62,7 @@
     "ball_side": "right",
     "ball_diameter": 34.0,
     "ball_wall_thickness": 3.0,
-    "ball_z_offset": -3.75,
+    "ball_z_offset": -3.25,
     "pinky_1_5U": false,
     "first_1_5U_row": 0,
     "last_1_5U_row": 5,

@@ -151,7 +151,6 @@ teensy_holder_height = 6 + teensy_width
 # screw_insert_bottom_radius = 5.31 / 2
 # screw_insert_top_radius = 5.1 / 2
 
-
 # save_path = path.join("..", "things", save_dir)
 if not path.isdir(save_path):
     os.mkdir(save_path)
@@ -266,7 +265,7 @@ def single_plate(cylinder_segments=100, side="right"):
     return plate
 
 def trackball_cutout(segments=100, side="right"):
-    shape = cylinder(tbiw_hole_diameter / 2 , tbiw_hole_height)
+    shape = cylinder(tbiw_hole_diameter / 2, tbiw_hole_height)
     return shape
 
 def trackball_socket(segments=100, side="right"):
@@ -274,11 +273,26 @@ def trackball_socket(segments=100, side="right"):
     # cyl = cylinder(ball_diameter / 2 + 4, 20)
     # cyl = translate(cyl, (0, 0, -8))
     # shape = union([shape, cyl])
-    tb_file = path.join("..", "src", r"ball_socket_v00")
-    shape = import_file(tb_file)
-    shape = translate(shape, (0, 0, ball_z_offset))
 
-    return shape
+    tb_file = path.join("..", "src", r"trackball_socket_body_34mm")
+    # tb_file = path.join("..", "src", r"trackball_fused_34mm")
+    tbcut_file = path.join("..", "src", r"trackball_socket_cutter_34mm")
+    sens_file = path.join("..", "src", r"trackball_sensor_mount")
+    senscut_file = path.join("..", "src", r"trackball_sensor_cutter")
+
+
+    # shape = import_file(tb_file)
+    # # shape = difference(shape, [import_file(senscut_file)])
+    # # shape = union([shape, import_file(sens_file)])
+    # cutter = import_file(tbcut_file)
+
+    shape = import_file(tb_file)
+    sensor = import_file(sens_file)
+    cutter = import_file(tbcut_file)
+    cutter = union([cutter, import_file(senscut_file)])
+
+    # return shape, cutter
+    return shape, cutter, sensor
 
 def trackball_ball(segments=100, side="right"):
     shape = sphere(ball_diameter / 2)
@@ -2787,19 +2801,31 @@ def external_mount_hole():
 
 def generate_trackball_in_wall():
     pos, rot = tbiw_position_rotation()
-    cutout = trackball_cutout()
-    cutout = rotate(cutout, rot)
-    cutout = translate(cutout, pos)
+    precut = trackball_cutout()
+    precut = rotate(precut, rot)
+    precut = translate(precut, pos)
 
-    shape = trackball_socket()
+    shape, cutout, sensor = trackball_socket()
+
+    shape = translate(shape, (0, 0, ball_z_offset))
     shape = rotate(shape, rot)
     shape = translate(shape, pos)
 
+    cutout = translate(cutout, (0, 0, ball_z_offset))
+    cutout = rotate(cutout, rot)
+    cutout = translate(cutout, pos)
+    #
+    sensor = translate(sensor, (0, 0, ball_z_offset+.001))
+    sensor = rotate(sensor, rot)
+    sensor = translate(sensor, pos)
+
     ball = trackball_ball()
+    ball = translate(ball, (0, 0, ball_z_offset))
     ball = rotate(ball, rot)
     ball = translate(ball, pos)
 
-    return shape, cutout, ball
+    # return precut, shape, cutout, ball
+    return precut, shape, cutout, sensor, ball
 
 def tbiw_position_rotation():
     base_pt1 = key_position(
@@ -3403,9 +3429,17 @@ def model_side(side="right"):
         shape = union([shape, frame])
 
     if trackball_in_wall and side == ball_side:
-        tb, cutout, ball = generate_trackball_in_wall()
-        shape = difference(shape, [cutout])
+        tbprecut, tb, tbcutout, sensor, ball = generate_trackball_in_wall()
+
+        shape = difference(shape, [tbprecut])
+        export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_1"))
         shape = union([shape, tb])
+        export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_2"))
+        shape = difference(shape, [tbcutout])
+        export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_3a"))
+        export_file(shape=add([shape, sensor]), fname=path.join(save_path, config_name + r"_test_3b"))
+        shape = union([shape, sensor])
+
         if show_caps:
             shape = add([shape, ball])
 

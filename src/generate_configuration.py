@@ -7,8 +7,8 @@ r2d = 180 / pi
 
 shape_config = {
 
-    'ENGINE': 'solid', # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
-    # 'ENGINE':  'cadquery', # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
+    # 'ENGINE': 'solid', # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
+    'ENGINE': 'cadquery', # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
 
 
     ######################
@@ -18,7 +18,7 @@ shape_config = {
     'save_dir': '.',
     'config_name':  "DM",
 
-    'show_caps':  True,
+    'show_caps':  False,
 
     'nrows':  5, #5,  # key rows
     'ncols':  6, #6,  # key columns
@@ -60,7 +60,7 @@ shape_config = {
     ## Trackball                     ##
     ###################################
     'trackball_in_wall': True,  # Separate trackball option, placing it in the OLED area
-    'tbiw_hole_diameter': 40,
+    'tbiw_hole_diameter': 36,
     'tbiw_hole_height': 40,
     'tbiw_ball_center_row': 0.2, # up from cornerrow instead of down from top
     'tbiw_translational_offset': (-2.0, 0.0, 3),
@@ -79,7 +79,7 @@ shape_config = {
     'ball_side': 'right',
     'ball_diameter': 34.0,
     'ball_wall_thickness': 3.0,  # should not be changed unless the import models are changed.
-    'ball_z_offset': -3.75,
+    'ball_z_offset': -3.25,
 
 
     ##############################
