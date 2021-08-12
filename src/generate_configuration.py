@@ -7,8 +7,8 @@ r2d = 180 / pi
 
 shape_config = {
 
-    # 'ENGINE': 'solid', # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
-    'ENGINE': 'cadquery', # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
+    'ENGINE': 'solid', # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
+    # 'ENGINE': 'cadquery', # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
 
 
     ######################
@@ -284,7 +284,7 @@ shape_config = {
     'external_holder_height':  12.5,
     'external_holder_width':  28.75,
     'external_holder_xoffset': -5.0,
-
+    'external_holder_yoffset': -4.5, #Tweak this value to get the right undercut for the tray engagement.
 
     # Offset is from the top inner corner of the top inner key.
 

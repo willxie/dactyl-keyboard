@@ -1,5 +1,5 @@
 {
-    "ENGINE": "cadquery",
+    "ENGINE": "solid",
     "save_dir": ".",
     "config_name": "DM",
     "show_caps": false,
@@ -242,6 +242,7 @@
     "external_holder_height": 12.5,
     "external_holder_width": 28.75,
     "external_holder_xoffset": -5.0,
+    "external_holder_yoffset": -4.5,
     "screw_hole_diameter": 2,
     "base_thickness": 3.0,
     "base_offset": 3.0,
