@@ -18,7 +18,8 @@ shape_config = {
     'save_dir': '.',
     'config_name':  "DM",
 
-    'show_caps':  False,
+    'show_caps': False,
+    'show_pcbs': False, #only runs if caps are shown, easist place to initially inject geometry
 
     'nrows':  5, #5,  # key rows
     'ncols':  6, #6,  # key columns
@@ -43,7 +44,7 @@ shape_config = {
     ##############################
     # THUMB PARAMETERS
     ##############################
-    'thumb_style': 'MINIDOX',  # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key, 'TRACKBALL'
+    'thumb_style': 'MINI',  # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key, 'TRACKBALL'
     'default_1U_cluster': False, # only used with default, makes top right thumb cluster key 1U
     'minidox_Usize': 1.6
     , # Thumb key size.  May need slight oversizing, check w/ caps.  Additional spacing will be automatically added for larger keys.
@@ -59,19 +60,19 @@ shape_config = {
     ###################################
     ## Trackball                     ##
     ###################################
-    'trackball_in_wall': True,  # Separate trackball option, placing it in the OLED area
+    'trackball_in_wall': False,  # Separate trackball option, placing it in the OLED area
     'tbiw_hole_diameter': 36,
     'tbiw_hole_height': 40,
     'tbiw_ball_center_row': 0.2, # up from cornerrow instead of down from top
-    'tbiw_translational_offset': (-2.0, 0.0, 3),
+    'tbiw_translational_offset': (0.0, 0.0, 3),
     'tbiw_rotation_offset': (0.0, 0.0, 0.0),
-    'tbiw_left_wall_x_offset_override': 46.0,
+    'tbiw_left_wall_x_offset_override': 50.0,
     'tbiw_left_wall_z_offset_override': 0.0,
     'tbiw_left_wall_lower_y_offset': 0.0,
     'tbiw_left_wall_lower_z_offset': 0.0,
 
     'tbiw_oled_center_row': .75,  # not none, offsets are from this position
-    'tbiw_oled_translation_offset': (-2.5, 0, 0),  # Z offset tweaks are expected depending on curvature and OLED mount choice.
+    'tbiw_oled_translation_offset': (-3.5, 0, 1.5),  # Z offset tweaks are expected depending on curvature and OLED mount choice.
     'tbiw_oled_rotation_offset': (0, 0, 0),
 
     'trackball_Usize': 1.5,  # size for inner key near trackball
@@ -80,7 +81,8 @@ shape_config = {
     'ball_side': 'right',
     'ball_diameter': 34.0,
     'ball_wall_thickness': 3.0,  # should not be changed unless the import models are changed.
-    'ball_z_offset': -3.25,
+    'ball_gap':1.0,
+    'ball_z_offset': -3.0,
 
 
     ##############################
@@ -301,14 +303,24 @@ shape_config = {
     # Offset is from the top inner corner of the top inner key.
 
     ###################################
-    ## EXPERIMENTAL
+    ## HOLES ON PLATE FOR PCB MOUNT
     ###################################
-    'plate_holes':  False,
+    'plate_holes':  True,
     'plate_holes_xy_offset': (0.0, 0.0),
     'plate_holes_width': 14.3,
     'plate_holes_height': 14.3,
     'plate_holes_diameter': 1.7,
     'plate_holes_depth': 20.0,
+
+    ###################################
+    ## SHOW PCB FOR FIT CHECK
+    ###################################
+    'pcb_width': 18.0,
+    'pcb_height': 18.0,
+    'pcb_thickness': 1.5,
+    'pcb_hole_diameter': 2,
+    'pcb_hole_pattern_width': 14.3,
+    'pcb_hole_pattern_height': 14.3,
 
     ###################################
     ## COLUMN OFFSETS

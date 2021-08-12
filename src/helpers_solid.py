@@ -73,7 +73,7 @@ def difference(shape, shapes):
 
 
 def intersect(shape1, shape2):
-    return sl.intersect()(shape1, shape2)
+    return sl.intersection()(shape1, shape2)
 
 
 def hull_from_points(points):
@@ -101,6 +101,21 @@ def triangle_hulls(shapes):
 
     return union(hulls)
 
+
+
+def bottom_hull(p, height=0.001):
+    debugprint("bottom_hull()")
+    shape = None
+    for item in p:
+        proj = sl.projection()(p)
+        t_shape = sl.linear_extrude(height=height, twist=0, convexity=0, center=True)(
+            proj
+        )
+        t_shape = sl.translate([0, 0, height / 2 - 10])(t_shape)
+        if shape is None:
+            shape = t_shape
+        shape = sl.hull()(p, shape, t_shape)
+    return shape
 
 def polyline(point_list):
     return sl.polygon(point_list)

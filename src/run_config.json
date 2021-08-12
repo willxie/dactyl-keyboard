@@ -3,6 +3,7 @@
     "save_dir": ".",
     "config_name": "DM",
     "show_caps": false,
+    "show_pcbs": false,
     "nrows": 5,
     "ncols": 6,
     "alpha": 0.26179916666666664,
@@ -19,7 +20,7 @@
         7
     ],
     "keyboard_z_offset": 11,
-    "thumb_style": "MINIDOX",
+    "thumb_style": "MINI",
     "default_1U_cluster": false,
     "minidox_Usize": 1.6,
     "thumb_plate_tr_rotation": 0.0,
@@ -28,12 +29,12 @@
     "thumb_plate_ml_rotation": 0.0,
     "thumb_plate_br_rotation": 0.0,
     "thumb_plate_bl_rotation": 0.0,
-    "trackball_in_wall": true,
+    "trackball_in_wall": false,
     "tbiw_hole_diameter": 36,
     "tbiw_hole_height": 40,
     "tbiw_ball_center_row": 0.2,
     "tbiw_translational_offset": [
-        -2.0,
+        0.0,
         0.0,
         3
     ],
@@ -42,15 +43,15 @@
         0.0,
         0.0
     ],
-    "tbiw_left_wall_x_offset_override": 46.0,
+    "tbiw_left_wall_x_offset_override": 50.0,
     "tbiw_left_wall_z_offset_override": 0.0,
     "tbiw_left_wall_lower_y_offset": 0.0,
     "tbiw_left_wall_lower_z_offset": 0.0,
     "tbiw_oled_center_row": 0.75,
     "tbiw_oled_translation_offset": [
-        -2.5,
+        -3.5,
         0,
-        0
+        1.5
     ],
     "tbiw_oled_rotation_offset": [
         0,
@@ -62,7 +63,8 @@
     "ball_side": "right",
     "ball_diameter": 34.0,
     "ball_wall_thickness": 3.0,
-    "ball_z_offset": -3.25,
+    "ball_gap": 1.0,
+    "ball_z_offset": -3.0,
     "pinky_1_5U": false,
     "first_1_5U_row": 0,
     "last_1_5U_row": 5,
@@ -246,7 +248,7 @@
     "base_rim_thickness": 5.0,
     "screw_cbore_diameter": 4.0,
     "screw_cbore_depth": 2.0,
-    "plate_holes": false,
+    "plate_holes": true,
     "plate_holes_xy_offset": [
         0.0,
         0.0
@@ -255,6 +257,12 @@
     "plate_holes_height": 14.3,
     "plate_holes_diameter": 1.7,
     "plate_holes_depth": 20.0,
+    "pcb_width": 18.0,
+    "pcb_height": 18.0,
+    "pcb_thickness": 1.5,
+    "pcb_hole_diameter": 2,
+    "pcb_hole_pattern_width": 14.3,
+    "pcb_hole_pattern_height": 14.3,
     "column_offsets": [
         [
             0,

@@ -157,6 +157,39 @@ def triangle_hulls(shapes):
     return union(hulls)
 
 
+
+
+
+def bottom_hull(p, height=0.001):
+    debugprint("bottom_hull()")
+    shape = None
+    for item in p:
+        vertices = []
+        # verts = item.faces('<Z').vertices()
+        verts = item.faces().vertices()
+        for vert in verts.objects:
+            v0 = vert.toTuple()
+            v1 = [v0[0], v0[1], -10]
+            vertices.append(np.array(v0))
+            vertices.append(np.array(v1))
+
+        t_shape = hull_from_points(vertices)
+
+        # t_shape = translate(t_shape, [0, 0, height / 2 - 10])
+
+        if shape is None:
+            shape = t_shape
+
+        for shp in (*p, shape, t_shape):
+            try:
+                shp.vertices()
+            except:
+                0
+        shape = union([shape, hull_from_shapes((shape, t_shape))])
+
+    return shape
+
+
 def polyline(point_list):
     return cq.Workplane('XY').polyline(point_list)
 
