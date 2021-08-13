@@ -1719,18 +1719,34 @@ def carbonfet_thumb_connectors():
 # Trackball (Ball + 4-key) THUMB CLUSTER
 ############################
 
+def trackball_thumb_position_rotation():
+    rot = [10, -15, 5]
+    pos = thumborigin()
+    shift = [-42, -20, -5]
+    for i in range(len(pos)):
+        pos[i] = pos[i] + shift[i]
+    return pos, rot
+
+
 def trackball_place(shape):
-    shape = rotate(shape, [10, -15, 5])
-    shape = translate(shape, thumborigin())
-    shape = translate(shape, [-42, -20, -5])
+    pos, rot = trackball_thumb_position_rotation()
+    shape = rotate(shape, rot)
+    shape = translate(shape, pos)
     return shape
 
 
 def trackball_thumb_tl_place(shape):
     debugprint('thumb_tr_place()')
+    # Modifying to make a "ring" of keys
+
+    shape = translate(shape, (0, ))
     shape = rotate(shape, [5, 10, -65])
-    shape = translate(shape, thumborigin())
-    shape = translate(shape, [-14, -9, 0])
+
+    # shape = rotate(shape, [5, 10, -65])
+    # shape = translate(shape, thumborigin())
+    # shape = translate(shape, [-14, -9, 0])
+
+
     return shape
 
 def trackball_thumb_mr_place(shape):
@@ -2866,8 +2882,7 @@ def external_mount_hole():
     )
     return shape
 
-def generate_trackball_in_wall():
-    pos, rot = tbiw_position_rotation()
+def generate_trackball(pos, rot):
     precut = trackball_cutout()
     precut = rotate(precut, rot)
     precut = translate(precut, pos)
@@ -2896,6 +2911,13 @@ def generate_trackball_in_wall():
     # return precut, shape, cutout, ball
     return precut, shape, cutout, sensor, ball
 
+def generate_trackball_in_cluster():
+
+    pos, rot = trackball_position_rotation()
+    return generate_trackball(pos, rot)
+
+
+
 def tbiw_position_rotation():
     base_pt1 = key_position(
         list(np.array([-mount_width/2, 0, 0]) + np.array([0, (mount_height / 2), 0])),
@@ -2920,6 +2942,10 @@ def tbiw_position_rotation():
     tbiw_mount_rotation_xyz = (0, rad2deg(angle_x), -90) + np.array(tbiw_rotation_offset)
 
     return tbiw_mount_location_xyz, tbiw_mount_rotation_xyz
+
+def generate_trackball_in_wall():
+    pos, rot = tbiw_position_rotation()
+    return generate_trackball(pos, rot)
 
 
 

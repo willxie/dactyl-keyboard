@@ -1,5 +1,5 @@
 {
-    "ENGINE": "solid",
+    "ENGINE": "cadquery",
     "save_dir": ".",
     "config_name": "DM",
     "show_caps": false,
@@ -29,7 +29,7 @@
     "thumb_plate_ml_rotation": 0.0,
     "thumb_plate_br_rotation": 0.0,
     "thumb_plate_bl_rotation": 0.0,
-    "trackball_in_wall": false,
+    "trackball_in_wall": true,
     "tbiw_hole_diameter": 36,
     "tbiw_hole_height": 40,
     "tbiw_ball_center_row": 0.2,

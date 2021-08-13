@@ -7,8 +7,8 @@ r2d = 180 / pi
 
 shape_config = {
 
-    'ENGINE': 'solid', # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
-    # 'ENGINE': 'cadquery', # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
+    # 'ENGINE': 'solid', # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
+    'ENGINE': 'cadquery', # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
 
 
     ######################
@@ -58,9 +58,9 @@ shape_config = {
     'thumb_plate_bl_rotation': 0.0,  # Bottom right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
 
     ###################################
-    ## Trackball                     ##
+    ## Trackball in Wall             ##
     ###################################
-    'trackball_in_wall': False,  # Separate trackball option, placing it in the OLED area
+    'trackball_in_wall': True,  # Separate trackball option, placing it in the OLED area
     'tbiw_hole_diameter': 36,
     'tbiw_hole_height': 40,
     'tbiw_ball_center_row': 0.2, # up from cornerrow instead of down from top
@@ -75,6 +75,15 @@ shape_config = {
     'tbiw_oled_translation_offset': (-3.5, 0, 1.5),  # Z offset tweaks are expected depending on curvature and OLED mount choice.
     'tbiw_oled_rotation_offset': (0, 0, 0),
 
+    ###################################
+    ## Trackball Thumb Cluster       ##
+    ###################################
+
+
+
+    ###################################
+    ## Trackball General             ##
+    ###################################
     'trackball_Usize': 1.5,  # size for inner key near trackball
     'trackball_rotation': 0.0,  # used to rotate the sensor direction around z.
     # 'trackball_sensor_rotation': 0.0,  # used to rotate the sensor direction around z.
