@@ -7,8 +7,8 @@ r2d = 180 / pi
 
 shape_config = {
 
-    # 'ENGINE': 'solid', # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
-    'ENGINE': 'cadquery', # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
+    'ENGINE': 'solid', # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
+    # 'ENGINE': 'cadquery', # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
 
 
     ######################
@@ -44,7 +44,7 @@ shape_config = {
     ##############################
     # THUMB PARAMETERS
     ##############################
-    'thumb_style': 'MINI',  # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key, 'TRACKBALL'
+    'thumb_style': 'TRACKBALL',  # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key, 'TRACKBALL'
     'default_1U_cluster': False, # only used with default, makes top right thumb cluster key 1U
     'minidox_Usize': 1.6
     , # Thumb key size.  May need slight oversizing, check w/ caps.  Additional spacing will be automatically added for larger keys.
@@ -60,7 +60,7 @@ shape_config = {
     ###################################
     ## Trackball in Wall             ##
     ###################################
-    'trackball_in_wall': True,  # Separate trackball option, placing it in the OLED area
+    'trackball_in_wall': False,  # Separate trackball option, placing it in the OLED area
     'tbiw_hole_diameter': 36,
     'tbiw_hole_height': 40,
     'tbiw_ball_center_row': 0.2, # up from cornerrow instead of down from top
@@ -76,11 +76,24 @@ shape_config = {
     'tbiw_oled_rotation_offset': (0, 0, 0),
 
     ###################################
-    ## Trackball Thumb Cluster       ##
+    ## Trackball JS Thumb Cluster    ##
     ###################################
-
-
-
+    'other_thumb': 'DEFAULT', # cluster used for second thumb except if ball_side == 'both'
+    'tbjs_key_diameter': 64,
+    # Offsets are per key and are applied before rotating into place around the ball
+    # X and Y act like Tangential and Radial around the ball
+    'tbjs_translational_offsets': [
+        (0.0, 0.0, -3.0),
+        (0.0, 0.0, -3.0),
+        (0.0, 0.0, -3.0),
+        (0.0, 0.0, -3.0),
+    ],
+    'tbjs_rotation_offsets': [
+        (0.0, 0.0, 0.0),
+        (0.0, 0.0, 0.0),
+        (0.0, 0.0, 0.0),
+        (0.0, 0.0, 0.0),
+    ],
     ###################################
     ## Trackball General             ##
     ###################################
@@ -89,7 +102,7 @@ shape_config = {
     # 'trackball_sensor_rotation': 0.0,  # used to rotate the sensor direction around z.
     'ball_side': 'right',
     'ball_diameter': 34.0,
-    'ball_wall_thickness': 3.0,  # should not be changed unless the import models are changed.
+    'ball_wall_thickness': 3.0+2.0,  # should not be changed unless the import models are changed.
     'ball_gap':1.0,
     'ball_z_offset': -3.0,
 

@@ -1,5 +1,5 @@
 {
-    "ENGINE": "cadquery",
+    "ENGINE": "solid",
     "save_dir": ".",
     "config_name": "DM",
     "show_caps": false,
@@ -20,7 +20,7 @@
         7
     ],
     "keyboard_z_offset": 11,
-    "thumb_style": "MINI",
+    "thumb_style": "TRACKBALL",
     "default_1U_cluster": false,
     "minidox_Usize": 1.6,
     "thumb_plate_tr_rotation": 0.0,
@@ -29,7 +29,7 @@
     "thumb_plate_ml_rotation": 0.0,
     "thumb_plate_br_rotation": 0.0,
     "thumb_plate_bl_rotation": 0.0,
-    "trackball_in_wall": true,
+    "trackball_in_wall": false,
     "tbiw_hole_diameter": 36,
     "tbiw_hole_height": 40,
     "tbiw_ball_center_row": 0.2,
@@ -58,11 +58,57 @@
         0,
         0
     ],
+    "other_thumb": "DEFAULT",
+    "tbjs_key_diameter": 64,
+    "tbjs_translational_offsets": [
+        [
+            0.0,
+            0.0,
+            -3.0
+        ],
+        [
+            0.0,
+            0.0,
+            -3.0
+        ],
+        [
+            0.0,
+            0.0,
+            -3.0
+        ],
+        [
+            0.0,
+            0.0,
+            -3.0
+        ]
+    ],
+    "tbjs_rotation_offsets": [
+        [
+            0.0,
+            0.0,
+            0.0
+        ],
+        [
+            0.0,
+            0.0,
+            0.0
+        ],
+        [
+            0.0,
+            0.0,
+            0.0
+        ],
+        [
+            0.0,
+            0.0,
+            0.0
+        ]
+    ],
     "trackball_Usize": 1.5,
     "trackball_rotation": 0.0,
     "ball_side": "right",
     "ball_diameter": 34.0,
-    "ball_wall_thickness": 3.0,
+    "ball_wall_thickness": 5.0,
     "ball_gap": 1.0,
     "ball_z_offset": -3.0,
     "pinky_1_5U": false,

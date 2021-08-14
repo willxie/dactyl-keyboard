@@ -99,6 +99,9 @@ if 'HS_' in plate_style:
     plate_file = path.join("..", "src", r"hot_swap_plate")
     plate_offset = 0.0
 
+if (trackball_in_wall or thumb_style in ['TRACKBALL']) and not ball_side == 'both':
+    symmetry = "asymmetric"
+
 mount_width = keyswitch_width + 2 * plate_rim
 mount_height = keyswitch_height + 2 * plate_rim
 mount_thickness = plate_thickness
@@ -747,44 +750,65 @@ def double_plate():
     return union((top_plate, mirror(top_plate, 'XZ')))
 
 
-def thumbcaps(side='right'):
-    if thumb_style == "MINI":
+def thumbcaps(side='right', style_override=None):
+    if style_override is None:
+        _thumb_style = thumb_style
+    else:
+        _thumb_style = style_override
+
+    if _thumb_style == "MINI":
         return mini_thumbcaps()
-    elif thumb_style == "MINIDOX":
+    elif _thumb_style == "MINIDOX":
         return minidox_thumbcaps()
-    elif thumb_style == "CARBONFET":
+    elif _thumb_style == "CARBONFET":
         return carbonfet_thumbcaps()
-    elif thumb_style == "TRACKBALL":
-        return trackball_thumbcaps()
+    elif _thumb_style == "TRACKBALL" :
+        if (side == ball_side or ball_side == 'both'):
+            return trackball_thumbcaps()
+        else:
+            return thumbcaps(side, style_override=other_thumb)
     else:
         return default_thumbcaps()
 
 
-def thumb(side="right"):
-    if thumb_style == "MINI":
+def thumb(side="right", style_override=None):
+    if style_override is None:
+        _thumb_style = thumb_style
+    else:
+        _thumb_style = style_override
+
+    if _thumb_style == "MINI":
         return mini_thumb(side)
-    elif thumb_style == "MINIDOX":
+    elif _thumb_style == "MINIDOX":
         return minidox_thumb(side)
-    elif thumb_style == "CARBONFET":
+    elif _thumb_style == "CARBONFET":
         return carbonfet_thumb(side)
-    elif thumb_style == "TRACKBALL":
-        if side == ball_side:
+    elif _thumb_style == "TRACKBALL":
+        if (side == ball_side or ball_side == 'both'):
             return trackball_thumb(side)
         else:
-            return default_thumb(side)
+            return thumb(side, style_override=other_thumb)
     else:
         return default_thumb(side)
 
 
-def thumb_connectors(side='right'):
-    if thumb_style == "MINI":
+def thumb_connectors(side='right', style_override=None):
+    if style_override is None:
+        _thumb_style = thumb_style
+    else:
+        _thumb_style = style_override
+
+    if _thumb_style == "MINI":
         return mini_thumb_connectors()
-    elif thumb_style == "MINIDOX":
+    elif _thumb_style == "MINIDOX":
         return minidox_thumb_connectors()
-    elif thumb_style == "CARBONFET":
+    elif _thumb_style == "CARBONFET":
         return carbonfet_thumb_connectors()
-    elif thumb_style == "TRACKBALL":
-        return trackball_thumb_connectors()
+    elif _thumb_style == "TRACKBALL" :
+        if (side == ball_side or ball_side == 'both'):
+            return trackball_thumb_connectors()
+        else:
+            return thumb_connectors(side, style_override=other_thumb)
     else:
         return default_thumb_connectors()
 
@@ -1722,7 +1746,8 @@ def carbonfet_thumb_connectors():
 def trackball_thumb_position_rotation():
     rot = [10, -15, 5]
     pos = thumborigin()
-    shift = [-42, -20, -5]
+    # Changes size based on key diameter around ball, shifting off of the top left cluster key.
+    shift = [-.9*tbjs_key_diameter/2+27-42, -.1*tbjs_key_diameter/2+3-20, -5]
     for i in range(len(pos)):
         pos[i] = pos[i] + shift[i]
     return pos, rot
@@ -1738,37 +1763,55 @@ def trackball_place(shape):
 def trackball_thumb_tl_place(shape):
     debugprint('thumb_tr_place()')
     # Modifying to make a "ring" of keys
-
-    shape = translate(shape, (0, ))
-    shape = rotate(shape, [5, 10, -65])
-
+    shape = rotate(shape, [0, 0, 0])
+    t_off = tbjs_translational_offsets[0]
+    shape = translate(shape, (t_off[0], t_off[1]+tbjs_key_diameter/2, t_off[2]))
+    shape = rotate(shape, [0,0,-80])
+    shape = trackball_place(shape)
     # shape = rotate(shape, [5, 10, -65])
     # shape = translate(shape, thumborigin())
     # shape = translate(shape, [-14, -9, 0])
-
-
     return shape
 
 def trackball_thumb_mr_place(shape):
     debugprint('thumb_mr_place()')
-    shape = rotate(shape, [7, 20, -105])
-    shape = translate(shape, thumborigin())
-    shape = translate(shape, [-12, -32, -5])
+    shape = rotate(shape, [0, 0, 0])
+    t_off = tbjs_translational_offsets[1]
+    shape = translate(shape, (t_off[0], t_off[1]+tbjs_key_diameter/2, t_off[2]))
+    shape = rotate(shape, [0,0,-130])
+    shape = trackball_place(shape)
+
+    # shape = rotate(shape, [7, 20, -105])
+    # shape = translate(shape, thumborigin())
+    # shape = translate(shape, [-12, -32, -5])
     return shape
 
 def trackball_thumb_br_place(shape):
     debugprint('thumb_br_place()')
-    shape = rotate(shape, [25, -11, 0])
-    shape = translate(shape, thumborigin())
-    shape = translate(shape, [-40, -50, -16])
+
+    shape = rotate(shape, [0, 0, 180])
+    t_off = tbjs_translational_offsets[2]
+    shape = translate(shape, (t_off[0], t_off[1]+tbjs_key_diameter/2, t_off[2]))
+    shape = rotate(shape, [0,0,-180])
+    shape = trackball_place(shape)
+
+    # shape = rotate(shape, [25, -11, 0])
+    # shape = translate(shape, thumborigin())
+    # shape = translate(shape, [-40, -50, -16])
     return shape
 
 
 def trackball_thumb_bl_place(shape):
     debugprint('thumb_bl_place()')
-    shape = rotate(shape, [25, 0, -45])
-    shape = translate(shape, thumborigin())
-    shape = translate(shape, [-63, -41, -18])
+    shape = rotate(shape, [0, 0, 180])
+    t_off = tbjs_translational_offsets[3]
+    shape = translate(shape, (t_off[0], t_off[1]+tbjs_key_diameter/2, t_off[2]))
+    shape = rotate(shape, [0,0,-230])
+    shape = trackball_place(shape)
+
+    # shape = rotate(shape, [25, 0, -45])
+    # shape = translate(shape, thumborigin())
+    # shape = translate(shape, [-63, -41, -18])
     return shape
 
 
@@ -2098,7 +2141,7 @@ def left_key_position(row, direction, low_corner=False, side='right'):
     pos = np.array(
         key_position([-mount_width * 0.5, direction * mount_height * 0.5, 0], 0, row)
     )
-    if trackball_in_wall and side==ball_side:
+    if trackball_in_wall and (side == ball_side or ball_side == 'both'):
 
         if low_corner:
             y_offset = tbiw_left_wall_lower_y_offset
@@ -2318,29 +2361,47 @@ def front_wall():
 
     return shape
 
-def thumb_walls():
-    if thumb_style == "MINI":
+
+def thumb_walls(side='right', style_override=None):
+    if style_override is None:
+        _thumb_style = thumb_style
+    else:
+        _thumb_style = style_override
+
+    if _thumb_style == "MINI":
         return mini_thumb_walls()
-    if thumb_style == "MINIDOX":
+    elif _thumb_style == "MINIDOX":
         return minidox_thumb_walls()
-    elif thumb_style == "CARBONFET":
+    elif _thumb_style == "CARBONFET":
         return carbonfet_thumb_walls()
-    elif thumb_style == "TRACKBALL":
-        return trackball_thumb_walls()
+    elif _thumb_style == "TRACKBALL" :
+        if (side == ball_side or ball_side == 'both'):
+            return trackball_thumb_walls()
+        else:
+            return thumb_walls(side, style_override=other_thumb)
     else:
         return default_thumb_walls()
 
-def thumb_connection(side='right'):
-    if thumb_style == "MINI":
+def thumb_connection(side='right', style_override=None):
+    if style_override is None:
+        _thumb_style = thumb_style
+    else:
+        _thumb_style = style_override
+
+    if _thumb_style == "MINI":
         return mini_thumb_connection(side=side)
-    if thumb_style == "MINIDOX":
+    elif _thumb_style == "MINIDOX":
         return minidox_thumb_connection(side=side)
-    elif thumb_style == "CARBONFET":
+    elif _thumb_style == "CARBONFET":
         return carbonfet_thumb_connection(side=side)
-    elif thumb_style == "TRACKBALL":
-        return trackball_thumb_connection(side=side)
+    elif _thumb_style == "TRACKBALL":
+        if (side == ball_side or ball_side == 'both'):
+            return trackball_thumb_connection(side=side)
+        else:
+            return thumb_connection(side, style_override=other_thumb)
     else:
         return default_thumb_connection(side=side)
+
 
 def default_thumb_walls():
     print('thumb_walls()')
@@ -2777,7 +2838,7 @@ def case_walls(side='right'):
             left_wall(side=side),
             right_wall(),
             front_wall(),
-            thumb_walls(),
+            thumb_walls(side=side),
             thumb_connection(side=side),
         ])
     )
@@ -2951,7 +3012,7 @@ def generate_trackball_in_wall():
 
 def oled_position_rotation(side='right'):
     _oled_center_row = None
-    if trackball_in_wall and side == ball_side:
+    if trackball_in_wall and (side == ball_side or ball_side == 'both'):
         _oled_center_row = tbiw_oled_center_row
         _oled_translation_offset = tbiw_oled_translation_offset
         _oled_rotation_offset = tbiw_oled_rotation_offset
@@ -2972,7 +3033,7 @@ def oled_position_rotation(side='right'):
             list(np.array([-mount_width / 2, 0, 0]) + np.array([0, (mount_height / 2), 0])), 0, _oled_center_row
         )
 
-        if trackball_in_wall and side==ball_side:
+        if trackball_in_wall and (side == ball_side or ball_side == 'both'):
             _left_wall_x_offset = tbiw_left_wall_x_offset_override
         else:
             _left_wall_x_offset = left_wall_x_offset
@@ -2982,7 +3043,7 @@ def oled_position_rotation(side='right'):
 
         angle_x = np.arctan2(base_pt1[2] - base_pt2[2], base_pt1[1] - base_pt2[1])
         angle_z = np.arctan2(base_pt1[0] - base_pt2[0], base_pt1[1] - base_pt2[1])
-        if trackball_in_wall and side == ball_side:
+        if trackball_in_wall and (side == ball_side or ball_side == 'both'):
             # oled_mount_rotation_xyz = (0, rad2deg(angle_x), -rad2deg(angle_z)-90) + np.array(oled_rotation_offset)
             # oled_mount_rotation_xyz = (rad2deg(angle_x)*.707, rad2deg(angle_x)*.707, -45) + np.array(oled_rotation_offset)
             oled_mount_rotation_xyz = (0, rad2deg(angle_x), -90) + np.array(_oled_rotation_offset)
@@ -3485,7 +3546,7 @@ def model_side(side="right"):
     if debug_exports:
         export_file(shape=thumb_shape, fname=path.join(r"..", "things", r"debug_thumb_shape"))
     shape = union([shape, thumb_shape])
-    thumb_connector_shape = thumb_connectors()
+    thumb_connector_shape = thumb_connectors(side=side)
     shape = union([shape, thumb_connector_shape])
     if debug_exports:
         export_file(shape=shape, fname=path.join(r"..", "things", r"debug_thumb_connector_shape"))
@@ -3532,7 +3593,7 @@ def model_side(side="right"):
         shape = difference(shape, [hole])
         shape = union([shape, frame])
 
-    if trackball_in_wall and side == ball_side:
+    if trackball_in_wall and (side == ball_side or ball_side == 'both'):
         tbprecut, tb, tbcutout, sensor, ball = generate_trackball_in_wall()
 
         shape = difference(shape, [tbprecut])
