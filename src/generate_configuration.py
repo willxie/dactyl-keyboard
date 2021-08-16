@@ -7,8 +7,8 @@ r2d = 180 / pi
 
 shape_config = {
 
-    'ENGINE': 'solid', # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
-    # 'ENGINE': 'cadquery', # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
+    'ENGINE': 'solid',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
+    # 'ENGINE': 'cadquery',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
 
 
     ######################
@@ -44,11 +44,11 @@ shape_config = {
     ##############################
     # THUMB PARAMETERS
     ##############################
-    'thumb_style': 'TRACKBALL',  # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key, 'TRACKBALL'
-    'default_1U_cluster': False, # only used with default, makes top right thumb cluster key 1U
-    'minidox_Usize': 1.6
-    , # Thumb key size.  May need slight oversizing, check w/ caps.  Additional spacing will be automatically added for larger keys.
-
+    # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key, 'TRACKBALL_ORBISSYL', 'TRACKBALL_CJ'
+    'thumb_style': 'TRACKBALL_ORBISSYL',
+    'default_1U_cluster': True, # only used with default, makes top right thumb cluster key 1U
+    # Thumb key size.  May need slight oversizing, check w/ caps.  Additional spacing will be automatically added for larger keys.
+    'minidox_Usize': 1.6,
     # Thumb plate rotations, anything other than 90 degree increments WILL NOT WORK.
     'thumb_plate_tr_rotation': 0.0,  # Top right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
     'thumb_plate_tl_rotation': 0.0,  # Top left plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
@@ -61,8 +61,6 @@ shape_config = {
     ## Trackball in Wall             ##
     ###################################
     'trackball_in_wall': False,  # Separate trackball option, placing it in the OLED area
-    'tbiw_hole_diameter': 36,
-    'tbiw_hole_height': 40,
     'tbiw_ball_center_row': 0.2, # up from cornerrow instead of down from top
     'tbiw_translational_offset': (0.0, 0.0, 3),
     'tbiw_rotation_offset': (0.0, 0.0, 0.0),
@@ -79,16 +77,18 @@ shape_config = {
     ## Trackball JS Thumb Cluster    ##
     ###################################
     'other_thumb': 'DEFAULT', # cluster used for second thumb except if ball_side == 'both'
-    'tbjs_key_diameter': 64,
+    'tbjs_key_diameter': 70,
     # Offsets are per key and are applied before rotating into place around the ball
     # X and Y act like Tangential and Radial around the ball
-    'tbjs_translational_offsets': [
-        (0.0, 0.0, -3.0),
-        (0.0, 0.0, -3.0),
-        (0.0, 0.0, -3.0),
-        (0.0, 0.0, -3.0),
+    'tbjs_translation_offset': (0, 0, 10),  # applied to the whole assy
+    'tbjs_rotation_offset': (0, 0, 0),  # applied to the whole assy
+    'tbjs_key_translation_offsets': [
+        (0.0, 0.0, -3.0-5),
+        (0.0, 0.0, -3.0-5),
+        (0.0, 0.0, -3.0-5),
+        (0.0, 0.0, -3.0-5),
     ],
-    'tbjs_rotation_offsets': [
+    'tbjs_key_rotation_offsets': [
         (0.0, 0.0, 0.0),
         (0.0, 0.0, 0.0),
         (0.0, 0.0, 0.0),
@@ -97,15 +97,22 @@ shape_config = {
     ###################################
     ## Trackball General             ##
     ###################################
-    'trackball_Usize': 1.5,  # size for inner key near trackball
-    'trackball_rotation': 0.0,  # used to rotate the sensor direction around z.
-    # 'trackball_sensor_rotation': 0.0,  # used to rotate the sensor direction around z.
-    'ball_side': 'right',
-    'ball_diameter': 34.0,
-    'ball_wall_thickness': 3.0+2.0,  # should not be changed unless the import models are changed.
-    'ball_gap':1.0,
-    'ball_z_offset': -3.0,
+    # EXPERIMENTAL
+    'trackball_modular': False, # May add removable trackball in subsequent releases, no current use.
+    # END EXPERIMENTAL
 
+    'trackball_Usize': 1.5,  # size for inner key near trackball
+    'ball_side': 'both',
+    'ball_diameter': 34.0,
+    'ball_wall_thickness': 3,  # should not be changed unless the import models are changed.
+    'ball_gap': 1.0,
+    'trackball_hole_diameter': 35,
+    'trackball_hole_height': 40,
+    # Removed trackball_rotation, ball_z_offset. and trackball_sensor_rotation and added more flexibility.
+    'tb_socket_translation_offset': (0, 0, 2.0),  # applied to the socket and sensor, large values will cause web/wall issues.
+    'tb_socket_rotation_offset':    (0, 0, -90),  # applied to the socket and sensor, large values will cause web/wall issues.
+    'tb_sensor_translation_offset': (0, 0, 0),  #deviation from socket offsets, for fixing generated geometry issues
+    'tb_sensor_rotation_offset':    (0, 0, 0),  #deviation from socket offsets, for changing the sensor roll orientation
 
     ##############################
     # EXPERIMENTAL PARAMETERS
@@ -327,7 +334,7 @@ shape_config = {
     ###################################
     ## HOLES ON PLATE FOR PCB MOUNT
     ###################################
-    'plate_holes':  True,
+    'plate_holes':  False,
     'plate_holes_xy_offset': (0.0, 0.0),
     'plate_holes_width': 14.3,
     'plate_holes_height': 14.3,
