@@ -45,7 +45,7 @@ shape_config = {
     # THUMB PARAMETERS
     ##############################
     # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key, 'TRACKBALL_ORBYL', 'TRACKBALL_CJ'
-    'thumb_style': 'TRACKBALL_ORBYL',
+    'thumb_style': 'MINIDOX',
     'default_1U_cluster': True, # only used with default, makes top right thumb cluster key 1U
     # Thumb key size.  May need slight oversizing, check w/ caps.  Additional spacing will be automatically added for larger keys.
     'minidox_Usize': 1.6,
@@ -60,9 +60,9 @@ shape_config = {
     ###################################
     ## Trackball in Wall             ##
     ###################################
-    'trackball_in_wall': False,  # Separate trackball option, placing it in the OLED area
+    'trackball_in_wall': True,  # Separate trackball option, placing it in the OLED area
     'tbiw_ball_center_row': 0.2, # up from cornerrow instead of down from top
-    'tbiw_translational_offset': (0.0, 0.0, 3),
+    'tbiw_translational_offset': (0.0, 0.0, 0.0),
     'tbiw_rotation_offset': (0.0, 0.0, 0.0),
     'tbiw_left_wall_x_offset_override': 50.0,
     'tbiw_left_wall_z_offset_override': 0.0,

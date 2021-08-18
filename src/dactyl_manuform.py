@@ -2908,7 +2908,7 @@ def tbiw_position_rotation():
 
     angle_x = np.arctan2(base_pt1[2] - base_pt2[2], base_pt1[1] - base_pt2[1])
     angle_z = np.arctan2(base_pt1[0] - base_pt2[0], base_pt1[1] - base_pt2[1])
-    tbiw_mount_rotation_xyz = (0, rad2deg(angle_x), -90) + np.array(tbiw_rotation_offset)
+    tbiw_mount_rotation_xyz = (0, rad2deg(angle_x), 0) + np.array(tbiw_rotation_offset)
 
     return tbiw_mount_location_xyz, tbiw_mount_rotation_xyz
 

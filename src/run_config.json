@@ -20,7 +20,7 @@
         7
     ],
     "keyboard_z_offset": 11,
-    "thumb_style": "TRACKBALL_ORBYL",
+    "thumb_style": "MINIDOX",
     "default_1U_cluster": true,
     "minidox_Usize": 1.6,
     "thumb_plate_tr_rotation": 0.0,
@@ -29,12 +29,12 @@
     "thumb_plate_ml_rotation": 0.0,
     "thumb_plate_br_rotation": 0.0,
     "thumb_plate_bl_rotation": 0.0,
-    "trackball_in_wall": false,
+    "trackball_in_wall": true,
     "tbiw_ball_center_row": 0.2,
     "tbiw_translational_offset": [
         0.0,
         0.0,
-        3
+        0.0
     ],
     "tbiw_rotation_offset": [
         0.0,
