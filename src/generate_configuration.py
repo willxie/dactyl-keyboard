@@ -18,7 +18,7 @@ shape_config = {
     'save_dir': '.',
     'config_name':  "DM",
 
-    'show_caps': False,
+    'show_caps': True,
     'show_pcbs': False, #only runs if caps are shown, easist place to initially inject geometry
 
     'nrows':  5, #5,  # key rows
@@ -44,8 +44,8 @@ shape_config = {
     ##############################
     # THUMB PARAMETERS
     ##############################
-    # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key, 'TRACKBALL_ORBISSYL', 'TRACKBALL_CJ'
-    'thumb_style': 'TRACKBALL_ORBISSYL',
+    # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key, 'TRACKBALL_ORBYL', 'TRACKBALL_CJ'
+    'thumb_style': 'TRACKBALL_ORBYL',
     'default_1U_cluster': True, # only used with default, makes top right thumb cluster key 1U
     # Thumb key size.  May need slight oversizing, check w/ caps.  Additional spacing will be automatically added for larger keys.
     'minidox_Usize': 1.6,
@@ -102,7 +102,7 @@ shape_config = {
     # END EXPERIMENTAL
 
     'trackball_Usize': 1.5,  # size for inner key near trackball
-    'ball_side': 'both',
+    'ball_side': 'right', #'left', 'right', or 'both'
     'ball_diameter': 34.0,
     'ball_wall_thickness': 3,  # should not be changed unless the import models are changed.
     'ball_gap': 1.0,

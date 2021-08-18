@@ -761,7 +761,7 @@ def thumbcaps(side='right', style_override=None):
         return carbonfet_thumbcaps()
     elif "TRACKBALL" in _thumb_style:
         if (side == ball_side or ball_side == 'both'):
-            if _thumb_style == "TRACKBALL_ORBISSYL":
+            if _thumb_style == "TRACKBALL_ORBYL":
                 return tbjs_thumbcaps()
         else:
             return thumbcaps(side, style_override=other_thumb)
@@ -783,7 +783,7 @@ def thumb(side="right", style_override=None):
         return carbonfet_thumb(side)
     elif "TRACKBALL" in _thumb_style:
         if (side == ball_side or ball_side == 'both'):
-            if _thumb_style == "TRACKBALL_ORBISSYL":
+            if _thumb_style == "TRACKBALL_ORBYL":
                 return tbjs_thumb(side)
         else:
             return thumb(side, style_override=other_thumb)
@@ -805,7 +805,7 @@ def thumb_connectors(side='right', style_override=None):
         return carbonfet_thumb_connectors()
     elif "TRACKBALL" in _thumb_style:
         if (side == ball_side or ball_side == 'both'):
-            if _thumb_style == "TRACKBALL_ORBISSYL":
+            if _thumb_style == "TRACKBALL_ORBYL":
                 return tbjs_thumb_connectors()
         else:
             return thumb_connectors(side, style_override=other_thumb)
@@ -2297,7 +2297,7 @@ def thumb_walls(side='right', style_override=None):
         return carbonfet_thumb_walls()
     elif "TRACKBALL" in _thumb_style:
         if (side == ball_side or ball_side == 'both'):
-            if _thumb_style == "TRACKBALL_ORBISSYL" :
+            if _thumb_style == "TRACKBALL_ORBYL" :
                 return tbjs_thumb_walls()
         else:
             return thumb_walls(side, style_override=other_thumb)
@@ -2318,7 +2318,7 @@ def thumb_connection(side='right', style_override=None):
         return carbonfet_thumb_connection(side=side)
     elif "TRACKBALL" in _thumb_style:
         if (side == ball_side or ball_side == 'both'):
-            if _thumb_style == "TRACKBALL_ORBISSYL":
+            if _thumb_style == "TRACKBALL_ORBYL":
                 return tbjs_thumb_connection(side=side)
         else:
             return thumb_connection(side, style_override=other_thumb)
@@ -2881,7 +2881,7 @@ def generate_trackball(pos, rot):
     return precut, shape, cutout, sensor, ball
 
 def generate_trackball_in_cluster():
-    if thumb_style == 'TRACKBALL_ORBISSYL':
+    if thumb_style == 'TRACKBALL_ORBYL':
         pos, rot = tbjs_thumb_position_rotation()
     return generate_trackball(pos, rot)
 
