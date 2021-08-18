@@ -126,9 +126,9 @@ def extrude_poly(outer_poly, inner_polys=None, height=1):
         return sl.linear_extrude(height=height, twist=0, convexity=0, center=True)(outer_poly)
 
 
-def import_file(fname):
+def import_file(fname, convexity=5):
     print("IMPORTING FROM {}".format(fname))
-    return sl.import_(fname + ".stl")
+    return sl.import_(fname + ".stl", convexity=convexity)
 
 
 def export_file(shape, fname):

@@ -106,11 +106,11 @@ shape_config = {
     'ball_diameter': 34.0,
     'ball_wall_thickness': 3,  # should not be changed unless the import models are changed.
     'ball_gap': 1.0,
-    'trackball_hole_diameter': 35,
+    'trackball_hole_diameter': 36.5,
     'trackball_hole_height': 40,
     # Removed trackball_rotation, ball_z_offset. and trackball_sensor_rotation and added more flexibility.
     'tb_socket_translation_offset': (0, 0, 2.0),  # applied to the socket and sensor, large values will cause web/wall issues.
-    'tb_socket_rotation_offset':    (0, 0, -90),  # applied to the socket and sensor, large values will cause web/wall issues.
+    'tb_socket_rotation_offset':    (0, 0, 0),  # applied to the socket and sensor, large values will cause web/wall issues.
     'tb_sensor_translation_offset': (0, 0, 0),  #deviation from socket offsets, for fixing generated geometry issues
     'tb_sensor_rotation_offset':    (0, 0, 0),  #deviation from socket offsets, for changing the sensor roll orientation
 

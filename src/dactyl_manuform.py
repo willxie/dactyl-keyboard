@@ -278,7 +278,6 @@ def trackball_socket(segments=100, side="right"):
     # shape = union([shape, cyl])
 
     tb_file = path.join("..", "src", r"trackball_socket_body_34mm")
-    # tb_file = path.join("..", "src", r"trackball_fused_34mm")
     tbcut_file = path.join("..", "src", r"trackball_socket_cutter_34mm")
     sens_file = path.join("..", "src", r"trackball_sensor_mount")
     senscut_file = path.join("..", "src", r"trackball_sensor_cutter")
