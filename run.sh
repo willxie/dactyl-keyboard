@@ -11,7 +11,9 @@ IMAGE_TAG="dactyl-keyboard"
 REBUILD=false;
 
 # get the command the user would like to run
-COMMAND=${1:?A command is required. Try \'run help\'}
+COMMAND=${1}
+
+
 
 case $COMMAND in
   help)
@@ -20,6 +22,7 @@ case $COMMAND in
     echo ""
     echo "Available Commands:"
     echo "  help        show this help"
+    echo "  build       rebuild the docker image"
     echo "  generate    output the keyboard files to the 'things' directory"
     echo "  configure   "
     echo "  release     "
@@ -27,6 +30,10 @@ case $COMMAND in
     echo "Flags:"
     echo "  -r    rebuild the docker image"
     echo "  -i    the tag that should be applied to the docker image"
+    exit 0
+    ;;
+  build)
+    docker build -t ${IMAGE_TAG} -f docker/Dockerfile .
     exit 0
     ;;
   generate)
@@ -43,8 +50,6 @@ case $COMMAND in
     exit 1
 esac
 
-
-
 # check for command line flags
 while getopts 'ri:' flag; do
   case "${flag}" in
@@ -52,6 +57,8 @@ while getopts 'ri:' flag; do
     i) IMAGE_TAG="${OPTARG}"
   esac
 done
+
+
 
 # get the image ID, and save the return code so we'll know if the image exists
 IMAGE_ID=$(docker inspect --type=image --format={{.Id}} ${IMAGE_TAG})
@@ -64,11 +71,8 @@ fi
 
 
 
-
 # run the command in a temporary container
 docker run --name dm-run -d --rm -v "`pwd`/src:/app/src" -v "`pwd`/things:/app/things"  ${IMAGE_TAG} python3 -i $SCRIPT > /dev/null 2>&1
-
-
 
 # show progress indicator while until dm-run container completes
 while $(docker inspect --format={{.Id}} dm-run > /dev/null 2>&1); do
