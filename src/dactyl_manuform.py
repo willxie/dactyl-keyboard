@@ -39,9 +39,11 @@ except Exception:
     print('Setting Current Engine = {}'.format(ENGINE))
 
 if save_dir in ['', None, '.']:
-    save_path = os.path.join(r"..", "things")
+    save_path = path.join(r"..", "things")
+    parts_path = path.join(r"..", "src", "parts")
 else:
-    save_path = os.path.join(r"..", "things", save_dir)
+    save_path = path.join(r"..", "things", save_dir)
+    parts_path = path.join(r"..", r"..", "src", "parts")
 
 ###############################################
 # END EXTREMELY UGLY BOOTSTRAP
@@ -96,7 +98,7 @@ else:
 
 if 'HS_' in plate_style:
     symmetry = "asymmetric"
-    plate_file = path.join("..", "src", r"hot_swap_plate")
+    plate_file = path.join(parts_path, r"hot_swap_plate")
     plate_offset = 0.0
 
 if (trackball_in_wall or ('TRACKBALL' in thumb_style)) and not ball_side == 'both':
@@ -277,10 +279,10 @@ def trackball_socket(segments=100, side="right"):
     # cyl = translate(cyl, (0, 0, -8))
     # shape = union([shape, cyl])
 
-    tb_file = path.join("..", "src", r"trackball_socket_body_34mm")
-    tbcut_file = path.join("..", "src", r"trackball_socket_cutter_34mm")
-    sens_file = path.join("..", "src", r"trackball_sensor_mount")
-    senscut_file = path.join("..", "src", r"trackball_sensor_cutter")
+    tb_file = path.join(parts_path, r"trackball_socket_body_34mm")
+    tbcut_file = path.join(parts_path, r"trackball_socket_cutter_34mm")
+    sens_file = path.join(parts_path, r"trackball_sensor_mount")
+    senscut_file = path.join(parts_path, r"trackball_sensor_cutter")
 
 
     # shape = import_file(tb_file)
