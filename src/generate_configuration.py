@@ -1,3 +1,6 @@
+import sys
+import getopt
+import os
 import json
 
 
@@ -301,23 +304,18 @@ shape_config = {
     ####################################
 
 def save_config():
-    print("Saving Configuration")
-    with open('run_config.json', mode='w') as fid:
-        json.dump(shape_config, fid, indent=4)
+    # Check to see if the user has specified an alternate config
+    opts, args = getopt.getopt(sys.argv[1:], "", ["config="]);
+    for opt, arg in opts:
+        if opt in ('--config'):
+            # If a config file was specified, set the config_name and save_dir
+            shape_config['save_dir'] = arg
+            shape_config['config_name'] = arg
 
-def update_config(fname, fname_out=None):
-    if fname_out is None:
-        fname_out == "updated_config.json"
-    # Open existing config, update with any new parameters, and save to updated_config.json
-    with open(fname, mode='r') as fid:
-        last_shape_config = json.load(fid)
-    shape_config.update(last_shape_config)
-
-    with open(fname_out, mode='w') as fid:
+    # Write the config to ./configs/<config_name>.json
+    with open(os.path.join(r"..", "configs", shape_config['config_name'] + '.json'), mode='w') as fid:
         json.dump(shape_config, fid, indent=4)
 
 
 if __name__ == '__main__':
     save_config()
-    from dactyl_manuform import *
-    run()

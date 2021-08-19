@@ -1,6 +1,7 @@
 import numpy as np
 from numpy import pi
 import os.path as path
+import getopt, sys
 import json
 import os
 
@@ -23,11 +24,15 @@ import generate_configuration as cfg
 for item in cfg.shape_config:
     locals()[item] = cfg.shape_config[item]
 
-## LOAD RUN CONFIGURATION FILE AND WRITE TO ANY VARIABLES IN FILE.
-with open('run_config.json', mode='r') as fid:
-    data = json.load(fid)
-for item in data:
-    locals()[item] = data[item]
+## CHECK FOR CONFIG FILE AND WRITE TO ANY VARIABLES IN FILE.
+opts, args = getopt.getopt(sys.argv[1:], "", ["config="]);
+for opt, arg in opts:
+    if opt in ('--config'):
+        with open(os.path.join(r"..", "configs", arg + '.json'), mode='r') as fid:
+            data = json.load(fid)
+        for item in data:
+            locals()[item] = data[item]
+
 
 # Really rough setup.  Check for ENGINE, set it not present from configuration.
 try:
