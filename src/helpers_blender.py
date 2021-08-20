@@ -1,4 +1,12 @@
-import solid as sl
+import bpy
+import bmesh
+import os
+import sys
+import time
+import mathutils
+from math import pi, radians, sin, cos
+from contextlib import contextmanager
+
 
 debug_trace = False
 
@@ -7,7 +15,7 @@ def debugprint(info):
         print(info)
 
 def box(width, height, depth):
-    return sl.cube([width, height, depth], center=True)
+    return bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 0, 0), scale=(width, height, depth))
 
 
 def cylinder(radius, height, segments=100):
@@ -27,7 +35,7 @@ def rotate(shape, angle):
 
 
 def translate(shape, vector):
-    return sl.translate(tuple(vector))(shape)
+    return  bpy.ops.transform.translate(
 
 
 def mirror(shape, plane=None):
@@ -118,9 +126,9 @@ def extrude_poly(outer_poly, inner_polys=None, height=1):
         return sl.linear_extrude(height=height, twist=0, convexity=0, center=True)(outer_poly)
 
 
-def import_file(fname):
+def import_file(fname, convexity=5):
     print("IMPORTING FROM {}".format(fname))
-    return sl.import_(fname + ".stl")
+    return sl.import_(fname + ".stl", convexity=convexity)
 
 
 def export_file(shape, fname):

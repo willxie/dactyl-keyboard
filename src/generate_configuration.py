@@ -7,8 +7,8 @@ r2d = 180 / pi
 
 shape_config = {
 
-    'ENGINE': 'solid', # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
-    # 'ENGINE':  'cadquery', # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
+    'ENGINE': 'solid',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
+    # 'ENGINE': 'cadquery',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
 
 
     ######################
@@ -18,7 +18,8 @@ shape_config = {
     'save_dir': '.',
     'config_name':  "DM",
 
-    'show_caps':  False,
+    'show_caps': True,
+    'show_pcbs': False, #only runs if caps are shown, easist place to initially inject geometry
 
     'nrows':  5, #5,  # key rows
     'ncols':  6, #6,  # key columns
@@ -43,11 +44,11 @@ shape_config = {
     ##############################
     # THUMB PARAMETERS
     ##############################
-    'thumb_style': 'MINIDOX',  # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key
+    # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key, 'TRACKBALL_ORBYL', 'TRACKBALL_CJ'
+    'thumb_style': 'MINIDOX',
     'default_1U_cluster': True, # only used with default, makes top right thumb cluster key 1U
-    'minidox_Usize': 1.6
-    , # Thumb key size.  May need slight oversizing, check w/ caps.  Additional spacing will be automatically added for larger keys.
-
+    # Thumb key size.  May need slight oversizing, check w/ caps.  Additional spacing will be automatically added for larger keys.
+    'minidox_Usize': 1.6,
     # Thumb plate rotations, anything other than 90 degree increments WILL NOT WORK.
     'thumb_plate_tr_rotation': 0.0,  # Top right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
     'thumb_plate_tl_rotation': 0.0,  # Top left plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
@@ -55,6 +56,63 @@ shape_config = {
     'thumb_plate_ml_rotation': 0.0,  # Mid left plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
     'thumb_plate_br_rotation': 0.0,  # Bottom right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
     'thumb_plate_bl_rotation': 0.0,  # Bottom right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
+
+    ###################################
+    ## Trackball in Wall             ##
+    ###################################
+    'trackball_in_wall': True,  # Separate trackball option, placing it in the OLED area
+    'tbiw_ball_center_row': 0.2, # up from cornerrow instead of down from top
+    'tbiw_translational_offset': (0.0, 0.0, 0.0),
+    'tbiw_rotation_offset': (0.0, 0.0, 0.0),
+    'tbiw_left_wall_x_offset_override': 50.0,
+    'tbiw_left_wall_z_offset_override': 0.0,
+    'tbiw_left_wall_lower_y_offset': 0.0,
+    'tbiw_left_wall_lower_z_offset': 0.0,
+
+    'tbiw_oled_center_row': .75,  # not none, offsets are from this position
+    'tbiw_oled_translation_offset': (-3.5, 0, 1.5),  # Z offset tweaks are expected depending on curvature and OLED mount choice.
+    'tbiw_oled_rotation_offset': (0, 0, 0),
+
+    ###################################
+    ## Trackball JS Thumb Cluster    ##
+    ###################################
+    'other_thumb': 'DEFAULT', # cluster used for second thumb except if ball_side == 'both'
+    'tbjs_key_diameter': 70,
+    # Offsets are per key and are applied before rotating into place around the ball
+    # X and Y act like Tangential and Radial around the ball
+    'tbjs_translation_offset': (0, 0, 10),  # applied to the whole assy
+    'tbjs_rotation_offset': (0, 0, 0),  # applied to the whole assy
+    'tbjs_key_translation_offsets': [
+        (0.0, 0.0, -3.0-5),
+        (0.0, 0.0, -3.0-5),
+        (0.0, 0.0, -3.0-5),
+        (0.0, 0.0, -3.0-5),
+    ],
+    'tbjs_key_rotation_offsets': [
+        (0.0, 0.0, 0.0),
+        (0.0, 0.0, 0.0),
+        (0.0, 0.0, 0.0),
+        (0.0, 0.0, 0.0),
+    ],
+    ###################################
+    ## Trackball General             ##
+    ###################################
+    # EXPERIMENTAL
+    'trackball_modular': False, # May add removable trackball in subsequent releases, no current use.
+    # END EXPERIMENTAL
+
+    'trackball_Usize': 1.5,  # size for inner key near trackball
+    'ball_side': 'right', #'left', 'right', or 'both'
+    'ball_diameter': 34.0,
+    'ball_wall_thickness': 3,  # should not be changed unless the import models are changed.
+    'ball_gap': 1.0,
+    'trackball_hole_diameter': 36.5,
+    'trackball_hole_height': 40,
+    # Removed trackball_rotation, ball_z_offset. and trackball_sensor_rotation and added more flexibility.
+    'tb_socket_translation_offset': (0, 0, 2.0),  # applied to the socket and sensor, large values will cause web/wall issues.
+    'tb_socket_rotation_offset':    (0, 0, 0),  # applied to the socket and sensor, large values will cause web/wall issues.
+    'tb_sensor_translation_offset': (0, 0, 0),  #deviation from socket offsets, for fixing generated geometry issues
+    'tb_sensor_rotation_offset':    (0, 0, 0),  #deviation from socket offsets, for changing the sensor roll orientation
 
     ##############################
     # EXPERIMENTAL PARAMETERS
@@ -237,6 +295,9 @@ shape_config = {
     'wire_post_overhang': 3.5,
     'wire_post_diameter': 2.6,
 
+
+
+
     ###################################
     ## Controller Mount / Connectors ##
     ###################################
@@ -252,7 +313,7 @@ shape_config = {
     'external_holder_height':  12.5,
     'external_holder_width':  28.75,
     'external_holder_xoffset': -5.0,
-
+    'external_holder_yoffset': -4.5, #Tweak this value to get the right undercut for the tray engagement.
 
     # Offset is from the top inner corner of the top inner key.
 
@@ -271,7 +332,7 @@ shape_config = {
     # Offset is from the top inner corner of the top inner key.
 
     ###################################
-    ## EXPERIMENTAL
+    ## HOLES ON PLATE FOR PCB MOUNT
     ###################################
     'plate_holes':  False,
     'plate_holes_xy_offset': (0.0, 0.0),
@@ -279,6 +340,16 @@ shape_config = {
     'plate_holes_height': 14.3,
     'plate_holes_diameter': 1.7,
     'plate_holes_depth': 20.0,
+
+    ###################################
+    ## SHOW PCB FOR FIT CHECK
+    ###################################
+    'pcb_width': 18.0,
+    'pcb_height': 18.0,
+    'pcb_thickness': 1.5,
+    'pcb_hole_diameter': 2,
+    'pcb_hole_pattern_width': 14.3,
+    'pcb_hole_pattern_height': 14.3,
 
     ###################################
     ## COLUMN OFFSETS

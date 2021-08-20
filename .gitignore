@@ -9,6 +9,7 @@
 *.scad
 /target
 .idea/
+.DS_Store
 *.FCStd1
 debug_*
 */__pycache__/*
