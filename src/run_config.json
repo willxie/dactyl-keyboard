@@ -20,7 +20,7 @@
         7
     ],
     "keyboard_z_offset": 11,
-    "thumb_style": "TRACKBALL_ORBYL",
+    "thumb_style": "TRACKBALL_CJ",
     "default_1U_cluster": true,
     "minidox_Usize": 1.6,
     "thumb_plate_tr_rotation": 0.0,
@@ -29,7 +29,7 @@
     "thumb_plate_ml_rotation": 0.0,
     "thumb_plate_br_rotation": 0.0,
     "thumb_plate_bl_rotation": 0.0,
-    "trackball_in_wall": true,
+    "trackball_in_wall": false,
     "tbiw_ball_center_row": 0.2,
     "tbiw_translational_offset": [
         0.0,
@@ -112,6 +112,9 @@
             0.0
         ]
     ],
+    "tbcj_inner_diameter": 42,
+    "tbcj_thickness": 2,
+    "tbcj_outer_diameter": 53,
     "trackball_modular": false,
     "trackball_Usize": 1.5,
     "ball_side": "right",
@@ -120,6 +123,8 @@
     "ball_gap": 1.0,
     "trackball_hole_diameter": 36.5,
     "trackball_hole_height": 40,
+    "trackball_plate_thickness": 2,
+    "trackball_plate_width": 2,
     "tb_socket_translation_offset": [
         0,
         0,

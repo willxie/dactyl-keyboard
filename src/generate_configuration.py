@@ -45,7 +45,7 @@ shape_config = {
     # THUMB PARAMETERS
     ##############################
     # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key, 'TRACKBALL_ORBYL', 'TRACKBALL_CJ'
-    'thumb_style': 'TRACKBALL_ORBYL',
+    'thumb_style': 'TRACKBALL_CJ',
     'default_1U_cluster': True, # only used with default, makes top right thumb cluster key 1U
     # Thumb key size.  May need slight oversizing, check w/ caps.  Additional spacing will be automatically added for larger keys.
     'minidox_Usize': 1.6,
@@ -60,7 +60,7 @@ shape_config = {
     ###################################
     ## Trackball in Wall             ##
     ###################################
-    'trackball_in_wall': True,  # Separate trackball option, placing it in the OLED area
+    'trackball_in_wall': False,  # Separate trackball option, placing it in the OLED area
     'tbiw_ball_center_row': 0.2, # up from cornerrow instead of down from top
     'tbiw_translational_offset': (0.0, 0.0, 0.0),
     'tbiw_rotation_offset': (0.0, 0.0, 0.0),
@@ -73,9 +73,9 @@ shape_config = {
     'tbiw_oled_translation_offset': (-3.5, 0, 1.5),  # Z offset tweaks are expected depending on curvature and OLED mount choice.
     'tbiw_oled_rotation_offset': (0, 0, 0),
 
-    ###################################
-    ## Trackball JS Thumb Cluster    ##
-    ###################################
+    ###########################################
+    ## Trackball JS / ORBYL Thumb Cluster    ##
+    ##########################################
     'other_thumb': 'DEFAULT', # cluster used for second thumb except if ball_side == 'both'
     'tbjs_key_diameter': 70,
     # Offsets are per key and are applied before rotating into place around the ball
@@ -94,6 +94,15 @@ shape_config = {
         (0.0, 0.0, 0.0),
         (0.0, 0.0, 0.0),
     ],
+
+    ###################################
+    ## Trackball CJ Thumb Cluster    ##
+    ###################################
+    'tbcj_inner_diameter': 42,
+    'tbcj_thickness': 2,
+    'tbcj_outer_diameter': 53,
+
+
     ###################################
     ## Trackball General             ##
     ###################################
@@ -108,6 +117,8 @@ shape_config = {
     'ball_gap': 1.0,
     'trackball_hole_diameter': 36.5,
     'trackball_hole_height': 40,
+    'trackball_plate_thickness': 2,
+    'trackball_plate_width': 2,
     # Removed trackball_rotation, ball_z_offset. and trackball_sensor_rotation and added more flexibility.
     'tb_socket_translation_offset': (0, 0, 2.0),  # applied to the socket and sensor, large values will cause web/wall issues.
     'tb_socket_rotation_offset':    (0, 0, 0),  # applied to the socket and sensor, large values will cause web/wall issues.
