@@ -2903,12 +2903,17 @@ def tbiw_position_rotation():
 
     left_wall_x_offset = tbiw_left_wall_x_offset_override
 
-    tbiw_mount_location_xyz = (np.array(base_pt1)+np.array(base_pt2))/2. + np.array(((-left_wall_x_offset/2), 0, 0)) + np.array(tbiw_translational_offset)
+    tbiw_mount_location_xyz = (
+            (np.array(base_pt1)+np.array(base_pt2))/2.
+            + np.array(((-left_wall_x_offset/2), 0, 0))
+            + np.array(tbiw_translational_offset)
+    )
+
     # tbiw_mount_location_xyz[2] = (oled_translation_offset[2] + base_pt0[2])/2
 
     angle_x = np.arctan2(base_pt1[2] - base_pt2[2], base_pt1[1] - base_pt2[1])
     angle_z = np.arctan2(base_pt1[0] - base_pt2[0], base_pt1[1] - base_pt2[1])
-    tbiw_mount_rotation_xyz = (0, rad2deg(angle_x), 0) + np.array(tbiw_rotation_offset)
+    tbiw_mount_rotation_xyz = (rad2deg(angle_x), 0, rad2deg(angle_z)) + np.array(tbiw_rotation_offset)
 
     return tbiw_mount_location_xyz, tbiw_mount_rotation_xyz
 
@@ -3283,7 +3288,7 @@ def screw_insert_shape(bottom_radius, top_radius, height):
     return shape
 
 
-def screw_insert(column, row, bottom_radius, top_radius, height):
+def screw_insert(column, row, bottom_radius, top_radius, height, side='right'):
     debugprint('screw_insert()')
     shift_right = column == lastcol
     shift_left = column == 0
@@ -3325,7 +3330,7 @@ def screw_insert(column, row, bottom_radius, top_radius, height):
         )
     elif shift_left:
         position = list(
-            np.array(left_key_position(row, 0)) + np.array(wall_locate3(-1, 0)) + np.array((shift_left_adjust,0,0))
+            np.array(left_key_position(row, 0, side=side)) + np.array(wall_locate3(-1, 0)) + np.array((shift_left_adjust,0,0))
         )
     else:
         position = key_position(
@@ -3367,15 +3372,15 @@ def screw_insert_thumb(bottom_radius, top_radius, height):
     shape = translate(shape, [position[0], position[1], height / 2])
     return shape
 
-def screw_insert_all_shapes(bottom_radius, top_radius, height, offset=0):
+def screw_insert_all_shapes(bottom_radius, top_radius, height, offset=0, side='right'):
     print('screw_insert_all_shapes()')
     shape = (
-        translate(screw_insert(0, 0, bottom_radius, top_radius, height), (0, 0, offset)),
-        translate(screw_insert(0, lastrow-1, bottom_radius, top_radius, height), (0, left_wall_lower_y_offset, offset)),
-        translate(screw_insert(3, lastrow, bottom_radius, top_radius, height), (0, 0, offset)),
-        translate(screw_insert(3, 0, bottom_radius, top_radius, height), (0,0, offset)),
-        translate(screw_insert(lastcol, 0, bottom_radius, top_radius, height), (0, 0, offset)),
-        translate(screw_insert(lastcol, lastrow-1, bottom_radius, top_radius, height), (0, 0, offset)),
+        translate(screw_insert(0, 0, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
+        translate(screw_insert(0, lastrow-1, bottom_radius, top_radius, height, side=side), (0, left_wall_lower_y_offset, offset)),
+        translate(screw_insert(3, lastrow, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
+        translate(screw_insert(3, 0, bottom_radius, top_radius, height, side=side), (0,0, offset)),
+        translate(screw_insert(lastcol, 0, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
+        translate(screw_insert(lastcol, lastrow-1, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
         translate(screw_insert_thumb(bottom_radius, top_radius, height), (0, 0, offset)),
     )
 
@@ -3384,20 +3389,21 @@ def screw_insert_all_shapes(bottom_radius, top_radius, height, offset=0):
 
 
 
-def screw_insert_holes():
+def screw_insert_holes(side='right'):
     return screw_insert_all_shapes(
-        screw_insert_bottom_radius, screw_insert_top_radius, screw_insert_height+.02, offset=-.01
+        screw_insert_bottom_radius, screw_insert_top_radius, screw_insert_height+.02, offset=-.01, side=side
     )
 
-def screw_insert_outers():
+def screw_insert_outers(side='right'):
     return screw_insert_all_shapes(
         screw_insert_bottom_radius + 1.6,
         screw_insert_top_radius + 1.6,
         screw_insert_height + 1.5,
+        side=side
     )
 
-def screw_insert_screw_holes():
-    return screw_insert_all_shapes(1.7, 1.7, 350)
+def screw_insert_screw_holes(side='right'):
+    return screw_insert_all_shapes(1.7, 1.7, 350, side=side)
 
 
 
@@ -3462,7 +3468,7 @@ def model_side(side="right"):
     if debug_exports:
         export_file(shape=walls_shape, fname=path.join(r"..", "things", r"debug_walls_shape"))
     s2 = union([walls_shape])
-    s2 = union([s2, *screw_insert_outers()])
+    s2 = union([s2, *screw_insert_outers(side=side)])
 
     if controller_mount_type in ['RJ9_USB_TEENSY', 'USB_TEENSY']:
         s2 = union([s2, teensy_holder()])
@@ -3480,7 +3486,7 @@ def model_side(side="right"):
     if controller_mount_type in ['None']:
         0 # do nothing, only here to expressly state inaction.
 
-    s2 = difference(s2, [union(screw_insert_holes())])
+    s2 = difference(s2, [union(screw_insert_holes(side=side))])
     shape = union([shape, s2])
 
     if controller_mount_type in ['RJ9_USB_TEENSY', 'RJ9_USB_WALL']:
@@ -3534,12 +3540,12 @@ def model_side(side="right"):
 
 
 # NEEDS TO BE SPECIAL FOR CADQUERY
-def baseplate(wedge_angle=None):
+def baseplate(wedge_angle=None, side='right'):
     if ENGINE == 'cadquery':
         # shape = mod_r
-        shape = union([case_walls(), *screw_insert_outers()])
-        # tool = translate(screw_insert_screw_holes(), [0, 0, -10])
-        tool = screw_insert_all_shapes(screw_hole_diameter/2., screw_hole_diameter/2., 350)
+        shape = union([case_walls(side=side), *screw_insert_outers(side=side)])
+        # tool = translate(screw_insert_screw_holes(side=side), [0, 0, -10])
+        tool = screw_insert_all_shapes(screw_hole_diameter/2., screw_hole_diameter/2., 350, side=side)
         for item in tool:
             item = translate(item, [0, 0, -10])
             shape = difference(shape, [item])
@@ -3605,11 +3611,11 @@ def baseplate(wedge_angle=None):
     else:
 
         shape = union([
-            case_walls(),
-            *screw_insert_outers()
+            case_walls(side=side),
+            *screw_insert_outers(side=side)
         ])
 
-        tool = translate(union(screw_insert_screw_holes()), [0, 0, -10])
+        tool = translate(union(screw_insert_screw_holes(side=side)), [0, 0, -10])
         base = box(1000, 1000, .01)
         shape = shape - tool
         shape = intersect(shape, base)
@@ -3623,21 +3629,27 @@ def run():
     mod_r = model_side(side="right")
     export_file(shape=mod_r, fname=path.join(save_path, config_name + r"_right"))
 
+    base = baseplate(side='right')
+    export_file(shape=base, fname=path.join(save_path, config_name + r"_right_plate"))
+    export_dxf(shape=base, fname=path.join(save_path, config_name + r"_right_plate"))
+
     if symmetry == "asymmetric":
         mod_l = model_side(side="left")
         export_file(shape=mod_l, fname=path.join(save_path, config_name + r"_left"))
 
+        base_l = mirror(baseplate(side='left'), 'YZ')
+        export_file(shape=base_l, fname=path.join(save_path, config_name + r"_left_plate"))
+        export_dxf(shape=base_l, fname=path.join(save_path, config_name + r"_left_plate"))
+
     else:
         export_file(shape=mirror(mod_r, 'YZ'), fname=path.join(save_path, config_name + r"_left"))
 
+        lbase = mirror(base, 'YZ')
+        export_file(shape=lbase, fname=path.join(save_path, config_name + r"_left_plate"))
+        export_dxf(shape=lbase, fname=path.join(save_path, config_name + r"_left_plate"))
 
-    base = baseplate()
-    export_file(shape=base, fname=path.join(save_path, config_name + r"_right_plate"))
-    export_dxf(shape=base, fname=path.join(save_path, config_name + r"_right_plate"))
 
-    lbase = mirror(base, 'YZ')
-    export_file(shape=lbase, fname=path.join(save_path, config_name + r"_left_plate"))
-    export_dxf(shape=lbase, fname=path.join(save_path, config_name + r"_left_plate"))
+
 
     if oled_mount_type == 'UNDERCUT':
         export_file(shape=oled_undercut_mount_frame()[1], fname=path.join(save_path, config_name + r"_oled_undercut_test"))
