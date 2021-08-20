@@ -3509,11 +3509,23 @@ def model_side(side="right"):
         shape = difference(shape, [hole])
         shape = union([shape, frame])
 
+    if trackball_in_wall and (side == ball_side or ball_side == 'both'):
+        tbprecut, tb, tbcutout, sensor, ball = generate_trackball_in_wall()
+
+        shape = difference(shape, [tbprecut])
+        # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_1"))
+        shape = union([shape, tb])
+        # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_2"))
+        shape = difference(shape, [tbcutout])
+        # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_3a"))
+        # export_file(shape=add([shape, sensor]), fname=path.join(save_path, config_name + r"_test_3b"))
+        shape = union([shape, sensor])
+
+        if show_caps:
+            shape = add([shape, ball])
+
     if (trackball_in_wall or ('TRACKBALL' in thumb_style)) and (side == ball_side or ball_side == 'both'):
-        if trackball_in_wall:
-            tbprecut, tb, tbcutout, sensor, ball = generate_trackball_in_wall()
-        elif 'TRACKBALL' in thumb_style:
-            tbprecut, tb, tbcutout, sensor, ball = generate_trackball_in_cluster()
+        tbprecut, tb, tbcutout, sensor, ball = generate_trackball_in_cluster()
 
         shape = difference(shape, [tbprecut])
         # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_1"))
