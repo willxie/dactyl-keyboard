@@ -54,7 +54,7 @@ build-models: check-requirements ## Build models.
 
 
 shell: check-requirements ## Open an interactive shell inside a container.
-	@${DOCKER_CMD} run --rm -it --name DM-shell -v "src:/app/src" -v "things:/app/things" dactyl-keyboard bash && \
+	@${DOCKER_CMD} run --rm -it --name DM-shell -v ${source_dir}:/app/src -v ${artifact_dir}:/app/things dactyl-keyboard bash && \
 	echo "\nBye!"
 .PHONY: shell
 
