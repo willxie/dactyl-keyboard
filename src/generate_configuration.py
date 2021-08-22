@@ -387,7 +387,13 @@ shape_config = {
 
 def save_config():
     # Check to see if the user has specified an alternate config
-    opts, args = getopt.getopt(sys.argv[1:], "", ["config="]);
+    opts, args = getopt.getopt(sys.argv[1:], "", ["config=", "update="])
+    for opt, arg in opts:
+        if opt in ('--update'):
+            with open(os.path.join(r"..", "configs", arg + '.json'), mode='r') as fid:
+                data = json.load(fid)
+                shape_config.update(data)
+
     for opt, arg in opts:
         if opt in ('--config'):
             # If a config file was specified, set the config_name and save_dir

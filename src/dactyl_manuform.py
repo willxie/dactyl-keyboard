@@ -24,14 +24,20 @@ import generate_configuration as cfg
 for item in cfg.shape_config:
     locals()[item] = cfg.shape_config[item]
 
-## CHECK FOR CONFIG FILE AND WRITE TO ANY VARIABLES IN FILE.
-opts, args = getopt.getopt(sys.argv[1:], "", ["config="]);
-for opt, arg in opts:
-    if opt in ('--config'):
-        with open(os.path.join(r"..", "configs", arg + '.json'), mode='r') as fid:
-            data = json.load(fid)
-        for item in data:
-            locals()[item] = data[item]
+if len(sys.argv) <= 1:
+    with open(os.path.join(r".", 'run_config.json'), mode='r') as fid:
+        data = json.load(fid)
+
+else:
+    ## CHECK FOR CONFIG FILE AND WRITE TO ANY VARIABLES IN FILE.
+    opts, args = getopt.getopt(sys.argv[1:], "", ["config="])
+    for opt, arg in opts:
+        if opt in ('--config'):
+            with open(os.path.join(r"..", "configs", arg + '.json'), mode='r') as fid:
+                data = json.load(fid)
+
+for item in data:
+    locals()[item] = data[item]
 
 
 # Really rough setup.  Check for ENGINE, set it not present from configuration.
@@ -151,15 +157,6 @@ teensy_holder_top_length = 18
 teensy_holder_width = 7 + teensy_pcb_thickness
 teensy_holder_height = 6 + teensy_width
 
-
-
-# wire_post_height = 7
-# wire_post_overhang = 3.5
-# wire_post_diameter = 2.6
-#
-# screw_insert_height = 3.8
-# screw_insert_bottom_radius = 5.31 / 2
-# screw_insert_top_radius = 5.1 / 2
 
 # save_path = path.join("..", "things", save_dir)
 if not path.isdir(save_path):
@@ -2605,7 +2602,7 @@ def thumb_walls(side='right', style_override=None):
 
     elif "TRACKBALL" in _thumb_style:
         if (side == ball_side or ball_side == 'both'):
-            if _thumb_style == "TRACKBALL_ORBYL" :
+            if _thumb_style == "TRACKBALL_ORBYL":
                 return tbjs_thumb_walls()
             elif thumb_style == "TRACKBALL_CJ":
                 return tbcj_thumb_walls()

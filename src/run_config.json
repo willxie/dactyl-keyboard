@@ -20,7 +20,7 @@
         7
     ],
     "keyboard_z_offset": 11,
-    "thumb_style": "TRACKBALL_CJ",
+    "thumb_style": "DEFAULT",
     "default_1U_cluster": true,
     "minidox_Usize": 1.6,
     "thumb_plate_tr_rotation": 0.0,

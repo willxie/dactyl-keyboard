@@ -15,4 +15,3 @@ debug_*
 */__pycache__/*
 *~$*
 things/
-configs/*.json
