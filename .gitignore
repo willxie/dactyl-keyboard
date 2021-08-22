@@ -14,4 +14,6 @@
 debug_*
 */__pycache__/*
 *~$*
-things/
+things/*.scad
+things/*.step
+things/*.stl
