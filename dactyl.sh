@@ -62,7 +62,12 @@ function exitUnexpectedFlags() {
 #    selected index (0 for opt1, 1 for opt2 ...)
 
 function menu {
-  printf "\n[Dactyl Manuform] Please choose an option:\n\n"
+  local header="\n[Dactyl Manuform]"
+  if [ $container ]; then
+    header+=" -- $container"
+  fi
+  header+="\n\nPlease choose an option:\n\n"
+  printf "$header"
 	options=("$@")
 
 	# helpers for terminal print control and key input
@@ -165,8 +170,32 @@ function menu {
 ################################
 
 function showHelpAndExit() {
-  echo "TODO: Help Menu"
-  exit
+cat << _end_of_text
+[Dactyl Manuform]
+
+A bash CLI to manage Docker artifacts for the Dactyl Keyboard project.
+
+Run script without any options to use in interactive mode.
+
+Usage:
+  ./dactyl.sh 
+  ./dactyl.sh [-h | --help | --uninstall]
+  ./dactyl.sh image [--build | --inspect | --remove]
+  ./dactyl.sh (config|model) [--build | --inspect | --start | --stop | --remove]
+  ./dactyl.sh shell [--build | --inspect | --session | --start | --stop | --remove]
+
+Options:
+  positional    Target the image or a particular container (shell | config | model)
+  -h --help     Show this screen.
+  --uninstall   Remove all Docker artifacts.
+  --build       Build or rebuild the target container.
+  --inspect     Show "docker inspect" results for the target container.
+  --start       Start or restart the target container.
+  --stop        Stop the target container.
+  --remove      Remove the target container.
+  --session     Start a shell session in the shell container.
+_end_of_text
+exit
 }
 
 # error on any unexpected flags or more than one positional argument
@@ -176,16 +205,15 @@ function processArgs() {
       key="$1"
 
       case $key in
-        --build|-rm|--remove|--inspect|--run|--start|--stop)
+        --build|--remove|--inspect|--session|--start|--stop)
           if [[ $flags ]]; then
             flags+=" $key"
           else
             flags=$key
           fi
           shift;;
-        -h|--help)
-          showHelpAndExit
-          ;;
+        -h|--help) showHelpAndExit;;
+        --uninstall) handleUninstall;;
         *)
           # all valid flags should have already been captured above
           if [[ $key == -* ]]; then
@@ -275,10 +303,11 @@ function handleInspectImage() {
 
 function handleImageMenu() {
   local check="Check Image Status"
-  local build="Reuild Image"
+  local build="Rebuild Image"
   local remove="Remove Image"
+  local mainMenu="Main Menu"
   local end="Exit"
-  options=("$check" "$build" "$remove" "$end")
+  options=("$check" "$build" "$remove" "$mainMenu" "$end")
   # execute in subshell so exit code doesn't exit the script
   (menu "${options[@]}") && true
   result="${options[$?]}"
@@ -287,6 +316,7 @@ function handleImageMenu() {
     $check) handleInspectImage;;
     $build) handleRebuildImage;;
     $remove) handleRemoveImage;;
+    $mainMenu) handleMainMenu;;
     *) exit;;
   esac
 }
@@ -299,7 +329,7 @@ function handleImageCLI() {
     handleInspectImage
   elif [[ "$flags" =~ ^.*(--build).*$ ]]; then
     handleRebuildImage
-  elif [[ "$flags" =~ ^.*(--remove|-rm).*$ ]]; then
+  elif [[ "$flags" =~ ^.*(--remove).*$ ]]; then
     handleRemoveImage
   else
     exitUnexpectedFlags
@@ -449,7 +479,7 @@ function handleContainerMenu() {
   local stop="Stop $container Container"
   local remove="Remove $container Container"
   local inspect="Inspect $container Container"
-  local run="Start $container Session"
+  local session="Start $container Session"
   local main="Main Menu"
   local end="Exit"
 
@@ -457,7 +487,7 @@ function handleContainerMenu() {
     build="Build $container Container"
     options=("$build" "$main" "$end")
   elif containerIsRunning; then
-    options=("$run" "$inspect" "$build" "$stop" "$remove" "$main" "$end")
+    options=("$session" "$inspect" "$build" "$stop" "$remove" "$main" "$end")
     if ! isShell; then
       unset options[0]
     fi
@@ -477,7 +507,7 @@ function handleContainerMenu() {
     $inspect) inspectContainer;;
     $main) handleMainMenu;;
     *) 
-      if isShell && [[ $run = $result ]]; then
+      if isShell && [[ $session = $result ]]; then
         startShellSession
       fi
       exit
@@ -492,13 +522,13 @@ function handleContainerCLI() {
     inspectContainer
   elif [[ "$flags" =~ ^.*(--build).*$ ]]; then
     handleBuildContainer
-  elif [[ "$flags" =~ ^.*(--run).*$ ]] && isShell; then
+  elif [[ "$flags" =~ ^.*(--session).*$ ]] && isShell; then
     startShellSession
   elif [[ "$flags" =~ ^.*(--start).*$ ]]; then
     startContainerOrAlert
   elif [[ "$flags" =~ ^.*(--stop).*$ ]]; then
     handleStopContainer
-  elif [[ "$flags" =~ ^.*(--remove|-rm).*$ ]]; then
+  elif [[ "$flags" =~ ^.*(--remove).*$ ]]; then
     removeContainer
   else
     exitUnexpectedFlags
@@ -531,16 +561,20 @@ function handleMainMenu() {
   local shellOpt="$shellContainer Options"
   local configOpt="$configContainer Options"
   local modelOpt="$modelContainer Options"
+  local uninstallOpt="Uninstall"
+  local help="Show Help"
   local end="Exit"
 
-  options=("$imageOpt" "$shellOpt" "$configOpt" "$modelOpt" "$end")
+  options=("$imageOpt" "$shellOpt" "$configOpt" "$modelOpt" "$help" "$uninstallOpt" "$end")
   
   # execute in subshell so exit code doesn't exit the script
   (menu "${options[@]}") && true
   result="${options[$?]}"
 
   case $result in
-    $imageOpt ) handleImageMenu;;
+    $help) showHelpAndExit;;
+    $imageOpt) handleImageMenu;;
+    $uninstallOpt) handleUninstall;;
     $shellOpt|$configOpt|$modelOpt)
       # remove " Options" and set as currentn container
       container=$(echo "${result/ Options/}")
