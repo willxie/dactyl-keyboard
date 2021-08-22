@@ -25,6 +25,7 @@ for item in cfg.shape_config:
     locals()[item] = cfg.shape_config[item]
 
 if len(sys.argv) <= 1:
+    print("NO CONFIGURATION SPECIFIED, USING run_config.json")
     with open(os.path.join(r".", 'run_config.json'), mode='r') as fid:
         data = json.load(fid)
 
