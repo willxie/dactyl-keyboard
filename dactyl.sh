@@ -82,8 +82,6 @@ function menu {
 	get_cursor_row()	{ IFS=';' read -sdR -p $'\E[6n' ROW COL; echo ${ROW#*[}; }
   key_input() {
     local key
-    ESC=$(printf "\033")
-
     # read 3 characters, 1 at a time
     for (( i=0; i < 3; ++i)); do
       read -s -n1 input 2>/dev/null >&2
@@ -105,6 +103,18 @@ function menu {
     if [[ $key = $ESC[A ]]; then echo up; fi;
     if [[ $key = $ESC[B ]]; then echo down; fi;
   }
+  function cursorUp() { printf "$ESC[A"; }
+  function clearRow() { printf "$ESC[2K\r"; }
+  function eraseMenu() {
+    cursor_to $lastrow
+    clearRow
+    numHeaderRows=$(printf "$header" | wc -l)
+    numOptions=${#options[@]}
+    numRows=$(($numHeaderRows + $numOptions))
+    for ((i=0; i<$numRows; ++i)); do
+      cursorUp; clearRow;
+    done
+  }
 
 	# initially print empty new lines (scroll down if at bottom of screen)
 	for opt in "${options[@]}"; do printf "\n"; done
@@ -112,16 +122,15 @@ function menu {
 	# determine current screen position for overwriting the options
 	local lastrow=`get_cursor_row`
 	local startrow=$(($lastrow - $#))
+  local selected=0
 
 	# ensure cursor and input echoing back on upon a ctrl+c during read -s
 	trap "cursor_blink_on; stty echo; printf '\n'; exit" 2
 	cursor_blink_off
 
-	local selected=0
-
-  # print options by overwriting the last lines
-  function drawOptions() {
-    local idx=0
+	while true; do
+    # print options by overwriting the last lines
+		local idx=0
     for opt in "${options[@]}"; do
       cursor_to $(($startrow + $idx))
       # add an index to the option
@@ -133,10 +142,6 @@ function menu {
       fi
       ((idx++))
     done
-  }
-
-	while true; do
-		drawOptions
 
 		# user key control
     input=$(key_input)
@@ -147,7 +152,6 @@ function menu {
         # If a digit is encountered, consider it a selection (if within range)
         if [ $input -lt $(($# + 1)) ]; then
           selected=$(($input - 1))
-          drawOptions
           break
         fi
         ;;
@@ -158,10 +162,8 @@ function menu {
 		esac
 	done
 
-	# cursor position back to normal
-	cursor_to $lastrow
+  eraseMenu
 	cursor_blink_on
-	echo
 
 	return $selected
 }
