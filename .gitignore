@@ -14,3 +14,4 @@ debug_*
 */__pycache__/*
 *~$*
 things/
+.DS_Store
