@@ -9,8 +9,10 @@ set -e
 
 container=""
 shellContainer=DM-shell
-configContainer=DM-config
 modelContainer=DM-model
+configContainer=DM-config
+containers=("$shellContainer" "$configContainer" "$modelContainer")
+
 imageName=dactyl-keyboard
 srcBind="$(pwd)/src:/app/src"
 thingsBind="$(pwd)/things:/app/things"
@@ -289,11 +291,15 @@ function handleRebuildImage() {
   buildImage
 }
 
+function removeImage() {
+  inform "Removing docker image: $imageName..."
+  docker image rm $imageName
+}
+
 function handleRemoveImage() {
   warn "This will remove docker image: $imageName"
   confirmContinue "Would you like to continue?"
-  inform "Removing docker image: $imageName..."
-  docker image rm $imageName
+  removeImage
 }
 
 function handleInspectImage() {
@@ -548,6 +554,20 @@ function startShellSession() {
 function promptStartShellSession() {
   confirmContinue "Would you like to start a shell session?"
   startShellSession
+}
+
+################################
+# Uninstaller
+################################
+
+function handleUninstall() {
+  for currentContainer in "${containers[@]}"; do
+    container="$currentContainer"
+    removeContainer
+  done
+
+  removeImage
+  exit
 }
 
 ################################
