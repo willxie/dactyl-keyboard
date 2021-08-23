@@ -561,6 +561,8 @@ function promptStartShellSession() {
 ################################
 
 function handleUninstall() {
+  warn "This will remove all containers and images."
+  confirmContinue "Are you sure you want to continue?"
   for currentContainer in "${containers[@]}"; do
     container="$currentContainer"
     removeContainer
