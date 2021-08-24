@@ -816,7 +816,7 @@ def thumb_connectors(side='right', style_override=None):
         return minidox_thumb_connectors()
     elif _thumb_style == "CARBONFET":
         return carbonfet_thumb_connectors()
-      
+
     elif "TRACKBALL" in _thumb_style:
         if (side == ball_side or ball_side == 'both'):
             if _thumb_style == "TRACKBALL_ORBYL":
@@ -825,7 +825,7 @@ def thumb_connectors(side='right', style_override=None):
                 return tbcj_thumb_connectors()
         else:
             return thumb_connectors(side, style_override=other_thumb)
-          
+
     else:
         return default_thumb_connectors()
 
@@ -1788,7 +1788,7 @@ def tbjs_thumb_tl_place(shape):
     t_off = tbjs_key_translation_offsets[0]
     shape = rotate(shape, tbjs_key_rotation_offsets[0])
     shape = translate(shape, (t_off[0], t_off[1]+tbjs_key_diameter/2, t_off[2]))
-    shape = rotate(shape, [0,0,-80])
+    shape = rotate(shape, [0,0,-95])
     shape = tbjs_place(shape)
     # shape = rotate(shape, [5, 10, -65])
     # shape = translate(shape, thumborigin())
@@ -1801,7 +1801,7 @@ def tbjs_thumb_mr_place(shape):
     shape = rotate(shape, tbjs_key_rotation_offsets[1])
     t_off = tbjs_key_translation_offsets[1]
     shape = translate(shape, (t_off[0], t_off[1]+tbjs_key_diameter/2, t_off[2]))
-    shape = rotate(shape, [0,0,-130])
+    shape = rotate(shape, [0,0,-150])
     shape = tbjs_place(shape)
 
     # shape = rotate(shape, [7, 20, -105])
@@ -1816,7 +1816,7 @@ def tbjs_thumb_br_place(shape):
     shape = rotate(shape, tbjs_key_rotation_offsets[2])
     t_off = tbjs_key_translation_offsets[2]
     shape = translate(shape, (t_off[0], t_off[1]+tbjs_key_diameter/2, t_off[2]))
-    shape = rotate(shape, [0,0,-180])
+    shape = rotate(shape, [0,0,-195])
     shape = tbjs_place(shape)
 
     # shape = rotate(shape, [25, -11, 0])
@@ -1831,7 +1831,7 @@ def tbjs_thumb_bl_place(shape):
     shape = rotate(shape, tbjs_key_rotation_offsets[3])
     t_off = tbjs_key_translation_offsets[3]
     shape = translate(shape, (t_off[0], t_off[1]+tbjs_key_diameter/2, t_off[2]))
-    shape = rotate(shape, [0,0,-230])
+    shape = rotate(shape, [0,0,-240])
     shape = tbjs_place(shape)
 
     # shape = rotate(shape, [25, 0, -45])
@@ -2114,7 +2114,7 @@ def tbcj_thumb_layout(shape):
 
 #def oct_corner(i, radius, shape):
 #    i = (i+1)%8
-#    
+#
 #    points_x = [1, 2, 2, 1, -1, -2, -2, -1]
 #    points_y = [2, 1, -1, -2, -2, -1, 1, 2]
 #
@@ -2127,7 +2127,7 @@ def oct_corner(i, diameter, shape):
 
     r = radius
     m = radius * math.tan(math.pi / 8)
-    
+
     points_x = [m, r, r, m, -m, -r, -r, -m]
     points_y = [r, m, -m, -r, -r, -m, m, r]
 
@@ -2625,7 +2625,7 @@ def thumb_connection(side='right', style_override=None):
         return minidox_thumb_connection(side=side)
     elif _thumb_style == "CARBONFET":
         return carbonfet_thumb_connection(side=side)
-      
+
     elif "TRACKBALL" in _thumb_style:
         if (side == ball_side or ball_side == 'both'):
             if _thumb_style == "TRACKBALL_ORBYL":
