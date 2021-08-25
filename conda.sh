@@ -67,6 +67,10 @@ inform "Installing scipy..."
 
 pip install scipy
 
+inform "Installing solidpython..."
+
+pip install solidpython
+
 inform "Updating conda dependencies..."
 
 conda update --all -y
