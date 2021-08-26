@@ -33,6 +33,8 @@ if [ "$1" = "--uninstall" ]; then
   confirmContinue "Would you like to remove the conda environment $envName?"
   conda deactivate
   conda env remove -n $envName
+  inform "Conda environment removed!\n\n\tRun \"conda deactivate\" to ensure the environment has been properly deactivated."
+
   exit
 fi
 
