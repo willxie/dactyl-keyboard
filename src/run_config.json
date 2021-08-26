@@ -1,7 +1,7 @@
 {
     "ENGINE": "solid",
     "save_dir": ".",
-    "config_name": "DM_ORB_PLAY2",
+    "config_name": "DM_WILD_PLAY",
     "show_caps": false,
     "show_pcbs": false,
     "nrows": 6,
@@ -20,15 +20,15 @@
         7
     ],
     "keyboard_z_offset": 11,
-    "thumb_style": "TRACKBALL_ORBYL",
+    "thumb_style": "TRACKBALL_WILD",
     "default_1U_cluster": true,
     "minidox_Usize": 1.6,
     "thumb_plate_tr_rotation": 0.0,
     "thumb_plate_tl_rotation": 0.0,
-    "thumb_plate_mr_rotation": 0.0,
+    "thumb_plate_mr_rotation": 180.0,
     "thumb_plate_ml_rotation": 0.0,
     "thumb_plate_br_rotation": 0.0,
-    "thumb_plate_bl_rotation": 0.0,
+    "thumb_plate_bl_rotation": 90.0,
     "trackball_in_wall": false,
     "tbiw_ball_center_row": 0.2,
     "tbiw_translational_offset": [
@@ -57,18 +57,18 @@
         0
     ],
     "other_thumb": "DEFAULT",
-    "tbjs_key_diameter": 70,
-    "tbjs_translation_offset": [
+    "wild_key_diameter": 70,
+    "wild_translation_offset": [
         10,
         0,
         -8
     ],
-    "tbjs_rotation_offset": [
+    "wild_rotation_offset": [
         10,
         -10,
         0
     ],
-    "tbjs_key_translation_offsets": [
+    "wild_key_translation_offsets": [
         [
             0.0,
             -5.0,
@@ -90,24 +90,24 @@
             4.0
         ]
     ],
-    "tbjs_key_rotation_offsets": [
+    "wild_key_rotation_offsets": [
         [
             -5.0,
             0.0,
-            15
+            0
         ],
         [
             0.0,
             5.0,
-            -5
+            0
         ],
         [
             0.0,
-            -10.0,
+            -20.0,
             43.0
         ],
         [
-            20.0,
+            25.0,
             0.0,
             0.0
         ]
@@ -115,6 +115,64 @@
     "tbcj_inner_diameter": 42,
     "tbcj_thickness": 2,
     "tbcj_outer_diameter": 53,
+    "tbjs_key_diameter": 70,
+    "tbjs_translation_offset": [
+        0,
+        0,
+        10
+    ],
+    "tbjs_rotation_offset": [
+        0,
+        0,
+        0
+    ],
+    "tbjs_key_translation_offsets": [
+        [
+            0.0,
+            0.0,
+            -8.0
+        ],
+        [
+            0.0,
+            0.0,
+            -8.0
+        ],
+        [
+            0.0,
+            0.0,
+            -8.0
+        ],
+        [
+            0.0,
+            0.0,
+            -8.0
+        ]
+    ],
+    "tbjs_key_rotation_offsets": [
+        [
+            0.0,
+            0.0,
+            0.0
+        ],
+        [
+            0.0,
+            0.0,
+            0.0
+        ],
+        [
+            0.0,
+            0.0,
+            0.0
+        ],
+        [
+            0.0,
+            0.0,
+            0.0
+        ]
+    ],
+    "thumb_hs_rotate": [
+        0, 180, 0, 90
+    ],
     "trackball_modular": false,
     "trackball_Usize": 1.5,
     "ball_side": "right",
@@ -205,8 +263,8 @@
     "clip_thickness": 1.4,
     "clip_undercut": 1.0,
     "undercut_transition": 0.2,
-    "plate_file": null,
-    "plate_offset": 0.0,
+    "plate_file_name": "hotswap_holder_15",
+    "plate_offset": -6.0,
     "oled_mount_type": null,
     "oled_center_row": 1.25,
     "oled_translation_offset": [

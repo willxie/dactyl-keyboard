@@ -110,8 +110,11 @@ else:
 
 if 'HS_' in plate_style:
     symmetry = "asymmetric"
-    plate_file = path.join(parts_path, r"hot_swap_plate")
-    plate_offset = 0.0
+    pname = r"hot_swap_plate"
+    if plate_file_name is not None:
+        pname = plate_file_name
+    plate_file = path.join(parts_path, pname)
+    # plate_offset = 0.0 # this overwrote the config variable
 
 if (trackball_in_wall or ('TRACKBALL' in thumb_style)) and not ball_side == 'both':
     symmetry = "asymmetric"
@@ -771,6 +774,8 @@ def thumbcaps(side='right', style_override=None):
                 return tbjs_thumbcaps()
             elif _thumb_style == "TRACKBALL_CJ":
                 return tbcj_thumbcaps()
+            elif _thumb_style == "TRACKBALL_WILD":
+                return wild_thumbcaps()
         else:
             return thumbcaps(side, style_override=other_thumb)
 
@@ -797,6 +802,8 @@ def thumb(side="right", style_override=None):
                 return tbjs_thumb(side)
             elif _thumb_style == "TRACKBALL_CJ":
                 return tbcj_thumb(side)
+            elif _thumb_style == "TRACKBALL_WILD":
+                return wild_thumb(side)
         else:
             return thumb(side, style_override=other_thumb)
 
@@ -823,6 +830,8 @@ def thumb_connectors(side='right', style_override=None):
                 return tbjs_thumb_connectors()
             elif _thumb_style == "TRACKBALL_CJ":
                 return tbcj_thumb_connectors()
+            elif _thumb_style == "TRACKBALL_WILD":
+                return wild_thumb_connectors()
         else:
             return thumb_connectors(side, style_override=other_thumb)
 
@@ -1788,7 +1797,7 @@ def tbjs_thumb_tl_place(shape):
     t_off = tbjs_key_translation_offsets[0]
     shape = rotate(shape, tbjs_key_rotation_offsets[0])
     shape = translate(shape, (t_off[0], t_off[1]+tbjs_key_diameter/2, t_off[2]))
-    shape = rotate(shape, [0,0,-95])
+    shape = rotate(shape, [0,0,-80])
     shape = tbjs_place(shape)
     # shape = rotate(shape, [5, 10, -65])
     # shape = translate(shape, thumborigin())
@@ -1801,7 +1810,7 @@ def tbjs_thumb_mr_place(shape):
     shape = rotate(shape, tbjs_key_rotation_offsets[1])
     t_off = tbjs_key_translation_offsets[1]
     shape = translate(shape, (t_off[0], t_off[1]+tbjs_key_diameter/2, t_off[2]))
-    shape = rotate(shape, [0,0,-150])
+    shape = rotate(shape, [0,0,-130])
     shape = tbjs_place(shape)
 
     # shape = rotate(shape, [7, 20, -105])
@@ -1816,7 +1825,7 @@ def tbjs_thumb_br_place(shape):
     shape = rotate(shape, tbjs_key_rotation_offsets[2])
     t_off = tbjs_key_translation_offsets[2]
     shape = translate(shape, (t_off[0], t_off[1]+tbjs_key_diameter/2, t_off[2]))
-    shape = rotate(shape, [0,0,-195])
+    shape = rotate(shape, [0,0,-180])
     shape = tbjs_place(shape)
 
     # shape = rotate(shape, [25, -11, 0])
@@ -1831,8 +1840,87 @@ def tbjs_thumb_bl_place(shape):
     shape = rotate(shape, tbjs_key_rotation_offsets[3])
     t_off = tbjs_key_translation_offsets[3]
     shape = translate(shape, (t_off[0], t_off[1]+tbjs_key_diameter/2, t_off[2]))
-    shape = rotate(shape, [0,0,-240])
+    shape = rotate(shape, [0,0,-230])
     shape = tbjs_place(shape)
+
+    # shape = rotate(shape, [25, 0, -45])
+    # shape = translate(shape, thumborigin())
+    # shape = translate(shape, [-63, -41, -18])
+    return shape
+
+def wild_thumb_position_rotation():
+    rot = [10, -15, 5]
+    pos = thumborigin()
+    # Changes size based on key diameter around ball, shifting off of the top left cluster key.
+    shift = [-.9*wild_key_diameter/2+27-42, -.1*wild_key_diameter/2+3-20, -5]
+    for i in range(len(pos)):
+        pos[i] = pos[i] + shift[i] + wild_translation_offset[i]
+
+    for i in range(len(rot)):
+        rot[i] = rot[i] + wild_rotation_offset[i]
+
+    return pos, rot
+
+
+def wild_place(shape):
+    pos, rot = wild_thumb_position_rotation()
+    shape = rotate(shape, rot)
+    shape = translate(shape, pos)
+    return shape
+
+
+def wild_thumb_tl_place(shape):
+    debugprint('thumb_tr_place()')
+    # Modifying to make a "ring" of keys
+    shape = rotate(shape, [0, 0, 0])
+    t_off = wild_key_translation_offsets[0]
+    shape = rotate(shape, wild_key_rotation_offsets[0])
+    shape = translate(shape, (t_off[0], t_off[1]+wild_key_diameter/2, t_off[2]))
+    shape = rotate(shape, [0,0,-80])
+    shape = wild_place(shape)
+    # shape = rotate(shape, [5, 10, -65])
+    # shape = translate(shape, thumborigin())
+    # shape = translate(shape, [-14, -9, 0])
+    return shape
+
+def wild_thumb_mr_place(shape):
+    debugprint('thumb_mr_place()')
+    shape = rotate(shape, [0, 0, 0])
+    shape = rotate(shape, wild_key_rotation_offsets[1])
+    t_off = wild_key_translation_offsets[1]
+    shape = translate(shape, (t_off[0], t_off[1]+wild_key_diameter/2, t_off[2]))
+    shape = rotate(shape, [0,0,-150])
+    shape = wild_place(shape)
+
+    # shape = rotate(shape, [7, 20, -105])
+    # shape = translate(shape, thumborigin())
+    # shape = translate(shape, [-12, -32, -5])
+    return shape
+
+def wild_thumb_br_place(shape):
+    debugprint('thumb_br_place()')
+
+    shape = rotate(shape, [0, 0, 180])
+    shape = rotate(shape, wild_key_rotation_offsets[2])
+    t_off = wild_key_translation_offsets[2]
+    shape = translate(shape, (t_off[0], t_off[1]+wild_key_diameter/2, t_off[2]))
+    shape = rotate(shape, [0,0,-195])
+    shape = wild_place(shape)
+
+    # shape = rotate(shape, [25, -11, 0])
+    # shape = translate(shape, thumborigin())
+    # shape = translate(shape, [-40, -50, -16])
+    return shape
+
+
+def wild_thumb_bl_place(shape):
+    debugprint('thumb_bl_place()')
+    shape = rotate(shape, [0, 0, 180])
+    shape = rotate(shape, wild_key_rotation_offsets[3])
+    t_off = wild_key_translation_offsets[3]
+    shape = translate(shape, (t_off[0], t_off[1]+wild_key_diameter/2, t_off[2]))
+    shape = rotate(shape, [0,0,-240])
+    shape = wild_place(shape)
 
     # shape = rotate(shape, [25, 0, -45])
     # shape = translate(shape, thumborigin())
@@ -1867,7 +1955,29 @@ def tbjs_thumb_1x_layout(shape):
     ])
 
 
+def wild_thumb_1x_layout(shape):
+    return union([
+        wild_thumb_tl_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])),
+        # tbjs_thumb_tlold_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])),
+        # tbjs_thumb_mlold_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])),
+        wild_thumb_mr_place(rotate(shape, [0, 0, thumb_plate_mr_rotation])),
+        wild_thumb_bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
+        wild_thumb_br_place(rotate(shape, [0, 0, thumb_plate_br_rotation])),
+    ])
+
+
 def tbjs_thumb_fx_layout(shape):
+    return union([
+        # tbjs_thumb_tl_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])),
+        # tbjs_thumb_tlold_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])),
+        # tbjs_thumb_mlold_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])),
+        # tbjs_thumb_mr_place(rotate(shape, [0, 0, thumb_plate_mr_rotation])),
+        # tbjs_thumb_bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
+        # tbjs_thumb_br_place(rotate(shape, [0, 0, thumb_plate_br_rotation])),
+    ])
+
+
+def wild_thumb_fx_layout(shape):
     return union([
         # tbjs_thumb_tl_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])),
         # tbjs_thumb_tlold_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])),
@@ -1891,10 +2001,26 @@ def tbjs_thumbcaps():
     return t1
 
 
+def wild_thumbcaps():
+    t1 = wild_thumb_1x_layout(sa_cap(1))
+    # t1.add(tbjs_thumb_15x_layout(rotate(sa_cap(1), [0, 0, rad2deg(pi / 2)])))
+    return t1
+
+
 def tbjs_thumb(side="right"):
     shape = tbjs_thumb_fx_layout(rotate(single_plate(side=side), [0.0, 0.0, -90]))
     shape = union([shape, tbjs_thumb_fx_layout(double_plate())])
     shape = union([shape, tbjs_thumb_1x_layout(single_plate(side=side))])
+
+    # shape = union([shape, trackball_layout(trackball_socket())])
+    # shape = tbjs_thumb_1x_layout(single_plate(side=side))
+    return shape
+
+
+def wild_thumb(side="right"):
+    shape = wild_thumb_fx_layout(rotate(single_plate(side=side), [0.0, 0.0, -90]))
+    shape = union([shape, wild_thumb_fx_layout(double_plate())])
+    shape = union([shape, wild_thumb_1x_layout(single_plate(side=side))])
 
     # shape = union([shape, trackball_layout(trackball_socket())])
     # shape = tbjs_thumb_1x_layout(single_plate(side=side))
@@ -2070,6 +2196,98 @@ def tbjs_thumb_connectors():
     return union(hulls)
 
 
+
+def wild_thumb_connectors():
+    print('wild_thumb_connectors()')
+    hulls = []
+
+    # bottom 2 to tb
+    hulls.append(
+        triangle_hulls(
+            [
+                wild_place(tbjs_post_l()),
+                wild_thumb_bl_place(web_post_tl()),
+                wild_place(tbjs_post_bl()),
+                wild_thumb_bl_place(web_post_tr()),
+                wild_thumb_br_place(web_post_tl()),
+                wild_place(tbjs_post_bl()),
+                wild_thumb_br_place(web_post_tr()),
+                wild_place(tbjs_post_br()),
+                wild_thumb_br_place(web_post_tr()),
+                wild_place(tbjs_post_br()),
+                wild_thumb_mr_place(web_post_br()),
+                wild_place(tbjs_post_r()),
+                wild_thumb_mr_place(web_post_bl()),
+                wild_thumb_tl_place(web_post_br()),
+                wild_place(tbjs_post_r()),
+                wild_thumb_tl_place(web_post_bl()),
+                wild_place(tbjs_post_tr()),
+                key_place(web_post_bl(), 0, cornerrow),
+                wild_place(tbjs_post_tl()),
+            ]
+        )
+    )
+
+    # bottom left
+    hulls.append(
+        triangle_hulls(
+            [
+                wild_thumb_bl_place(web_post_tr()),
+                wild_thumb_br_place(web_post_tl()),
+                wild_thumb_bl_place(web_post_br()),
+                wild_thumb_br_place(web_post_bl()),
+            ]
+        )
+    )
+
+    # bottom right
+    hulls.append(
+        triangle_hulls(
+            [
+                wild_thumb_br_place(web_post_tr()),
+                wild_thumb_mr_place(web_post_br()),
+                wild_thumb_br_place(web_post_br()),
+                wild_thumb_mr_place(web_post_tr()),
+            ]
+        )
+    )
+    # top right
+    hulls.append(
+        triangle_hulls(
+            [
+                wild_thumb_mr_place(web_post_bl()),
+                wild_thumb_tl_place(web_post_br()),
+                wild_thumb_mr_place(web_post_tl()),
+                wild_thumb_tl_place(web_post_tr()),
+            ]
+        )
+    )
+
+    hulls.append(
+        triangle_hulls(
+            [
+                key_place(web_post_br(), 1, cornerrow),
+                key_place(web_post_tl(), 2, lastrow),
+                key_place(web_post_bl(), 2, cornerrow),
+                key_place(web_post_tr(), 2, lastrow),
+                key_place(web_post_br(), 2, cornerrow),
+                key_place(web_post_bl(), 3, cornerrow),
+            ]
+        )
+    )
+
+    hulls.append(
+        triangle_hulls(
+            [
+                key_place(web_post_tr(), 3, lastrow),
+                key_place(web_post_br(), 3, lastrow),
+                key_place(web_post_tr(), 3, lastrow),
+                key_place(web_post_bl(), 4, cornerrow),
+            ]
+        )
+    )
+
+    return union(hulls)
 
 
 
@@ -2607,6 +2825,8 @@ def thumb_walls(side='right', style_override=None):
                 return tbjs_thumb_walls()
             elif thumb_style == "TRACKBALL_CJ":
                 return tbcj_thumb_walls()
+            elif thumb_style == "TRACKBALL_WILD":
+                return wild_thumb_walls()
 
         else:
             return thumb_walls(side, style_override=other_thumb)
@@ -2632,6 +2852,8 @@ def thumb_connection(side='right', style_override=None):
                 return tbjs_thumb_connection(side=side)
             elif thumb_style == "TRACKBALL_CJ":
                 return tbcj_thumb_connection(side=side)
+            elif thumb_style == "TRACKBALL_WILD":
+                return wild_thumb_connection(side=side)
         else:
             return thumb_connection(side, style_override=other_thumb)
     else:
@@ -2770,6 +2992,55 @@ def tbjs_thumb_connection(side='right'):
     shape = union(hulls)
     return shape
 
+def wild_thumb_connection(side='right'):
+    print('wild_thumb_connection()')
+    # clunky bit on the top left thumb connection  (normal connectors don't work well)
+    hulls = []
+    hulls.append(
+        triangle_hulls(
+            [
+                key_place(web_post_bl(), 0, cornerrow),
+                left_key_place(web_post(), lastrow - 1, -1, side=side, low_corner=True),                # left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True),
+                wild_place(tbjs_post_tl()),
+            ]
+        )
+    )
+
+    hulls.append(
+        triangle_hulls(
+            [
+                key_place(web_post_bl(), 0, cornerrow),
+                wild_thumb_tl_place(web_post_bl()),
+                key_place(web_post_br(), 0, cornerrow),
+                wild_thumb_tl_place(web_post_tl()),
+                key_place(web_post_bl(), 1, cornerrow),
+                wild_thumb_tl_place(web_post_tl()),
+                key_place(web_post_br(), 1, cornerrow),
+                wild_thumb_tl_place(web_post_tr()),
+                key_place(web_post_tl(), 2, lastrow),
+                key_place(web_post_bl(), 2, lastrow),
+                wild_thumb_tl_place(web_post_tr()),
+                key_place(web_post_bl(), 2, lastrow),
+                wild_thumb_mr_place(web_post_tl()),
+                key_place(web_post_br(), 2, lastrow),
+                key_place(web_post_bl(), 3, lastrow),
+                wild_thumb_mr_place(web_post_tr()),
+                wild_thumb_mr_place(web_post_tl()),
+                key_place(web_post_br(), 2, lastrow),
+
+                key_place(web_post_bl(), 3, lastrow),
+                key_place(web_post_tr(), 2, lastrow),
+                key_place(web_post_tl(), 3, lastrow),
+                key_place(web_post_bl(), 3, cornerrow),
+                key_place(web_post_tr(), 3, lastrow),
+                key_place(web_post_br(), 3, cornerrow),
+                key_place(web_post_bl(), 4, cornerrow),
+            ]
+        )
+    )
+    shape = union(hulls)
+    return shape
+
 
 def tbjs_thumb_walls():
     print('thumb_walls()')
@@ -2813,6 +3084,50 @@ def tbjs_thumb_walls():
     )])
 
     return shape
+
+def wild_thumb_walls():
+    print('wild_thumb_walls()')
+    # thumb, walls
+    shape = wall_brace(
+        wild_thumb_mr_place, .5, 1, web_post_tr(),
+        (lambda sh: key_place(sh, 3, lastrow)), 0, -1, web_post_bl(),
+    )
+    shape = union([shape, wall_brace(
+        wild_thumb_mr_place, .5, 1, web_post_tr(),
+        wild_thumb_br_place, 0, -1, web_post_br(),
+    )])
+    shape = union([shape, wall_brace(
+        wild_thumb_br_place, 0, -1, web_post_br(),
+        wild_thumb_br_place, 0, -1, web_post_bl(),
+    )])
+    shape = union([shape, wall_brace(
+        wild_thumb_br_place, 0, -1, web_post_bl(),
+        wild_thumb_bl_place, 0, -1, web_post_br(),
+    )])
+    shape = union([shape, wall_brace(
+        wild_thumb_bl_place, 0, -1, web_post_br(),
+        wild_thumb_bl_place, -1, -1, web_post_bl(),
+    )])
+
+    shape = union([shape, wall_brace(
+        wild_place, -1.5, 0, tbjs_post_tl(),
+        (lambda sh: left_key_place(sh, lastrow - 1, -1, side=ball_side, low_corner=True)), -1, 0, web_post(),
+    )])
+    shape = union([shape, wall_brace(
+        wild_place, -1.5, 0, tbjs_post_tl(),
+        wild_place, -1, 0, tbjs_post_l(),
+    )])
+    shape = union([shape, wall_brace(
+        wild_place, -1, 0, tbjs_post_l(),
+        wild_thumb_bl_place, -1, 0, web_post_tl(),
+    )])
+    shape = union([shape, wall_brace(
+        wild_thumb_bl_place, -1, 0, web_post_tl(),
+        wild_thumb_bl_place, -1, -1, web_post_bl(),
+    )])
+
+    return shape
+
 
 
 def tbcj_thumb_connection(side='right'):
@@ -3279,6 +3594,8 @@ def generate_trackball_in_cluster():
         pos, rot = tbjs_thumb_position_rotation()
     elif thumb_style == 'TRACKBALL_CJ':
         pos, rot = tbcj_thumb_position_rotation()
+    elif thumb_style == 'TRACKBALL_WILD':
+        pos, rot = wild_thumb_position_rotation()
     return generate_trackball(pos, rot)
 
 
