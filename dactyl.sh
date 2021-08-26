@@ -8,10 +8,14 @@
 set -e
 
 container=""
+# bad practice:
+    # container variable names MUST match
+    # the positional name {positional}Container
 shellContainer=DM-shell
-modelContainer=DM-model
+runContainer=DM-run
 configContainer=DM-config
-containers=("$shellContainer" "$configContainer" "$modelContainer")
+releaseBuildContainer=DM-release-build
+containers=("$shellContainer" "$configContainer" "$runContainer" "$releaseBuildContainer")
 
 imageName=dactyl-keyboard
 srcBind="$(pwd)/src:/app/src"
@@ -179,20 +183,20 @@ cat << _end_of_text
 
 A bash CLI to manage Docker artifacts for the Dactyl Keyboard project.
 
-Run script without any options to use in interactive mode.
+Run the script without any flags to use the interactive menu.
 
 Usage:
   ./dactyl.sh 
   ./dactyl.sh [-h | --help | --uninstall]
   ./dactyl.sh image [--build | --inspect | --remove]
-  ./dactyl.sh (config|model) [--build | --inspect | --start | --stop | --remove]
+  ./dactyl.sh (config|run|releaseBuild) [--build | --inspect | --start | --stop | --remove]
   ./dactyl.sh shell [--build | --inspect | --session | --start | --stop | --remove]
 
 Options:
-  positional    Target the image or a particular container (shell | config | model)
+  positional    Target the image or a particular container (shell | config | run | releaseBuild)
   -h --help     Show this screen.
   --uninstall   Remove all Docker artifacts.
-  --build       Build or rebuild the target container.
+  --build       Build (or rebuild) and run the target container.
   --inspect     Show "docker inspect" results for the target container.
   --start       Start or restart the target container.
   --stop        Stop the target container.
@@ -228,7 +232,7 @@ function processArgs() {
             exitUnexpectedPositionalArgs $key
             exit 1
           # the totality of accepted positional arguments
-          elif [[ "$key" =~ ^(image|shell|config|model)$ ]]; then
+          elif [[ "$key" =~ ^(image|shell|config|run|releaseBuild)$ ]]; then
             positional="$key"
             if [[ ! $key = image ]]; then
               key+="Container"
@@ -378,13 +382,16 @@ function buildContainer() {
   inform "Building docker container: $container..."
   case $container in
     $shellContainer)
-      docker run --name $shellContainer -d -p 8000:8000 -it -v "$srcBind" -v "$thingsBind" $imageName
+      docker run --name $shellContainer -d -it -v "$srcBind" -v "$thingsBind" $imageName
       ;;
-    $modelContainer)
+    $runContainer)
       buildContainerAndExecutePythonScript dactyl_manuform.py
       ;;
     $configContainer)
       buildContainerAndExecutePythonScript generate_configuration.py
+      ;;
+    $releaseBuildContainer)
+      buildContainerAndExecutePythonScript model_builder.py
       ;;
     *)
       error "Unexpected exception. Containier: $container"
@@ -492,7 +499,7 @@ function handleContainerMenu() {
   local end="Exit"
 
   if ! containerExists; then
-    build="Build $container Container"
+    build="Build and run $container Container"
     options=("$build" "$main" "$end")
   elif containerIsRunning; then
     options=("$session" "$inspect" "$build" "$stop" "$remove" "$main" "$end")
@@ -582,14 +589,15 @@ function handleMainMenu() {
   container=""
 
   local imageOpt="Manage Docker Image"
-  local shellOpt="$shellContainer Options"
-  local configOpt="$configContainer Options"
-  local modelOpt="$modelContainer Options"
+  local shellOpt="$shellContainer Container"
+  local configOpt="$configContainer Container"
+  local releaseOpt="$releaseBuildContainer Container"
+  local runOpt="$runContainer Container"
   local uninstallOpt="Uninstall"
   local help="Show Help"
   local end="Exit"
 
-  options=("$imageOpt" "$shellOpt" "$configOpt" "$modelOpt" "$help" "$uninstallOpt" "$end")
+  options=("$imageOpt" "$shellOpt" "$configOpt" "$runOpt" "$releaseOpt" "$help" "$uninstallOpt" "$end")
   
   # execute in subshell so exit code doesn't exit the script
   (menu "${options[@]}") && true
@@ -599,9 +607,9 @@ function handleMainMenu() {
     $help) showHelpAndExit;;
     $imageOpt) handleImageMenu;;
     $uninstallOpt) handleUninstall;;
-    $shellOpt|$configOpt|$modelOpt)
-      # remove " Options" and set as currentn container
-      container=$(echo "${result/ Options/}")
+    $shellOpt|$configOpt|$runOpt|$releaseOpt)
+      # remove " Container" and set as currentn container
+      container=$(echo "${result/ Container/}")
       handleContainerMenu
       ;;
     * ) exit;;
@@ -625,9 +633,9 @@ promptBuildImageIfNotExists
 
 if [[ "$positional" ]]; then
   case $positional in
-    image ) handleImageCLI;;
-    shell|config|model ) handleContainerCLI;;
-    * ) exitUnexpectedPositionalArgs;;
+    image) handleImageCLI;;
+    shell|config|run|releaseBuild) handleContainerCLI;;
+    *) exitUnexpectedPositionalArgs;;
   esac
 else
   handleMainMenu

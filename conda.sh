@@ -49,15 +49,11 @@ conda create --name=$envName python=3.7 -y
 
 conda activate $envName
 
-inform "Installing PythonOCC..."
-
-conda install -c conda-forge pythonocc-core=7.4.1 -y
-
 inform "Installing CadQuery..."
 
 conda install -c conda-forge -c cadquery cadquery=2 -y
 
-inform "Installing dataclasses_json..."
+inform "Installing dataclasses-json..."
 
 pip install dataclasses-json
 
