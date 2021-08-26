@@ -3,12 +3,15 @@ import copy
 import importlib
 from generate_configuration import *
 
-ENGINE = 'solid'
-# ENGINE = 'cadquery'
 
 base = shape_config
 
 config_options = [
+    {
+        'name': '{}', 'vars': ['ball_side'], # set ball side to both, other half can come from other renders
+        'vals': ['both'],
+        'val_names': ['']
+    },
     {
         'name': '{}x{}', 'vars': ['nrows', 'ncols'],
         'vals':[(4, 5), (5, 6)],
@@ -21,8 +24,8 @@ config_options = [
     },
     {
         'name': '{}TMB', 'vars': ['thumb_style'],
-        'vals': ['DEFAULT', 'MINIDOX'],
-        'val_names': ['DEF', 'MDOX']
+        'vals': ['DEFAULT', 'MINIDOX', 'TRACKBALL_ORBISSYL'],
+        'val_names': ['DEF', 'MDOX', 'ORBY']
         # 'vals': ['DEFAULT', 'MINI', 'CARBONFET', 'MINIDOX'],
         # 'val_names': ['DEF', 'MINI', 'CF', 'MDOX']
     },
@@ -65,7 +68,9 @@ def create_config(config_options):
                 else:
                     n_input = vals
 
-                new_config['config_name'] += "_" + temp_opt['name'].format(*n_input)
+                name_ext = temp_opt['name'].format(*n_input)
+                if not name_ext == '':
+                    new_config['config_name'] += "_" + name_ext
                 new_config['save_dir'] = new_config['config_name']
                 new_configurations.append(new_config)
         configurations = new_configurations
