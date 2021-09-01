@@ -255,6 +255,11 @@ function checkDocker() {
     error "Docker is not installed.\n\n\tPlease visit https://www.docker.com/products/docker-desktop for more information."
     exit 1
   fi
+
+  if ! docker image list &> /dev/null; then
+    error "Docker is not running. Please start docker and try again."
+    exit 1;
+  fi
 }
 
 # exit unless user responds with yes
