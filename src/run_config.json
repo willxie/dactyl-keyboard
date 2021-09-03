@@ -2,7 +2,7 @@
     "ENGINE": "solid",
     "save_dir": ".",
     "config_name": "DM",
-    "show_caps": true,
+    "show_caps": false,
     "show_pcbs": false,
     "nrows": 5,
     "ncols": 6,
@@ -20,7 +20,10 @@
         7
     ],
     "keyboard_z_offset": 11,
-    "thumb_style": "TRACKBALL_ORBYL",
+    "web_thickness": 4.0,
+    "post_size": 0.1,
+    "post_adj": 0,
+    "thumb_style": "CARBONFET",
     "default_1U_cluster": true,
     "minidox_Usize": 1.6,
     "thumb_plate_tr_rotation": 0.0,
@@ -116,6 +119,10 @@
     "tbcj_thickness": 2,
     "tbcj_outer_diameter": 53,
     "trackball_modular": false,
+    "trackball_modular_lip_width": 3.0,
+    "trackball_modular_ball_height": 3.0,
+    "trackball_modular_ring_height": 10.0,
+    "trackball_modular_clearance": 0.5,
     "trackball_Usize": 1.5,
     "ball_side": "right",
     "ball_diameter": 34.0,
@@ -308,9 +315,6 @@
             "oled_clip_z_gap": 0.2
         }
     },
-    "web_thickness": 4.0,
-    "post_size": 0.1,
-    "post_adj": 0,
     "screws_offset": "INSIDE",
     "screw_insert_height": 3.8,
     "screw_insert_bottom_radius": 2.655,
@@ -318,11 +322,45 @@
     "wire_post_height": 7,
     "wire_post_overhang": 3.5,
     "wire_post_diameter": 2.6,
-    "controller_mount_type": "EXTERNAL",
+    "controller_mount_type": "PCB_MOUNT",
     "external_holder_height": 12.5,
     "external_holder_width": 28.75,
     "external_holder_xoffset": -5.0,
     "external_holder_yoffset": -4.5,
+    "pcb_mount_ref_y_offset": -5,
+    "pcb_holder_size": [
+        34.6,
+        7,
+        4
+    ],
+    "pcb_holder_x_offset": 8.9,
+    "pcb_usb_hole_x_offset": 15,
+    "pcb_usb_hole_z_offset": 4.5,
+    "pcb_usb_hole_size": [
+        7.5,
+        10.0,
+        4
+    ],
+    "wall_thinner_size": [
+        34,
+        7,
+        10
+    ],
+    "trrs_hole_size": [
+        3,
+        20
+    ],
+    "trrs_z_offset": 1.5,
+    "pcb_screw_hole_size": [
+        0.5,
+        10
+    ],
+    "pcb_screw_x_offsets": [
+        -5.5,
+        7.75,
+        22
+    ],
+    "pcb_screw_y_offset": -2,
     "screw_hole_diameter": 2,
     "base_thickness": 3.0,
     "base_offset": 3.0,

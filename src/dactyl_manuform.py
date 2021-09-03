@@ -4,6 +4,7 @@ import os.path as path
 import getopt, sys
 import json
 import os
+import copy
 
 from scipy.spatial import ConvexHull as sphull
 
@@ -273,30 +274,37 @@ def single_plate(cylinder_segments=100, side="right"):
     return plate
 
 def trackball_cutout(segments=100, side="right"):
-    shape = cylinder(trackball_hole_diameter / 2, trackball_hole_height)
+    if trackball_modular:
+        hole_diameter = ball_diameter + 2 * (ball_gap + ball_wall_thickness + trackball_modular_clearance+trackball_modular_lip_width)-.1
+        shape = cylinder(hole_diameter / 2, trackball_hole_height)
+    else:
+        shape = cylinder(trackball_hole_diameter / 2, trackball_hole_height)
     return shape
 
 def trackball_socket(segments=100, side="right"):
-    # shape = sphere(ball_diameter / 2)
-    # cyl = cylinder(ball_diameter / 2 + 4, 20)
-    # cyl = translate(cyl, (0, 0, -8))
-    # shape = union([shape, cyl])
+    if trackball_modular:
+        hole_diameter = ball_diameter + 2 * (ball_gap + ball_wall_thickness + trackball_modular_clearance)
+        ring_diameter = hole_diameter + 2 * trackball_modular_lip_width
+        ring_height = trackball_modular_ring_height
+        ring_z_offset = mount_thickness - trackball_modular_ball_height
+        shape = cylinder(ring_diameter / 2, ring_height)
+        shape = translate(shape, (0, 0, -ring_height / 2 + ring_z_offset))
 
-    tb_file = path.join(parts_path, r"trackball_socket_body_34mm")
-    tbcut_file = path.join(parts_path, r"trackball_socket_cutter_34mm")
-    sens_file = path.join(parts_path, r"trackball_sensor_mount")
-    senscut_file = path.join(parts_path, r"trackball_sensor_cutter")
+        cutter = cylinder(hole_diameter / 2, ring_height + .2)
+        cutter = translate(cutter, (0, 0, -ring_height / 2 + ring_z_offset))
 
+        sensor = None
 
-    # shape = import_file(tb_file)
-    # # shape = difference(shape, [import_file(senscut_file)])
-    # # shape = union([shape, import_file(sens_file)])
-    # cutter = import_file(tbcut_file)
+    else:
+        tb_file = path.join(parts_path, r"trackball_socket_body_34mm")
+        tbcut_file = path.join(parts_path, r"trackball_socket_cutter_34mm")
+        sens_file = path.join(parts_path, r"trackball_sensor_mount")
+        senscut_file = path.join(parts_path, r"trackball_sensor_cutter")
 
-    shape = import_file(tb_file)
-    sensor = import_file(sens_file)
-    cutter = import_file(tbcut_file)
-    cutter = union([cutter, import_file(senscut_file)])
+        shape = import_file(tb_file)
+        sensor = import_file(sens_file)
+        cutter = import_file(tbcut_file)
+        cutter = union([cutter, import_file(senscut_file)])
 
     # return shape, cutter
     return shape, cutter, sensor
@@ -3233,8 +3241,130 @@ def external_mount_hole():
     )
     return shape
 
-def generate_trackball(pos, rot):
 
+
+pcb_mount_ref_position = key_position(
+    #TRRS POSITION IS REFERENCE BY CONVENIENCE
+    list(np.array(wall_locate3(0, 1)) + np.array([0, (mount_height / 2), 0])), 0, 0
+)
+
+pcb_mount_ref_position[0] = pcb_mount_ref_position[0] + pcb_mount_ref_offset[0]
+pcb_mount_ref_position[1] = pcb_mount_ref_position[1] + pcb_mount_ref_offset[1]
+pcb_mount_ref_position[2] = 0.0 + pcb_mount_ref_offset[2]
+
+def pcb_usb_hole():
+    debugprint('pcb_holder()')
+    pcb_usb_position = copy.deepcopy(pcb_mount_ref_position)
+    pcb_usb_position[0] = pcb_usb_position[0] + pcb_usb_hole_offset[0]
+    pcb_usb_position[1] = pcb_usb_position[1] + pcb_usb_hole_offset[1]
+    pcb_usb_position[2] = pcb_usb_position[2] + pcb_usb_hole_offset[2]
+
+    shape = box(*pcb_usb_hole_size)
+    shape = translate(shape,
+        (
+            pcb_usb_position[0],
+            pcb_usb_position[1],
+            pcb_usb_hole_size[2] / 2 + pcb_usb_hole_z_offset + usb_holder_thickness,
+        )
+    )
+    return shape
+
+
+
+pcb_holder_position = copy.deepcopy(pcb_mount_ref_position)
+pcb_holder_position[0] = pcb_holder_position[0] + pcb_holder_offset[0]
+pcb_holder_position[1] = pcb_holder_position[1] + pcb_holder_offset[1]
+pcb_holder_position[2] = pcb_holder_position[2] + pcb_holder_offset[2]
+pcb_holder_thickness = pcb_holder_size[2]
+
+def pcb_holder():
+    debugprint('pcb_holder()')
+    shape = box(*pcb_holder_size)
+    shape = translate(shape,
+        (
+            pcb_holder_position[0],
+            pcb_holder_position[1] - pcb_holder_size[1] / 2,
+            pcb_holder_thickness / 2,
+        )
+    )
+    return shape
+
+
+def wall_thinner():
+    debugprint('wall_thinner()')
+    shape = box(*wall_thinner_size)
+    shape = translate(shape,
+        (
+            pcb_holder_position[0],
+            pcb_holder_position[1] - wall_thinner_size[1]/2,
+            wall_thinner_size[2]/2 + pcb_holder_thickness,
+        )
+    )
+    return shape
+
+
+
+
+def trrs_hole():
+    debugprint('trrs_hole()')
+    trrs_position = copy.deepcopy(pcb_mount_ref_position)
+    trrs_position[0] = trrs_position[0] + trrs_offset[0]
+    trrs_position[1] = trrs_position[1] + trrs_offset[1]
+    trrs_position[2] = trrs_position[2] + trrs_offset[2]
+
+    trrs_hole_size = [3, 20]
+
+
+    shape = cylinder(*trrs_hole_size)
+    shape = rotate(shape, [0, 90, 90])
+    shape = translate(shape,
+        (
+            trrs_position[0],
+            trrs_position[1],
+            trrs_hole_size[0] + pcb_holder_thickness,
+        )
+    )
+    return shape
+
+pcb_screw_position = copy.deepcopy(pcb_mount_ref_position)
+pcb_screw_position[1] = pcb_screw_position[1] + pcb_screw_y_offset
+
+def pcb_screw_hole():
+    debugprint('pcb_screw_hole()')
+    holes = []
+    hole = cylinder(*pcb_screw_hole_size)
+    hole = translate(hole, pcb_screw_position)
+    hole = translate(hole, (0, 0, pcb_screw_hole_size[1]/2-.1))
+    holes.append(translate(hole, (pcb_screw_x_offsets[0], 0, 0)))
+    holes.append(translate(hole, (pcb_screw_x_offsets[1], 0, 0)))
+    holes.append(translate(hole, (pcb_screw_x_offsets[2], 0, 0)))
+
+    return holes
+
+
+if oled_center_row is not None:
+    base_pt1 = key_position(
+        list(np.array([-mount_width/2, 0, 0]) + np.array([0, (mount_height / 2), 0])), 0, oled_center_row-1
+    )
+    base_pt2 = key_position(
+        list(np.array([-mount_width/2, 0, 0]) + np.array([0, (mount_height / 2), 0])), 0, oled_center_row+1
+    )
+    base_pt0 = key_position(
+        list(np.array([-mount_width / 2, 0, 0]) + np.array([0, (mount_height / 2), 0])), 0, oled_center_row
+    )
+
+    oled_mount_location_xyz = (np.array(base_pt1)+np.array(base_pt2))/2. + np.array(((-left_wall_x_offset/2), 0, 0)) + np.array(oled_translation_offset)
+    oled_mount_location_xyz[2] = (oled_mount_location_xyz[2] + base_pt0[2])/2
+
+    angle_x = np.arctan2(base_pt1[2] - base_pt2[2], base_pt1[1] - base_pt2[1])
+    angle_z = np.arctan2(base_pt1[0] - base_pt2[0], base_pt1[1] - base_pt2[1])
+
+    oled_mount_rotation_xyz = (rad2deg(angle_x), 0, -rad2deg(angle_z)) + np.array(oled_rotation_offset)
+
+
+
+
+def generate_trackball(pos, rot):
     precut = trackball_cutout()
     precut = rotate(precut, tb_socket_rotation_offset)
     precut = translate(precut, tb_socket_translation_offset)
@@ -3883,7 +4013,14 @@ def model_side(side="right"):
     if controller_mount_type in ['EXTERNAL']:
         s2 = difference(s2, [external_mount_hole()])
 
-    if controller_mount_type in ['None']:
+    if controller_mount_type in ['PCB_MOUNT']:
+        s2 = difference(s2, [pcb_usb_hole()])
+        s2 = difference(s2, [trrs_hole()])
+        s2 = union([s2, pcb_holder()])
+        s2 = difference(s2, [wall_thinner()])
+        s2 = difference(s2, pcb_screw_hole())
+
+    if controller_mount_type in [None, 'None']:
         0 # do nothing, only here to expressly state inaction.
 
     s2 = difference(s2, [union(screw_insert_holes(side=side))])
@@ -3922,7 +4059,7 @@ def model_side(side="right"):
         if show_caps:
             shape = add([shape, ball])
 
-    if (trackball_in_wall or ('TRACKBALL' in thumb_style)) and (side == ball_side or ball_side == 'both'):
+    if ('TRACKBALL' in thumb_style) and (side == ball_side or ball_side == 'both'):
         tbprecut, tb, tbcutout, sensor, ball = generate_trackball_in_cluster()
 
         shape = difference(shape, [tbprecut])

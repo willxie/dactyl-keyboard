@@ -21,7 +21,7 @@ shape_config = {
     'save_dir': '.',
     'config_name':  "DM",
 
-    'show_caps': True,
+    'show_caps': False,
     'show_pcbs': False, #only runs if caps are shown, easist place to initially inject geometry
 
     'nrows':  5, #5,  # key rows
@@ -44,11 +44,16 @@ shape_config = {
         11  # controls overall height# original=9 with centercol=3# use 16 for centercol=2
     ),
 
+    'web_thickness': 4.0,
+    'post_size': 0.1,
+    # post_adj':  post_size / 2
+    'post_adj': 0,
+
     ##############################
     # THUMB PARAMETERS
     ##############################
     # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key, 'TRACKBALL_ORBYL', 'TRACKBALL_CJ'
-    'thumb_style': 'TRACKBALL_ORBYL',
+    'thumb_style': 'CARBONFET',
     'default_1U_cluster': True, # only used with default, makes top right thumb cluster key 1U
     # Thumb key size.  May need slight oversizing, check w/ caps.  Additional spacing will be automatically added for larger keys.
     'minidox_Usize': 1.6,
@@ -109,9 +114,11 @@ shape_config = {
     ###################################
     ## Trackball General             ##
     ###################################
-    # EXPERIMENTAL
-    'trackball_modular': False, # May add removable trackball in subsequent releases, no current use.
-    # END EXPERIMENTAL
+    'trackball_modular': False,  # Added, creates a hole with space for the lip size listed below.
+    'trackball_modular_lip_width': 3.0,  # width of lip cleared out in ring location
+    'trackball_modular_ball_height': 3.0,  # height of ball from ring , used to create identical position to fixed.
+    'trackball_modular_ring_height': 10.0,  # height mount ring down from ball height. Covers gaps on elevated ball.
+    'trackball_modular_clearance': 0.5,  # height of ball from ring, used to create identical position to fixed.
 
     'trackball_Usize': 1.5,  # size for inner key near trackball
     'ball_side': 'right', #'left', 'right', or 'both'
@@ -294,10 +301,7 @@ shape_config = {
             'oled_clip_z_gap': .2,
         }
     },
-    'web_thickness':  4.0,
-    'post_size':  0.1,
-    # post_adj':  post_size / 2
-    'post_adj':  0,
+
     'screws_offset': 'INSIDE', #'OUTSIDE', 'INSIDE', 'ORIGINAL'
 
     'screw_insert_height': 3.8,
@@ -322,7 +326,7 @@ shape_config = {
     # 'USB_TEENSY' = Teensy holder, no RJ9
     # 'EXTERNAL' = square cutout for a holder such as the one from lolligagger.
     # 'NONE' = No openings in the back.
-    'controller_mount_type':  'EXTERNAL',
+    'controller_mount_type':  'PCB_MOUNT',
 
     'external_holder_height':  12.5,
     'external_holder_width':  28.75,
@@ -330,6 +334,26 @@ shape_config = {
     'external_holder_yoffset': -4.5, #Tweak this value to get the right undercut for the tray engagement.
 
     # Offset is from the top inner corner of the top inner key.
+
+    ###################################
+    ## PCB Screw Mount               ##
+    ###################################
+    "pcb_mount_ref_offset": [0, -5, 0],
+    "pcb_holder_size": [34.6, 7, 4],
+    "pcb_holder_offset": [8.9, 0, 0],
+
+    "pcb_usb_hole_size": [7.5, 10.0, 4],
+    "pcb_usb_hole_offset": [15, 0, 4.5],
+
+    "wall_thinner_size": [34, 7, 10],
+
+    "trrs_hole_size": [3, 20],
+    "trrs_offset": [0, 0, 1.5],
+
+    "pcb_screw_hole_size": [.5, 10],
+    "pcb_screw_x_offsets": [- 5.5, 7.75, 22], # for the screw positions off of reference
+    "pcb_screw_y_offset": -2,
+
 
     ###################################
     ## Bottom Plate Dimensions
