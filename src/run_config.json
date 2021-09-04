@@ -1,7 +1,7 @@
 {
     "ENGINE": "solid",
     "save_dir": ".",
-    "config_name": "DM_WILD_PLAY",
+    "config_name": "WILD_TWEAKY_NEW_HOTSWAP",
     "show_caps": false,
     "show_pcbs": false,
     "nrows": 6,
@@ -20,7 +20,7 @@
         7
     ],
     "keyboard_z_offset": 11,
-    "thumb_style": "TRACKBALL_WILD",
+    "thumb_style": "TRACKBALL_ORBYL",
     "default_1U_cluster": true,
     "minidox_Usize": 1.6,
     "thumb_plate_tr_rotation": 0.0,
@@ -57,11 +57,11 @@
         0
     ],
     "other_thumb": "DEFAULT",
-    "wild_key_diameter": 70,
+    "wild_key_diameter": 75,
     "wild_translation_offset": [
         10,
         0,
-        -8
+        0
     ],
     "wild_rotation_offset": [
         10,
@@ -72,45 +72,48 @@
         [
             0.0,
             -5.0,
-            3.0
+            -4.0
         ],
         [
             0.0,
-            -5.0,
-            1.0
+            -3.0,
+            -6.0
         ],
         [
             0.0,
-            -1.0,
-            3.0
+            1.0,
+            -4.0
         ],
         [
             0.0,
-            -4.0,
-            4.0
+            1.0,
+            -3.0
         ]
     ],
     "wild_key_rotation_offsets": [
         [
-            -5.0,
             0.0,
-            0
+            0.0,
+            15
         ],
         [
             0.0,
-            5.0,
-            0
+            0.0,
+            -5
         ],
         [
             0.0,
             -20.0,
-            43.0
+            41.0
         ],
         [
             25.0,
             0.0,
-            0.0
+            -4.0
         ]
+    ],
+    "wild_key_to_thumb_rotation": [
+        -80, -150, -195, -240
     ],
     "tbcj_inner_diameter": 42,
     "tbcj_thickness": 2,
@@ -169,9 +172,6 @@
             0.0,
             0.0
         ]
-    ],
-    "thumb_hs_rotate": [
-        0, 180, 0, 90
     ],
     "trackball_modular": false,
     "trackball_Usize": 1.5,
@@ -264,7 +264,7 @@
     "clip_undercut": 1.0,
     "undercut_transition": 0.2,
     "plate_file_name": "hotswap_holder_15",
-    "plate_offset": -6.0,
+    "plate_offset": -5.0,
     "oled_mount_type": null,
     "oled_center_row": 1.25,
     "oled_translation_offset": [
