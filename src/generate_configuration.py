@@ -52,18 +52,41 @@ shape_config = {
     ##############################
     # THUMB PARAMETERS
     ##############################
+
     # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key, 'TRACKBALL_ORBYL', 'TRACKBALL_CJ'
-    'thumb_style': 'CARBONFET',
+    'thumb_style': 'TRACKBALL_ORBYL',
     'default_1U_cluster': True, # only used with default, makes top right thumb cluster key 1U
     # Thumb key size.  May need slight oversizing, check w/ caps.  Additional spacing will be automatically added for larger keys.
     'minidox_Usize': 1.6,
     # Thumb plate rotations, anything other than 90 degree increments WILL NOT WORK.
+
+    # Screw locations and extra screw locations for separable thumb, all from thumb origin
+    # Pulled out of hardcoding as drastic changes to the geometry may require fixes to the screw mounts.
+    # First screw in separable should be similar to the standard location as it will receive the same modifiers.
+    'default_thumb_screw_xy_locations': [[-21, -58]],
+    'default_separable_thumb_screw_xy_locations': [[-21, -58]],
+    'mini_thumb_screw_xy_locations': [[-29, -52]],
+    'mini_separable_thumb_screw_xy_locations': [[-29, -52], [-62, 10], [12, -25]],
+    'minidox_thumb_screw_xy_locations': [[-37, -34]],
+    'minidox_separable_thumb_screw_xy_locations': [[-37, -34], [-62, 12], [10, -25]],
+    'carbonfet_thumb_screw_xy_locations': [[-48, -37]],
+    'carbonfet_separable_thumb_screw_xy_locations': [[-48, -37], [-52, 10], [12, -35]],
+    'orbyl_thumb_screw_xy_locations': [[-53, -60]],
+    'orbyl_separable_thumb_screw_xy_locations': [[-53, -60], [-67, 10], [8, -40]],
+    'tbcj_thumb_screw_xy_locations': [[-40, -75]],
+    'tbcj_separable_thumb_screw_xy_locations': [[-40, -75], [-63, 10], [15, -40]],
+
     'thumb_plate_tr_rotation': 0.0,  # Top right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
     'thumb_plate_tl_rotation': 0.0,  # Top left plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
     'thumb_plate_mr_rotation': 0.0,  # Mid right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
     'thumb_plate_ml_rotation': 0.0,  # Mid left plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
     'thumb_plate_br_rotation': 0.0,  # Bottom right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
     'thumb_plate_bl_rotation': 0.0,  # Bottom right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
+    ##############################
+    # EXPERIMENTAL
+
+    'separable_thumb': True,  #creates a separable thumb section with additional screws to hold it down.  Only attached at base.
+    ##############################
 
     ###################################
     ## Trackball in Wall             ##
@@ -88,8 +111,10 @@ shape_config = {
     'tbjs_key_diameter': 70,
     # Offsets are per key and are applied before rotating into place around the ball
     # X and Y act like Tangential and Radial around the ball
-    'tbjs_translation_offset': (0, 0, 10),  # applied to the whole assy
-    'tbjs_rotation_offset': (0, 0, 0),  # applied to the whole assy
+    # 'tbjs_translation_offset': (0, 0, 10),  # applied to the whole assy
+    # 'tbjs_rotation_offset': (0, 10, 0),  # applied to the whole assy
+    'tbjs_translation_offset': (0, 0, 2),  # applied to the whole assy
+    'tbjs_rotation_offset': (0, -8, 0),  # applied to the whole assy
     'tbjs_key_translation_offsets': [
         (0.0, 0.0, -3.0-5),
         (0.0, 0.0, -3.0-5),
@@ -439,3 +464,7 @@ def save_config():
 
 if __name__ == '__main__':
     save_config()
+
+    ## HERE FOR QUICK TESTING, SHOULD BE COMMENTED ON COMMIT
+    # from dactyl_manuform import *
+    # run()
