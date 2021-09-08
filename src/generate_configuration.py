@@ -44,7 +44,12 @@ shape_config = {
         11  # controls overall height# original=9 with centercol=3# use 16 for centercol=2
     ),
 
-    'web_thickness': 4.0,
+
+    'extra_width': 2.5,  # extra space between the base of keys# original= 2
+    'extra_height': 1.0,  # original= 0.5
+
+
+    'web_thickness': 4.0 + 1.1,
     'post_size': 0.1,
     # post_adj':  post_size / 2
     'post_adj': 0,
@@ -71,8 +76,8 @@ shape_config = {
     'minidox_separable_thumb_screw_xy_locations': [[-37, -34], [-62, 12], [10, -25]],
     'carbonfet_thumb_screw_xy_locations': [[-48, -37]],
     'carbonfet_separable_thumb_screw_xy_locations': [[-48, -37], [-52, 10], [12, -35]],
-    'orbyl_thumb_screw_xy_locations': [[-53, -60]],
-    'orbyl_separable_thumb_screw_xy_locations': [[-53, -60], [-67, 10], [8, -40]],
+    'orbyl_thumb_screw_xy_locations': [[-53, -68]],
+    'orbyl_separable_thumb_screw_xy_locations': [[-53, -68], [-66, 8], [10, -40]],
     'tbcj_thumb_screw_xy_locations': [[-40, -75]],
     'tbcj_separable_thumb_screw_xy_locations': [[-40, -75], [-63, 10], [15, -40]],
 
@@ -84,7 +89,6 @@ shape_config = {
     'thumb_plate_bl_rotation': 0.0,  # Bottom right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
     ##############################
     # EXPERIMENTAL
-
     'separable_thumb': True,  #creates a separable thumb section with additional screws to hold it down.  Only attached at base.
     ##############################
 
@@ -109,6 +113,9 @@ shape_config = {
     ##########################################
     'other_thumb': 'DEFAULT', # cluster used for second thumb except if ball_side == 'both'
     'tbjs_key_diameter': 70,
+    'tbjs_Uwidth': 1.2,  # size for inner key near trackball
+    'tbjs_Uheight': 1.2,  # size for inner key near trackball
+
     # Offsets are per key and are applied before rotating into place around the ball
     # X and Y act like Tangential and Radial around the ball
     # 'tbjs_translation_offset': (0, 0, 10),  # applied to the whole assy
@@ -145,8 +152,7 @@ shape_config = {
     'trackball_modular_ring_height': 10.0,  # height mount ring down from ball height. Covers gaps on elevated ball.
     'trackball_modular_clearance': 0.5,  # height of ball from ring, used to create identical position to fixed.
 
-    'trackball_Usize': 1.5,  # size for inner key near trackball
-    'ball_side': 'right', #'left', 'right', or 'both'
+    'ball_side': 'both', #'left', 'right', or 'both'
     'ball_diameter': 34.0,
     'ball_wall_thickness': 3,  # should not be changed unless the import models are changed.
     'ball_gap': 1.0,
@@ -168,9 +174,6 @@ shape_config = {
     'last_1_5U_row': 5,
     ##############################
 
-
-    'extra_width':  2.5,  # extra space between the base of keys# original= 2
-    'extra_height':  1.0,  # original= 0.5
 
     'wall_z_offset':  15,  # length of the first downward_sloping part of the wall
     'wall_x_offset':  5,  # offset in the x and/or y direction for the first downward_sloping part of the wall (negative)
@@ -225,11 +228,11 @@ shape_config = {
     'sa_profile_key_height':  12.7,
     'sa_length': 18.5,
     'sa_double_length': 37.5,
-    'plate_thickness':  4+1.1,
+    'plate_thickness':  4 + 1.1,
 
     'plate_rim': 1.5 + 0.5,
     # Undercut style dimensions
-    'clip_thickness':  1.4,
+    'clip_thickness':  1.3,
     'clip_undercut':  1.0,
     'undercut_transition':  .2,  # NOT FUNCTIONAL WITH OPENSCAD, ONLY WORKS WITH CADQUERY
 
@@ -327,11 +330,17 @@ shape_config = {
         }
     },
 
-    'screws_offset': 'INSIDE', #'OUTSIDE', 'INSIDE', 'ORIGINAL'
+    'screws_offset': 'INSIDE', # 'OUTSIDE', 'INSIDE', 'ORIGINAL'
 
     'screw_insert_height': 3.8,
-    'screw_insert_bottom_radius': 5.31 / 2,
-    'screw_insert_top_radius': 5.1 / 2,
+
+    # 'screw_insert_bottom_radius': 5.31 / 2,  #Designed for inserts
+    # 'screw_insert_top_radius': 5.1 / 2,  #Designed for inserts
+
+    'screw_insert_bottom_radius': 2.5 / 2,  # Designed for self tapping
+    'screw_insert_top_radius': 2.5 / 2,  # Designed for self tapping
+
+    'screw_insert_outer_radius': 4.25,  # Common to keep interface to base
 
     # Does anyone even use these?  I think they just get in the way.
     'wire_post_height': 7,
@@ -351,7 +360,7 @@ shape_config = {
     # 'USB_TEENSY' = Teensy holder, no RJ9
     # 'EXTERNAL' = square cutout for a holder such as the one from lolligagger.
     # 'NONE' = No openings in the back.
-    'controller_mount_type':  'PCB_MOUNT',
+    'controller_mount_type':  'EXTERNAL',
 
     'external_holder_height':  12.5,
     'external_holder_width':  28.75,
@@ -384,25 +393,32 @@ shape_config = {
     ## Bottom Plate Dimensions
     ###################################
     # COMMON DIMENSION
-    'screw_hole_diameter': 2,
+    'screw_hole_diameter': 3,
     # USED FOR CADQUERY ONLY
     'base_thickness': 3.0, # thickness in the middle of the plate
     'base_offset': 3.0, # Both start flat/flush on the bottom.  This offsets the base up (if positive)
     'base_rim_thickness': 5.0,  # thickness on the outer frame with screws
-    'screw_cbore_diameter': 4.0,
-    'screw_cbore_depth': 2.0,
+    'screw_cbore_diameter': 6.0,
+    'screw_cbore_depth': 2.5,
 
     # Offset is from the top inner corner of the top inner key.
 
     ###################################
     ## HOLES ON PLATE FOR PCB MOUNT
     ###################################
-    'plate_holes':  False,
+    'plate_holes':  True,
     'plate_holes_xy_offset': (0.0, 0.0),
     'plate_holes_width': 14.3,
     'plate_holes_height': 14.3,
-    'plate_holes_diameter': 1.7,
+    'plate_holes_diameter': 1.6,
     'plate_holes_depth': 20.0,
+
+    ###################################
+    ## EXPERIMENTAL
+    'plate_pcb_clear': False,
+    'plate_pcb_size': (18.5, 18.5, 5),
+    'plate_pcb_offset': (0, 0, 0),# this is off of the back of the plate size.
+    ###################################
 
     ###################################
     ## SHOW PCB FOR FIT CHECK
