@@ -19,3 +19,5 @@ things/
 things/*.scad
 things/*.step
 things/*.stl
+*.3mf
+*.dxf
