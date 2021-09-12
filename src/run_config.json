@@ -1,7 +1,7 @@
 {
-    "ENGINE": "solid",
+    "ENGINE": "cadquery",
     "save_dir": ".",
-    "config_name": "WILD_TWEAKY_NEW_HOTSWAP",
+    "config_name": "WILD_THUMB_6x6",
     "show_caps": false,
     "show_pcbs": false,
     "nrows": 6,
@@ -20,10 +20,10 @@
         7
     ],
     "keyboard_z_offset": 11,
-    "thumb_style": "TRACKBALL_ORBYL",
+    "thumb_style": "TRACKBALL_WILD",
     "default_1U_cluster": true,
     "minidox_Usize": 1.6,
-    "thumb_plate_tr_rotation": 0.0,
+    "thumb_plate_tr_rotation": 180.0,
     "thumb_plate_tl_rotation": 0.0,
     "thumb_plate_mr_rotation": 180.0,
     "thumb_plate_ml_rotation": 0.0,
@@ -72,22 +72,22 @@
         [
             0.0,
             -5.0,
-            -4.0
+            -3.0
         ],
         [
             0.0,
             -3.0,
-            -6.0
-        ],
-        [
-            0.0,
-            1.0,
-            -4.0
+            -5.0
         ],
         [
             0.0,
             1.0,
             -3.0
+        ],
+        [
+            0.0,
+            1.0,
+            -2.0
         ]
     ],
     "wild_key_rotation_offsets": [
@@ -118,7 +118,7 @@
     "tbcj_inner_diameter": 42,
     "tbcj_thickness": 2,
     "tbcj_outer_diameter": 53,
-    "tbjs_key_diameter": 70,
+    "tbjs_key_diameter": 75,
     "tbjs_translation_offset": [
         0,
         0,
@@ -181,7 +181,7 @@
     "ball_gap": 1.0,
     "trackball_hole_diameter": 36.5,
     "trackball_hole_height": 40,
-    "trackball_plate_thickness": 2,
+    "trackball_plate_thickness": 3,
     "trackball_plate_width": 2,
     "tb_socket_translation_offset": [
         0,
@@ -203,7 +203,7 @@
         0,
         0
     ],
-    "pinky_1_5U": true,
+    "pinky_1_5U": false,
     "first_1_5U_row": 0,
     "last_1_5U_row": 5,
     "extra_width": 2.5,
@@ -247,7 +247,7 @@
         17.5
     ],
     "fixed_tenting": 0.0,
-    "plate_style": "HS_NOTCH",
+    "plate_style": "HS_UNDERCUT",
     "hole_keyswitch_height": 14.0,
     "hole_keyswitch_width": 14.0,
     "nub_keyswitch_height": 14.4,
@@ -258,12 +258,12 @@
     "sa_profile_key_height": 12.7,
     "sa_length": 18.5,
     "sa_double_length": 37.5,
-    "plate_thickness": 5.1,
+    "plate_thickness": 6.1,
     "plate_rim": 2.0,
     "clip_thickness": 1.4,
     "clip_undercut": 1.0,
     "undercut_transition": 0.2,
-    "plate_file_name": "hotswap_holder_15",
+    "plate_file_name": "derek_hotswap",
     "plate_offset": -5.0,
     "oled_mount_type": null,
     "oled_center_row": 1.25,
