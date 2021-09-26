@@ -2731,7 +2731,11 @@ def right_wall():
         )
     ])
 
-    for i in range(lastrow):
+    torow = lastrow - 1
+    if (full_last_rows):
+        torow = lastrow
+
+    for i in range(torow):
         y = i + 1
         shape = union([shape, key_wall_brace(
             lastcol, y - 1, 1, 0, web_post_br(), lastcol, y, 1, 0, web_post_tr()
@@ -2744,7 +2748,7 @@ def right_wall():
 
     shape = union([
         shape,
-        key_wall_brace(lastcol, lastrow, 0, -1, web_post_br(), lastcol, lastrow, 1, 0, web_post_br())
+        key_wall_brace(lastcol, torow, 0, -1, web_post_br(), lastcol, torow, 1, 0, web_post_br())
     ])
     return shape
 
@@ -2798,6 +2802,11 @@ def left_wall(side='right'):
 
 def front_wall():
     print('front_wall()')
+
+    torow = lastrow - 1
+    if (full_last_rows):
+        torow = lastrow
+
     shape = union([
         key_wall_brace(
             lastcol, 0, 0, 1, web_post_tr(), lastcol, 0, 1, 0, web_post_tr()
@@ -2807,17 +2816,17 @@ def front_wall():
         3, lastrow, 0, -1, web_post_bl(), 3, lastrow, 0.5, -1, web_post_br()
     )])
     shape = union([shape,key_wall_brace(
-        3, lastrow, 0.5, -1, web_post_br(), 4, lastrow, 1, -1, web_post_bl()
+        3, lastrow, 0.5, -1, web_post_br(), 4, torow, 1, -1, web_post_bl()
     )])
     for i in range(ncols - 4):
         x = i + 4
         shape = union([shape,key_wall_brace(
-            x, lastrow, 0, -1, web_post_bl(), x, lastrow, 0, -1, web_post_br()
+            x, torow, 0, -1, web_post_bl(), x, torow, 0, -1, web_post_br()
         )])
     for i in range(ncols - 5):
         x = i + 5
         shape = union([shape, key_wall_brace(
-            x, lastrow, 0, -1, web_post_bl(), x - 1, lastrow, 0, -1, web_post_br()
+            x, torow, 0, -1, web_post_bl(), x - 1, torow, 0, -1, web_post_br()
         )])
 
     return shape
