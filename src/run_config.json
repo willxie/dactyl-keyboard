@@ -1,5 +1,5 @@
 {
-    "ENGINE": "openscad",
+    "ENGINE": "cadquery",
     "save_dir": ".",
     "config_name": "column_curve_track_test_fullsize",
     "show_caps": false,
@@ -13,8 +13,8 @@
     "centerrow_offset": 3,
     "tenting_angle": 0.26179916666666664,
     "symmetry": "symmetric",
-    "column_style_gt5": "fixed",
-    "column_style": "fixed",
+    "column_style_gt5": "orthographic",
+    "column_style": "standard",
     "thumb_offsets": [
         6,
         -3,

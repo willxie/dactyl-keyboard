@@ -566,16 +566,19 @@ def web_post_br(wide=False):
     return translate(web_post(), ((mount_width / w_divide) - post_adj, -(mount_height / 2) + post_adj, 0))
 
 
+def get_torow(column):
+    torow = lastrow
+    if full_last_rows:
+        torow = lastrow + 1
+    if column in [0, 1]:
+        torow = lastrow
+    return torow
 
 def connectors():
     debugprint('connectors()')
     hulls = []
     for column in range(ncols - 1):
-        torow = lastrow
-        if full_last_rows:
-            torow = lastrow + 1
-        if column in [0, 1]:
-            torow = cornerrow
+        torow = get_torow(column)
         for row in range(torow):  # need to consider last_row?
             # for row in range(nrows):  # need to consider last_row?
             places = []
@@ -586,6 +589,7 @@ def connectors():
             hulls.append(triangle_hulls(places))
 
     for column in range(ncols):
+        torow = get_torow(column)
         # for row in range(nrows-1):
         for row in range(torow - 1):
             places = []
@@ -596,6 +600,7 @@ def connectors():
             hulls.append(triangle_hulls(places))
 
     for column in range(ncols - 1):
+        torow = get_torow(column)
         # for row in range(nrows-1):  # need to consider last_row?
         for row in range(torow - 1):  # need to consider last_row?
             places = []
