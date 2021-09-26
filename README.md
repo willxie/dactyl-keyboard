@@ -3,10 +3,25 @@ This is a fork of [Dactyl-Manuform](https://github.com/tshort/dactyl-keyboard) b
 
 While the code structure remains comparable to the original, Clojure and OpenSCAD have been replaced by Python and cadquery/OpenCASCADE.  The predecessors were exceptional contributions to the ergo keyboard community by the authors but used a rather esoteric programming language, Clojure, and a relatively inconsistent geometry engine, OpenSCAD.  My hope is that by converting the code the community will have an easier time modifying and evolving this design.  
 
-## Helpful Feedback
-**Special thanks to [u/loss_of_signal](https://www.reddit.com/user/loss_of_signal/) on Reddit** for exceptionally useful feedback and suggestions.  Our discussions led to the addition of the controller tray and prompted me to finally add a real OLED mount.  **As someone trying to give the community something new and useful, productive feedback is both extremely helpful and extremely rare.**  Never be afraid to send a message or make a pull request.  I may or may not decide to implement the suggestion, but the discussion and consideration is always worthwhile. 
 
-## Updated Geometry Engine, now generating STEP files !!!
+## Collaborations and Donations
+I decided to start accepting donations to help offset some of the prototyping costs and development time.  There are 2 ways to contribute to this project:
+
+### Purchase a kit or keyboard from https://www.ergohaven.xyz/
+I am also supported by [ergohaven](https://www.ergohaven.xyz/).  The Dactyl-Manuforms are generated from this repository.  After working with the owner on additions to support new features we decided to collaborate to evolve the designs they can offer and to support my work.  
+
+### Donate directly
+I opened Liberapay and Ko-fi accounts to accept donations.  It is obviously not necessary, but is appreciated.  If you do donate and have something specific you really want to see, please let me know. I want to be very open that I can't promise to complete all requests as there are many reasons like engine capabilities and generator construction that can make certain features unfeasible, but I will do my best to improve this repo for you and the ergo keyboard community.
+
+[![Donate using Liberapay](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/joshreve/donate)
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/K3K25ZIHR)
+
+
+## Helpful Feedback
+At this point there has been tons of feedback form the community and I greatly appreciate it.  While I can only work on this in my free time, I do my best to respond to anyone who posts a comment or question.  Feedback on issues or just possible new features is always welcome.
+
+## Updated Geometry Engine, generating STEP files
 As part of the effort to create a new engine I converted the code to cadquery/OpenCASCADE.  While OpenSCAD has provided an open source 3D engine that is extremely popular, it frankly creates barely passable STLs when you have complex geometry.  After being extremely frustrated trying to fix the mesh I realized it is just not a stable engine to create high quality files.  OpenCASCADE is extremely powerful but requires extensive detail to operate.  cadquery provided an excellent platform to run a stable geometry engine with a simplified API. 
 
 ![STEP File in FreeCAD](./resources/FreeCAD_STEP_screen.png)
@@ -45,8 +60,12 @@ Running `dactyl_manuform.py` will automatically load the `run_config.json` file.
 ### Everyone gets a thumb cluster!
 
 Added support of for the thumb clusters in the [carbonfet Dactyl library](https://github.com/carbonfet/dactyl-manuform).
-These are the "mini" and "carbonfet" thumb clusters. Feel free to try them out with by setting `'thumb_style'` to 
-`'DEFAULT'`, `'MINI'`, or `'CARBONFET'`.
+These are the "mini" and "carbonfet" thumb clusters. Additional trackball cluster added as well more info to be added after additional build and debug time.
+
+Feel free to try them out with by setting `'thumb_style'` to 
+`'DEFAULT'`, `'MINI'`, `'CARBONFET'`, `'MINIDOX'`, `'TRACKBALL_ORBYL'`, and `'TRACKBALL_CJ'`.
+
+Trackball features accommodate a [Perixx PERIPRO-303](https://smile.amazon.com/gp/product/B08DD6GQRV/).  Others may fit, but this was the target ball diameter for the design.  It is a little smaller than a Ploopy to try to fit better in the cluster.
 
 Rendered and actual images to be added in future commits.
 
@@ -90,7 +109,7 @@ This is a new feature so any feedback is appreciated.  If you have issues, messa
 
 ### OLED Display Mount
 
-Added 3 OLED mounts.  Have printed them stand alone with success.
+Added 3 OLED mounts.  Have printed them stand alone with success.  I suggest clip, but it may require some tweaks based on your printer (over vs under sized).
 
 ![OLED Clip Mounting](./resources/clip_OLED_mounting.png)
 ![OLED Clip Plate](./resources/OLED_clip_plate.png)
@@ -108,8 +127,11 @@ This is a new feature so any feedback is appreciated.  If you have issues, messa
 You can now have slightly better control of screw mounts.  Set to `'screws_offset':'INSIDE'`, `'screws_offset':'OUTSIDE'` or `'screws_offset': 'ORIGINAL'` to control screw locations relative to the wall. 
 ![Inside Screws](./resources/inside_screw_posts.png)
 
+I am planning to deprecate outside and original at some point.  I don't see the need to carry all of them and the hidden look the best.  If you disagree feel free to let me know and I may keep a second form.
+
 ## Status / Future
-This is now a bit of a monster of many minds and yet continues to bear fruit.  I plan to continue to use this code to try new geometries and features to share.  I am still working on a new generator, but feel this one can continue to evolve and inform the other effort.
+This is now a bit of a monster of many minds and yet continues to bear fruit.  
+I plan to continue to use this code to try new geometries and features to share for the foreseeable future.
 
 ## Installation
 
