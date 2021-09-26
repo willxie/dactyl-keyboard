@@ -456,6 +456,13 @@ def apply_key_geometry(
     return shape
 
 
+def valid_key(column, row):
+    if (full_last_rows):
+        return (not (column in [0, 1])) or (not row == lastrow)
+
+    return (column in [2, 3]) or (not row == lastrow)
+
+
 def x_rot(shape, angle):
     # debugprint('x_rot()')
     return rotate(shape, [rad2deg(angle), 0, 0])
@@ -492,7 +499,7 @@ def key_holes(side="right"):
     holes = []
     for column in range(ncols):
         for row in range(nrows):
-            if (column in [2, 3]) or (not row == lastrow):
+            if valid_key(column, row):
                 holes.append(key_place(single_plate(side=side), column, row))
 
     shape = union(holes)
@@ -504,7 +511,7 @@ def caps():
     caps = None
     for column in range(ncols):
         for row in range(nrows):
-            if (column in [2, 3]) or (not row == lastrow):
+            if valid_key(column, row):
                 if caps is None:
                     caps = key_place(sa_cap(), column, row)
                 else:
@@ -564,7 +571,12 @@ def connectors():
     debugprint('connectors()')
     hulls = []
     for column in range(ncols - 1):
-        for row in range(lastrow):  # need to consider last_row?
+        torow = lastrow
+        if full_last_rows:
+            torow = lastrow + 1
+        if column in [0, 1]:
+            torow = cornerrow
+        for row in range(torow):  # need to consider last_row?
             # for row in range(nrows):  # need to consider last_row?
             places = []
             places.append(key_place(web_post_tl(), column + 1, row))
@@ -575,7 +587,7 @@ def connectors():
 
     for column in range(ncols):
         # for row in range(nrows-1):
-        for row in range(cornerrow):
+        for row in range(torow - 1):
             places = []
             places.append(key_place(web_post_bl(), column, row))
             places.append(key_place(web_post_br(), column, row))
@@ -585,7 +597,7 @@ def connectors():
 
     for column in range(ncols - 1):
         # for row in range(nrows-1):  # need to consider last_row?
-        for row in range(cornerrow):  # need to consider last_row?
+        for row in range(torow - 1):  # need to consider last_row?
             places = []
             places.append(key_place(web_post_br(), column, row))
             places.append(key_place(web_post_tr(), column, row + 1))
@@ -2714,7 +2726,7 @@ def right_wall():
         )
     ])
 
-    for i in range(lastrow - 1):
+    for i in range(lastrow):
         y = i + 1
         shape = union([shape, key_wall_brace(
             lastcol, y - 1, 1, 0, web_post_br(), lastcol, y, 1, 0, web_post_tr()
@@ -2727,7 +2739,7 @@ def right_wall():
 
     shape = union([
         shape,
-        key_wall_brace(lastcol, cornerrow, 0, -1, web_post_br(), lastcol, cornerrow, 1, 0, web_post_br())
+        key_wall_brace(lastcol, lastrow, 0, -1, web_post_br(), lastcol, lastrow, 1, 0, web_post_br())
     ])
     return shape
 
@@ -2790,17 +2802,17 @@ def front_wall():
         3, lastrow, 0, -1, web_post_bl(), 3, lastrow, 0.5, -1, web_post_br()
     )])
     shape = union([shape,key_wall_brace(
-        3, lastrow, 0.5, -1, web_post_br(), 4, cornerrow, 1, -1, web_post_bl()
+        3, lastrow, 0.5, -1, web_post_br(), 4, lastrow, 1, -1, web_post_bl()
     )])
     for i in range(ncols - 4):
         x = i + 4
         shape = union([shape,key_wall_brace(
-            x, cornerrow, 0, -1, web_post_bl(), x, cornerrow, 0, -1, web_post_br()
+            x, lastrow, 0, -1, web_post_bl(), x, lastrow, 0, -1, web_post_br()
         )])
     for i in range(ncols - 5):
         x = i + 5
         shape = union([shape, key_wall_brace(
-            x, cornerrow, 0, -1, web_post_bl(), x - 1, cornerrow, 0, -1, web_post_br()
+            x, lastrow, 0, -1, web_post_bl(), x - 1, lastrow, 0, -1, web_post_br()
         )])
 
     return shape
