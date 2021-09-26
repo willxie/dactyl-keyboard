@@ -15,20 +15,27 @@ As part of the effort to create a new engine I converted the code to cadquery/Op
 
 ### Docker Autobuild
 ![Docker Support!](./resources/docker_containers.png)
+
 At the excellent suggestion of [martint17r](https://github.com/joshreve/dactyl-keyboard/issues?q=is%3Apr+author%3Amartint17r) 
-I have added docker configurations with an Windows batch file to assist with getting setup. 
-If there is sufficient interest I can add a .sh file as well.  If you have 
+I have added docker configurations with a Windows batch file to assist with getting setup. 
+If you have 
 [docker desktop](https://www.docker.com/products/docker-desktop) installed, the batch file will create the 
-dactyl-keyboard image and 3 containers:  DM-run: runs the dactyl_manuform.py, DM-config: runs generate_configuration.py,
-and DM-shell:  just starts an interactive session to manually run from shell (tip: run bash after entering to get the better 
-shell environment).  All apps bindmount the src and things directory to allow editing in the host and running in the
-container.  While not exactly hard drive space efficient, this hopefully this helps those having issue getting
+dactyl-keyboard image and 4 containers:
+
+- DM-run: runs `dactyl_manuform.py`, 
+- DM-config: runs `generate_configuration.py`
+- DM-shell: starts an interactive session to manually run from shell
+  - tip: run bash after entering to get a better shell environment
+- DM-release-build: runs `model_builder.py` to generate a number of keyboard variants
+
+All apps bindmount the `src` and `things` directory to allow editing in the host and running in the
+container.  While not exactly hard drive space efficient, this hopefully helps those having issues getting
 cadquery running and prevents local Python conflicts.  It works well on my computer, but I don't use
 docker often, so please let me know if you find any issues with the approach.
 
 ### Refactored
 
-Your settings are now created by `generate_configuration.py` or by direct modification fo the `run_config.json` file.  
+Your settings are now created by `generate_configuration.py` or by direct modification of the `run_config.json` file.  
 This allows you to save `run_config.json` to share your configuration.
 
 Additionally, the OpenSCAD/solid python and OpenCASCADE/cadquery versions are merged with separate helper functions 
@@ -104,13 +111,61 @@ You can now have slightly better control of screw mounts.  Set to `'screws_offse
 ## Status / Future
 This is now a bit of a monster of many minds and yet continues to bear fruit.  I plan to continue to use this code to try new geometries and features to share.  I am still working on a new generator, but feel this one can continue to evolve and inform the other effort.
 
-## Generating a Design
+## Installation
+
+There are three different environments in which you can run this application. Depending on which you choose, the installation process will vary.
+
+- [Docker Environment](#docker-environment-installation)
+- [Conda Environment](#conda-environment-installation)
+- [Python Environment](#python-environment-installation)
+
+### Docker Environment Installation
+
+Running the application with Docker is the most convenient way to do so. In addition to a straightforward installation, this also allows you to generate models in the background without having to keep a shell open.
+
+*Note:* If you are using Windows, see [Docker Autobuild](#docker-autobuild).
+
+Before you proceed, ensure you have installed [Docker](https://www.docker.com/) and the `docker` command is available from your terminal.
+
+There are two tools you can use to help manage the Docker containers associated with this project. 
+
+#### Make
+
+If you prefer, you can use `make` to manage the containers. Type `make help` to see the available commands.
+
+#### Bash Script
+
+The `dactyl.sh` bash script provides a CLI to manage the containers. Type `./dactyl.sh --help` to see all CLI options.
+
+In addition to the CLI you can run `./dactyl.sh` without any arguments to use an interactive menu. 
+
+Upon running the script, you will be prompted to build the dactyl-keyboard Docker image.
+
+Once the image is built, you can choose which containers to run on an as-needed basis. In general, you can start, stop, rebuild, inspect, and remove the containers via the CLI/Menu. 
+
+You can also remove all of the Docker artifacts by running the included uninstaller.
+
+*Tip:* Run `./dactyl.sh shell --session` to jump into a bash session inside of the shell container.
+
+### Conda Environment Installation
+
+After the Docker installation, Anaconda is the next best option. Before you begin, ensure you have installed [Anaconda](https://docs.anaconda.com/anaconda/install/index.html) and the `conda` command is available from your terminal.
+
+You can install all of the dependencies by hand, but you can automate the install by running the bash script `./conda.sh`. This will create a python 3.7 environment named `dactyl-keyboard` and install all of the required dependencies.
+
+If you would like to install into a conda environment manually, check the bash script to see all of the required commands.
+
+If you would like to remove the conda artifacts, run `./conda.sh --uninstall`.
+
+### Python Environment Installation
+
+You can install the application in a regular python environment, but it is not recommended. You will not be able to take advantage of the updated geometry generated by the CadQuery engine, as this is only available via the Docker/Anaconda installation.
 
 **Setting up the Python environment - NEW**
 * [Install Python 3.X](https://www.python.org/downloads/release/python-385/) or use your [favorite distro / platform (Anaconda)](https://www.anaconda.com/products/individual) 
 * It is advisable, but not necessary, to setup a virtual environment to prevent package/library incompatibility 
 * [Install Numpy](https://pypi.org/project/numpy/), easiest method is `pip install numpy` or `pip3 install numpy` on linux.
-* [Install dataclasses_json](https://pypi.org/project/dataclasses_json/), easiest method is `pip install numpy` or `pip3 install numpy` on linux.
+* [Install dataclasses_json](https://pypi.org/project/dataclasses_json/), easiest method is `pip install dataclasses-json` or `pip3 install dataclasses-json` on linux.
 
 **cadquery install**
 * [Install scipy](https://pypi.org/project/scipy/), easiest method is `pip install scipy` or `pip3 install scipy` on linux.
@@ -119,6 +174,8 @@ This is now a bit of a monster of many minds and yet continues to bear fruit.  I
 **OpenSCAD install**
 * [Install SolidPython](https://pypi.org/project/solidpython/), easiest method is `pip install solidpython` or `pip3 install solidpython` on linux.
 * [Install OpenSCAD](http://www.openscad.org/)
+
+## Generating the design
 
 **Generating the design - UPDATED**
 * ~~Run `python dactyl_manuform_cadquery.py` or `python3 dactyl_manuform_cadquery.py`~~ 

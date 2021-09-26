@@ -48,7 +48,7 @@ shape_config = {
     # THUMB PARAMETERS
     ##############################
     # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key, 'TRACKBALL_ORBYL', 'TRACKBALL_CJ'
-    'thumb_style': 'TRACKBALL_CJ',
+    'thumb_style': 'TRACKBALL_ORBYL',
     'default_1U_cluster': True, # only used with default, makes top right thumb cluster key 1U
     # Thumb key size.  May need slight oversizing, check w/ caps.  Additional spacing will be automatically added for larger keys.
     'minidox_Usize': 1.6,
@@ -388,21 +388,29 @@ shape_config = {
 def save_config():
     # Check to see if the user has specified an alternate config
     opts, args = getopt.getopt(sys.argv[1:], "", ["config=", "update="])
+    got_opts = False
     for opt, arg in opts:
         if opt in ('--update'):
             with open(os.path.join(r"..", "configs", arg + '.json'), mode='r') as fid:
                 data = json.load(fid)
                 shape_config.update(data)
+            got_opts = True
 
     for opt, arg in opts:
         if opt in ('--config'):
             # If a config file was specified, set the config_name and save_dir
             shape_config['save_dir'] = arg
             shape_config['config_name'] = arg
+            got_opts = True
 
     # Write the config to ./configs/<config_name>.json
-    with open(os.path.join(r"..", "configs", shape_config['config_name'] + '.json'), mode='w') as fid:
-        json.dump(shape_config, fid, indent=4)
+    if got_opts:
+        with open(os.path.join(r"..", "configs", shape_config['config_name'] + '.json'), mode='w') as fid:
+            json.dump(shape_config, fid, indent=4)
+
+    else:
+        with open(os.path.join(r".", 'run_config.json'), mode='w') as fid:
+            json.dump(shape_config, fid, indent=4)
 
 
 if __name__ == '__main__':
