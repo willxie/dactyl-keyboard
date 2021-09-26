@@ -101,12 +101,26 @@ shape_config = {
     'tbiw_rotation_offset': (0.0, 0.0, 0.0),
     'tbiw_left_wall_x_offset_override': 50.0,
     'tbiw_left_wall_z_offset_override': 0.0,
+    'tbiw_left_wall_lower_x_offset': 0.0,
     'tbiw_left_wall_lower_y_offset': 0.0,
     'tbiw_left_wall_lower_z_offset': 0.0,
 
     'tbiw_oled_center_row': .75,  # not none, offsets are from this position
     'tbiw_oled_translation_offset': (-3.5, 0, 1.5),  # Z offset tweaks are expected depending on curvature and OLED mount choice.
     'tbiw_oled_rotation_offset': (0, 0, 0),
+
+    ##########################################################################
+    ## Finger Trackball in Wall EXPERIMENTAL WIP!!!!                        ##
+    ##########################################################################
+    'finger_trackball_in_wall': False,  # Separate trackball option, placing it in the OLED area
+    'tbiw_ball_center_column': 0.2,  # up from cornerrow instead of down from top
+    'tbiw_translational_offset': (0.0, 0.0, 0.0),
+    'tbiw_rotation_offset': (0.0, 0.0, 0.0),
+    'tbiw_top_wall_y_offset_override': 50.0,
+    'tbiw_top_wall_z_offset_override': 0.0,
+    'tbiw_top_wall_extension_cols': 4,
+
+
 
     ###########################################
     ## Trackball JS / ORBYL Thumb Cluster    ##
@@ -172,7 +186,10 @@ shape_config = {
     'pinky_1_5U': False,  # LEAVE AS FALSE, CURRENTLY BROKEN
     'first_1_5U_row': 0,
     'last_1_5U_row': 5,
+
+    'skeletal': False,
     ##############################
+
 
 
     'wall_z_offset':  15,  # length of the first downward_sloping part of the wall
@@ -180,6 +197,7 @@ shape_config = {
     'wall_y_offset':  6,  # offset in the x and/or y direction for the first downward_sloping part of the wall (negative)
     'left_wall_x_offset':  12,  # specific values for the left side due to the minimal wall.
     'left_wall_z_offset':  3,  # specific values for the left side due to the minimal wall.
+    'left_wall_lower_x_offset': 0,  # specific values for the lower left corner.
     'left_wall_lower_y_offset': 0,  # specific values for the lower left corner.
     'left_wall_lower_z_offset': 0,
     'wall_thickness':  4.5,  # wall thickness parameter used on upper/mid stage of the wall

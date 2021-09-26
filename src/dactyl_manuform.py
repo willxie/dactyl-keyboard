@@ -2230,27 +2230,31 @@ def left_key_position(row, direction, low_corner=False, side='right'):
     if trackball_in_wall and (side == ball_side or ball_side == 'both'):
 
         if low_corner:
+            x_offset = tbiw_left_wall_lower_x_offset
             y_offset = tbiw_left_wall_lower_y_offset
             z_offset = tbiw_left_wall_lower_z_offset
         else:
+            x_offset = 0.0
             y_offset = 0.0
             z_offset = 0.0
 
 
         return list(pos - np.array([
-            tbiw_left_wall_x_offset_override,
+            tbiw_left_wall_x_offset_override - x_offset,
             -y_offset,
             tbiw_left_wall_z_offset_override + z_offset
         ]))
 
     if low_corner:
+        x_offset = left_wall_lower_x_offset
         y_offset = left_wall_lower_y_offset
         z_offset = left_wall_lower_z_offset
     else:
+        x_offset = 0.0
         y_offset = 0.0
         z_offset = 0.0
 
-    return list(pos - np.array([left_wall_x_offset, -y_offset, left_wall_z_offset + z_offset]))
+    return list(pos - np.array([left_wall_x_offset - x_offset, -y_offset, left_wall_z_offset + z_offset]))
 
 
 def left_key_place(shape, row, direction, low_corner=False, side='right'):
@@ -2285,33 +2289,43 @@ def wall_locate3(dx, dy, back=False):
         ]
 
 
-def wall_brace(place1, dx1, dy1, post1, place2, dx2, dy2, post2, back=False):
+def wall_brace(place1, dx1, dy1, post1, place2, dx2, dy2, post2, back=False, skeleton=False, skel_bottom=False):
     debugprint("wall_brace()")
     hulls = []
 
     hulls.append(place1(post1))
-    hulls.append(place1(translate(post1, wall_locate1(dx1, dy1))))
-    hulls.append(place1(translate(post1, wall_locate2(dx1, dy1))))
-    hulls.append(place1(translate(post1, wall_locate3(dx1, dy1, back))))
+    if not skeleton:
+        hulls.append(place1(translate(post1, wall_locate1(dx1, dy1))))
+        hulls.append(place1(translate(post1, wall_locate2(dx1, dy1))))
+    if not skeleton or skel_bottom:
+        hulls.append(place1(translate(post1, wall_locate3(dx1, dy1, back))))
 
     hulls.append(place2(post2))
-    hulls.append(place2(translate(post2, wall_locate1(dx2, dy2))))
-    hulls.append(place2(translate(post2, wall_locate2(dx2, dy2))))
-    hulls.append(place2(translate(post2, wall_locate3(dx2, dy2, back))))
+    if not skeleton:
+        hulls.append(place2(translate(post2, wall_locate1(dx2, dy2))))
+        hulls.append(place2(translate(post2, wall_locate2(dx2, dy2))))
+
+    if not skeleton or skel_bottom:
+        hulls.append(place2(translate(post2, wall_locate3(dx2, dy2, back))))
+
     shape1 = hull_from_shapes(hulls)
 
     hulls = []
-    hulls.append(place1(translate(post1, wall_locate2(dx1, dy1))))
-    hulls.append(place1(translate(post1, wall_locate3(dx1, dy1, back))))
-    hulls.append(place2(translate(post2, wall_locate2(dx2, dy2))))
-    hulls.append(place2(translate(post2, wall_locate3(dx2, dy2, back))))
-    shape2 = bottom_hull(hulls)
+    if not skeleton:
+        hulls.append(place1(translate(post1, wall_locate2(dx1, dy1))))
+        hulls.append(place2(translate(post2, wall_locate2(dx2, dy2))))
+    if not skeleton or skel_bottom:
+        hulls.append(place1(translate(post1, wall_locate3(dx1, dy1, back))))
+        hulls.append(place2(translate(post2, wall_locate3(dx2, dy2, back))))
 
-    return union([shape1, shape2])
-    # return shape1
+    if len(hulls)>0:
+        shape2 = bottom_hull(hulls)
+        shape1 = union([shape1, shape2])
+
+    return shape1
 
 
-def key_wall_brace(x1, y1, dx1, dy1, post1, x2, y2, dx2, dy2, post2, back=False):
+def key_wall_brace(x1, y1, dx1, dy1, post1, x2, y2, dx2, dy2, post2, back=False, skeleton=False, skel_bottom=False):
     debugprint("key_wall_brace()")
     return wall_brace(
         (lambda shape: key_place(shape, x1, y1)),
@@ -2322,54 +2336,80 @@ def key_wall_brace(x1, y1, dx1, dy1, post1, x2, y2, dx2, dy2, post2, back=False)
         dx2,
         dy2,
         post2,
-        back
+        back,
+        skeleton=skeleton,
+        skel_bottom=False,
     )
 
 
-def back_wall():
+def back_wall(skeleton=False):
     print("back_wall()")
     x = 0
-    shape = union([key_wall_brace(x, 0, 0, 1, web_post_tl(), x, 0, 0, 1, web_post_tr(), back=True)])
+    shape = None
+    shape = union([shape, key_wall_brace(
+        x, 0, 0, 1, web_post_tl(), x, 0, 0, 1, web_post_tr(), back=True,
+    )])
     for i in range(ncols - 1):
         x = i + 1
-        shape = union([shape, key_wall_brace(x, 0, 0, 1, web_post_tl(), x, 0, 0, 1, web_post_tr(), back=True)])
         shape = union([shape, key_wall_brace(
-            x, 0, 0, 1, web_post_tl(), x - 1, 0, 0, 1, web_post_tr(), back=True
+            x, 0, 0, 1, web_post_tl(), x, 0, 0, 1, web_post_tr(), back=True,
         )])
+
+        skelly = skeleton and not x==1
+        shape = union([shape, key_wall_brace(
+            x, 0, 0, 1, web_post_tl(), x - 1, 0, 0, 1, web_post_tr(), back=True,
+            skeleton=skelly, skel_bottom=True,
+        )])
+
     shape = union([shape, key_wall_brace(
-        lastcol, 0, 0, 1, web_post_tr(), lastcol, 0, 1, 0, web_post_tr(), back=True
+        lastcol, 0, 0, 1, web_post_tr(), lastcol, 0, 1, 0, web_post_tr(), back=True,
+        skeleton=skeleton, skel_bottom=True,
     )])
+    if not skeleton:
+        shape = union([shape,
+            key_wall_brace(
+                lastcol, 0, 0, 1, web_post_tr(), lastcol, 0, 1, 0, web_post_tr()
+            )
+        ])
     return shape
 
 
-def right_wall():
+def right_wall(skeleton=False):
     print("right_wall()")
     y = 0
-    shape = union([
-        key_wall_brace(
-            lastcol, y, 1, 0, web_post_tr(), lastcol, y, 1, 0, web_post_br()
-        )
-    ])
+
+    shape = None
+
+    shape = union([shape,key_wall_brace(
+        lastcol, y, 1, 0, web_post_tr(), lastcol, y, 1, 0, web_post_br(),
+        skeleton=skeleton,
+    )])
 
     for i in range(lastrow - 1):
         y = i + 1
         shape = union([shape, key_wall_brace(
-            lastcol, y - 1, 1, 0, web_post_br(), lastcol, y, 1, 0, web_post_tr()
+            lastcol, y - 1, 1, 0, web_post_br(), lastcol, y, 1, 0, web_post_tr(),
+            skeleton=skeleton,
         )])
 
         shape = union([shape, key_wall_brace(
-            lastcol, y, 1, 0, web_post_tr(), lastcol, y, 1, 0, web_post_br()
+            lastcol, y, 1, 0, web_post_tr(), lastcol, y, 1, 0, web_post_br(),
+            skeleton=skeleton,
         )])
         #STRANGE PARTIAL OFFSET
 
     shape = union([
         shape,
-        key_wall_brace(lastcol, cornerrow, 0, -1, web_post_br(), lastcol, cornerrow, 1, 0, web_post_br())
+        key_wall_brace(
+            lastcol, cornerrow, 0, -1, web_post_br(), lastcol, cornerrow, 1, 0, web_post_br(),
+            skeleton=skeleton
+        ),
     ])
+
     return shape
 
 
-def left_wall(side='right'):
+def left_wall(side='right', skeleton=False):
     print('left_wall()')
     shape = union([wall_brace(
         (lambda sh: key_place(sh, 0, 0)), 0, 1, web_post_tl(),
@@ -2379,6 +2419,7 @@ def left_wall(side='right'):
     shape = union([shape, wall_brace(
         (lambda sh: left_key_place(sh, 0, 1, side=side)), 0, 1, web_post(),
         (lambda sh: left_key_place(sh, 0, 1, side=side)), -1, 0, web_post(),
+        skeleton=skeleton,
     )])
 
     for i in range(lastrow):
@@ -2387,14 +2428,17 @@ def left_wall(side='right'):
         temp_shape1 = wall_brace(
             (lambda sh: left_key_place(sh, y, 1, side=side)), -1, 0, web_post(),
             (lambda sh: left_key_place(sh, y, -1, low_corner=low, side=side)), -1, 0, web_post(),
+        skeleton=skeleton and (y < (lastrow-1)),
         )
+        shape = union([shape, temp_shape1])
+
         temp_shape2 = hull_from_shapes((
             key_place(web_post_tl(), 0, y),
             key_place(web_post_bl(), 0, y),
             left_key_place(web_post(), y, 1, side=side),
             left_key_place(web_post(), y, -1, low_corner=low, side=side),
         ))
-        shape = union([shape, temp_shape1])
+
         shape = union([shape, temp_shape2])
 
     for i in range(lastrow - 1):
@@ -2403,26 +2447,26 @@ def left_wall(side='right'):
         temp_shape1 = wall_brace(
             (lambda sh: left_key_place(sh, y - 1, -1, side=side)), -1, 0, web_post(),
             (lambda sh: left_key_place(sh, y, 1, side=side)), -1, 0, web_post(),
+            skeleton=skeleton and (y < (lastrow - 1)),
         )
+        shape = union([shape, temp_shape1])
+
         temp_shape2 = hull_from_shapes((
             key_place(web_post_tl(), 0, y),
             key_place(web_post_bl(), 0, y - 1),
             left_key_place(web_post(), y, 1, side=side),
             left_key_place(web_post(), y - 1, -1, side=side),
         ))
-        shape = union([shape, temp_shape1])
+
         shape = union([shape, temp_shape2])
 
     return shape
 
 
-def front_wall():
+def front_wall(skeleton=False):
     print('front_wall()')
-    shape = union([
-        key_wall_brace(
-            lastcol, 0, 0, 1, web_post_tr(), lastcol, 0, 1, 0, web_post_tr()
-        )
-    ])
+    shape = None
+
     shape = union([shape,key_wall_brace(
         3, lastrow, 0, -1, web_post_bl(), 3, lastrow, 0.5, -1, web_post_br()
     )])
@@ -2443,57 +2487,57 @@ def front_wall():
     return shape
 
 
-def thumb_walls(side='right', style_override=None):
+def thumb_walls(side='right', style_override=None, skeleton=False):
     if style_override is None:
         _thumb_style = thumb_style
     else:
         _thumb_style = style_override
 
     if _thumb_style == "MINI":
-        return mini_thumb_walls()
+        return mini_thumb_walls(skeleton=skeleton)
     elif _thumb_style == "MINIDOX":
-        return minidox_thumb_walls()
+        return minidox_thumb_walls(skeleton=skeleton)
     elif _thumb_style == "CARBONFET":
-        return carbonfet_thumb_walls()
+        return carbonfet_thumb_walls(skeleton=skeleton)
 
     elif "TRACKBALL" in _thumb_style:
         if (side == ball_side or ball_side == 'both'):
             if _thumb_style == "TRACKBALL_ORBYL":
-                return tbjs_thumb_walls()
+                return tbjs_thumb_walls(skeleton=skeleton)
             elif thumb_style == "TRACKBALL_CJ":
-                return tbcj_thumb_walls()
+                return tbcj_thumb_walls(skeleton=skeleton)
 
         else:
-            return thumb_walls(side, style_override=other_thumb)
+            return thumb_walls(side, style_override=other_thumb, skeleton=skeleton)
     else:
-        return default_thumb_walls()
+        return default_thumb_walls(skeleton=skeleton)
 
-def thumb_connection(side='right', style_override=None):
+def thumb_connection(side='right', style_override=None, skeleton=False):
     if style_override is None:
         _thumb_style = thumb_style
     else:
         _thumb_style = style_override
 
     if _thumb_style == "MINI":
-        return mini_thumb_connection(side=side)
+        return mini_thumb_connection(side=side, skeleton=skeleton)
     elif _thumb_style == "MINIDOX":
-        return minidox_thumb_connection(side=side)
+        return minidox_thumb_connection(side=side, skeleton=skeleton)
     elif _thumb_style == "CARBONFET":
-        return carbonfet_thumb_connection(side=side)
+        return carbonfet_thumb_connection(side=side, skeleton=skeleton)
       
     elif "TRACKBALL" in _thumb_style:
         if (side == ball_side or ball_side == 'both'):
             if _thumb_style == "TRACKBALL_ORBYL":
-                return tbjs_thumb_connection(side=side)
+                return tbjs_thumb_connection(side=side, skeleton=skeleton)
             elif thumb_style == "TRACKBALL_CJ":
-                return tbcj_thumb_connection(side=side)
+                return tbcj_thumb_connection(side=side, skeleton=skeleton)
         else:
-            return thumb_connection(side, style_override=other_thumb)
+            return thumb_connection(side, style_override=other_thumb, skeleton=skeleton)
     else:
-        return default_thumb_connection(side=side)
+        return default_thumb_connection(side=side, skeleton=skeleton)
 
 
-def default_thumb_walls():
+def default_thumb_walls(skeleton=False):
     print('thumb_walls()')
     # thumb, walls
     if default_1U_cluster:
@@ -2521,10 +2565,11 @@ def default_thumb_walls():
     return shape
 
 
-def default_thumb_connection(side='right'):
+def default_thumb_connection(side='right', skeleton=False):
     print('thumb_connection()')
     # clunky bit on the top left thumb connection  (normal connectors don't work well)
-    shape = union([bottom_hull(
+    shape = None
+    shape = union([shape, bottom_hull(
         [
             left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True, side=side),
             left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True, side=side),
@@ -2576,7 +2621,7 @@ def default_thumb_connection(side='right'):
     return shape
 
 
-def tbjs_thumb_connection(side='right'):
+def tbjs_thumb_connection(side='right', skeleton=False):
     print('thumb_connection()')
     # clunky bit on the top left thumb connection  (normal connectors don't work well)
     hulls = []
@@ -2619,7 +2664,7 @@ def tbjs_thumb_connection(side='right'):
     return shape
 
 
-def tbjs_thumb_walls():
+def tbjs_thumb_walls(skeleton=False):
     print('thumb_walls()')
     # thumb, walls
     shape = wall_brace(
@@ -2663,7 +2708,7 @@ def tbjs_thumb_walls():
     return shape
 
 
-def tbcj_thumb_connection(side='right'):
+def tbcj_thumb_connection(side='right', skeleton=False):
     # clunky bit on the top left thumb connection  (normal connectors don't work well)
     shape = union([bottom_hull(
         [
@@ -2716,7 +2761,7 @@ def tbcj_thumb_connection(side='right'):
 
     return shape
 
-def tbcj_thumb_walls():
+def tbcj_thumb_walls(skeleton=False):
     shape = union([wall_brace(tbcj_thumb_ml_place, -0.3, 1, web_post_tr(), tbcj_thumb_ml_place, 0, 1, web_post_tl())])
     shape = union([shape, wall_brace(tbcj_thumb_bl_place, 0, 1, web_post_tr(), tbcj_thumb_bl_place, 0, 1, web_post_tl())])
     shape = union([shape, wall_brace(tbcj_thumb_bl_place, -1, 0, web_post_tl(), tbcj_thumb_bl_place, -1, 0, web_post_bl())])
@@ -2743,7 +2788,7 @@ def tbcj_thumb_walls():
     return shape
 
 
-def mini_thumb_walls():
+def mini_thumb_walls(skeleton=False):
     # thumb, walls
     shape = union([wall_brace(mini_thumb_mr_place, 0, -1, web_post_br(), mini_thumb_tr_place, 0, -1, mini_thumb_post_br())])
     shape = union([shape, wall_brace(mini_thumb_mr_place, 0, -1, web_post_br(), mini_thumb_mr_place, 0, -1, web_post_bl())])
@@ -2761,7 +2806,7 @@ def mini_thumb_walls():
 
     return shape
 
-def mini_thumb_connection(side='right'):
+def mini_thumb_connection(side='right', skeleton=False):
     # clunky bit on the top left thumb connection  (normal connectors don't work well)
     shape = union([bottom_hull(
         [
@@ -2817,7 +2862,7 @@ def mini_thumb_connection(side='right'):
 
     return shape
 
-def minidox_thumb_walls():
+def minidox_thumb_walls(skeleton=False):
 
     # thumb, walls
     shape = union([wall_brace(minidox_thumb_tr_place, 0, -1, minidox_thumb_post_br(), minidox_thumb_tr_place, 0, -1, minidox_thumb_post_bl())])
@@ -2836,7 +2881,7 @@ def minidox_thumb_walls():
 
     return shape
 
-def minidox_thumb_connection(side='right'):
+def minidox_thumb_connection(side='right', skeleton=False):
     # clunky bit on the top left thumb connection  (normal connectors don't work well)
     shape = union([bottom_hull(
         [
@@ -2894,7 +2939,7 @@ def minidox_thumb_connection(side='right'):
 
 
 
-def carbonfet_thumb_walls():
+def carbonfet_thumb_walls(skeleton=False):
     # thumb, walls
     shape = union([wall_brace(carbonfet_thumb_mr_place, 0, -1, web_post_br(), carbonfet_thumb_tr_place, 0, -1, web_post_br())])
     shape = union([shape, wall_brace(carbonfet_thumb_mr_place, 0, -1, web_post_br(), carbonfet_thumb_mr_place, 0, -1.15, web_post_bl())])
@@ -2911,7 +2956,7 @@ def carbonfet_thumb_walls():
     shape = union([shape, wall_brace(carbonfet_thumb_tr_place, 0, -1, web_post_br(), (lambda sh: key_place(sh, 3, lastrow)), 0, -1, web_post_bl())])
     return shape
 
-def carbonfet_thumb_connection(side='right'):
+def carbonfet_thumb_connection(side='right', skeleton=False):
     # clunky bit on the top left thumb connection  (normal connectors don't work well)
     shape = bottom_hull(
         [
@@ -2967,14 +3012,14 @@ def carbonfet_thumb_connection(side='right'):
 
     return shape
 
-def case_walls(side='right'):
+def case_walls(side='right', skeleton=False):
     print('case_walls()')
     return (
         union([
-            back_wall(),
-            left_wall(side=side),
-            right_wall(),
-            front_wall(),
+            back_wall(skeleton=skeleton),
+            left_wall(side=side, skeleton=skeleton),
+            right_wall(skeleton=skeleton),
+            front_wall(skeleton=skeleton),
             # thumb_walls(side=side),
             # thumb_connection(side=side),
         ])
@@ -3858,7 +3903,7 @@ def model_side(side="right"):
     shape = union([shape, connector_shape])
     if debug_exports:
         export_file(shape=shape, fname=path.join(r"..", "things", r"debug_connector_shape"))
-    walls_shape = case_walls(side=side)
+    walls_shape = case_walls(side=side, skeleton=skeletal)
     if debug_exports:
         export_file(shape=walls_shape, fname=path.join(r"..", "things", r"debug_walls_shape"))
 
@@ -3909,7 +3954,7 @@ def model_side(side="right"):
         shape = difference(shape, [hole])
         shape = union([shape, frame])
 
-    if trackball_in_wall and (side == ball_side or ball_side == 'both'):
+    if trackball_in_wall and (side == ball_side or ball_side == 'both') and separable_thumb:
         tbprecut, tb, tbcutout, sensor, ball = generate_trackball_in_wall()
 
         shape = difference(shape, [tbprecut])
@@ -3938,9 +3983,9 @@ def model_side(side="right"):
     if debug_exports:
         export_file(shape=thumb_connector_shape, fname=path.join(r"..", "things", r"debug_thumb_connector_shape"))
 
-    thumb_wall_shape = thumb_walls(side=side)
+    thumb_wall_shape = thumb_walls(side=side, skeleton=skeletal)
     thumb_wall_shape = union([thumb_wall_shape, *thumb_screw_insert_outers(side=side)])
-    thumb_connection_shape = thumb_connection(side=side)
+    thumb_connection_shape = thumb_connection(side=side, skeleton=skeletal)
 
 
     if debug_exports:
@@ -3981,6 +4026,25 @@ def model_side(side="right"):
             main_shape = add([main_shape, thumbcaps(side=side)])
             if has_trackball:
                 main_shape = add([main_shape, ball])
+
+        if trackball_in_wall and (side == ball_side or ball_side == 'both') and not separable_thumb:
+            tbprecut, tb, tbcutout, sensor, ball = generate_trackball_in_wall()
+
+            main_shape = difference(main_shape, [tbprecut])
+            # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_1"))
+            main_shape = union([main_shape, tb])
+            # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_2"))
+            main_shape = difference(main_shape, [tbcutout])
+            # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_3a"))
+            # export_file(shape=add([shape, sensor]), fname=path.join(save_path, config_name + r"_test_3b"))
+            main_shape = union([main_shape, sensor])
+
+            if show_caps:
+                main_shape = add([main_shape, ball])
+
+
+
+
 
     if show_caps:
         main_shape = add([main_shape, caps()])
