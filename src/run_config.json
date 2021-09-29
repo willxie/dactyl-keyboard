@@ -1,11 +1,11 @@
 {
     "ENGINE": "openscad",
     "save_dir": ".",
-    "config_name": "test_fullsize",
+    "config_name": "trackball_left_4x6_test",
     "show_caps": false,
     "show_pcbs": false,
-    "nrows": 5,
-    "ncols": 7,
+    "nrows": 4,
+    "ncols": 6,
     "alpha": 0.26179916666666664,
     "alpha_CUSTOM": 0.283,
     "beta": 0.08726638888888888,
@@ -20,7 +20,7 @@
         -3,
         7
     ],
-    "full_last_rows": false,
+    "full_last_rows": true,
     "keyboard_z_offset": 11,
     "thumb_style": "TRACKBALL_WILD",
     "default_1U_cluster": true,
@@ -58,7 +58,7 @@
         0,
         0
     ],
-    "other_thumb": "DEFAULT",
+    "other_thumb": "FOURKEY",
     "wild_key_diameter": 75,
     "wild_translation_offset": [
         10,
@@ -177,7 +177,7 @@
     ],
     "trackball_modular": false,
     "trackball_Usize": 1.5,
-    "ball_side": "right",
+    "ball_side": "left",
     "ball_diameter": 34.0,
     "ball_wall_thickness": 3,
     "ball_gap": 1.0,
@@ -249,7 +249,7 @@
         17.5
     ],
     "fixed_tenting": 0.0,
-    "plate_style": "HS_UNDERCUT",
+    "plate_style": "NOTCH",
     "hole_keyswitch_height": 14.0,
     "hole_keyswitch_width": 14.0,
     "nub_keyswitch_height": 14.4,
