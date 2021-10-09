@@ -1,10 +1,10 @@
 {
     "ENGINE": "openscad",
     "save_dir": ".",
-    "config_name": "trackball_left_4x6_test",
+    "config_name": "CARBONFET_TEST_6x6_no_hotswap_notch",
     "show_caps": false,
     "show_pcbs": false,
-    "nrows": 4,
+    "nrows": 6,
     "ncols": 6,
     "alpha": 0.26179916666666664,
     "alpha_CUSTOM": 0.283,
@@ -22,7 +22,7 @@
     ],
     "full_last_rows": true,
     "keyboard_z_offset": 11,
-    "thumb_style": "TRACKBALL_WILD",
+    "thumb_style": "CARBONFET",
     "default_1U_cluster": true,
     "minidox_Usize": 1.6,
     "thumb_plate_tr_rotation": 180.0,
@@ -58,7 +58,7 @@
         0,
         0
     ],
-    "other_thumb": "FOURKEY",
+    "other_thumb": "DEFAULT",
     "wild_key_diameter": 75,
     "wild_translation_offset": [
         10,
@@ -177,7 +177,7 @@
     ],
     "trackball_modular": false,
     "trackball_Usize": 1.5,
-    "ball_side": "left",
+    "ball_side": "right",
     "ball_diameter": 34.0,
     "ball_wall_thickness": 3,
     "ball_gap": 1.0,
@@ -205,7 +205,7 @@
         0,
         0
     ],
-    "pinky_1_5U": false,
+    "pinky_1_5U": true,
     "first_1_5U_row": 0,
     "last_1_5U_row": 5,
     "extra_width": 2.5,

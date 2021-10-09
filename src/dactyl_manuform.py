@@ -427,7 +427,7 @@ def apply_key_geometry(
     column_x_delta_actual = column_x_delta
     if (pinky_1_5U and column == lastcol):
         column_x_delta_actual = column_x_delta - 1.5
-        column_angle = beta * (centercol - column - 0.5)
+        column_angle = beta * (centercol - column - 0.27)
 
     if column_style == "orthographic":
         column_z_delta = column_radius * (1 - np.cos(column_angle))
