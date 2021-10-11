@@ -343,6 +343,13 @@ def sa_cap(Usize=1):
         pl2 = 6
         pw2 = 11
 
+    elif Usize == 1.25: # todo
+        bl2 = sa_length / 2
+        bw2 = 22.64 / 2
+        m = 0
+        pl2 = 16
+        pw2 = 11
+
     k1 = polyline([(bw2, bl2), (bw2, -bl2), (-bw2, -bl2), (-bw2, bl2), (bw2, bl2)])
     k1 = extrude_poly(outer_poly=k1, height=0.1)
     k1 = translate(k1, (0, 0, 0.05))
