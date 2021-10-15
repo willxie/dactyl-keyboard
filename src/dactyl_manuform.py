@@ -4,6 +4,7 @@ import os.path as path
 import getopt, sys
 import json
 import os
+import shutil
 
 from scipy.spatial import ConvexHull as sphull
 
@@ -40,6 +41,18 @@ else:
 for item in data:
     locals()[item] = data[item]
 
+full_dir_name = save_dir
+
+if overrides is not None:
+    with open(os.path.join(r".", r"configs", overrides), mode='r') as fid:
+        override_data = json.load(fid)
+    for item in override_data:
+        locals()[item] = override_data[item]
+
+    full_dir_name = override_name
+    if iteration is not None:
+        full_dir_name = override_name + "_" + iteration
+    config_name = override_name + "_" + str(nrows) + "x" + str(ncols) + "_" + thumb_style
 
 # Really rough setup.  Check for ENGINE, set it not present from configuration.
 try:
@@ -50,13 +63,24 @@ except Exception:
     # ENGINE = 'cadquery'
     print('Setting Current Engine = {}'.format(ENGINE))
 
-if save_dir in ['', None, '.']:
-    save_path = path.join(r"..", "things")
-    parts_path = path.join(r"..", "src", "parts")
-else:
-    save_path = path.join(r"..", "things", save_dir)
+if override_name in ['', None, '.']:
+    if save_dir in ['', None, '.']:
+        save_path = path.join(r"..", "things")
+        parts_path = path.join(r"..", "src", "parts")
+    else:
+        save_path = path.join(r"..", "things", save_dir)
+        parts_path = path.join(r"..", r"..", "src", "parts")
+elif iteration in ['', None, '.']:
+    save_path = path.join(r"..", "things", override_name)
     parts_path = path.join(r"..", r"..", "src", "parts")
+else:
+    save_path = path.join(r"..", "things", override_name, iteration)
 
+dir_exists = os.path.isdir(save_path)
+if not dir_exists:
+    os.makedirs(save_path, exist_ok=True)
+
+shutil.copy("./configs/" + overrides, save_path)
 ###############################################
 # END EXTREMELY UGLY BOOTSTRAP
 ###############################################
@@ -433,8 +457,9 @@ def apply_key_geometry(
 
     column_x_delta_actual = column_x_delta
     if (pinky_1_5U and column == lastcol):
-        column_x_delta_actual = column_x_delta - 1.5
-        column_angle = beta * (centercol - column - 0.27)
+        if row >= first_1_5U_row and row <= last_1_5U_row:
+            column_x_delta_actual = column_x_delta - 1.5
+            column_angle = beta * (centercol - column - 0.27)
 
     if column_style == "orthographic":
         column_z_delta = column_radius * (1 - np.cos(column_angle))
@@ -527,7 +552,8 @@ def caps():
     for column in range(ncols):
         size = 1
         if pinky_1_5U and column == lastcol:
-            size = 1.5
+            if row >= first_1_5U_row and row <= last_1_5U_row:
+                size = 1.5
         for row in range(nrows):
             if valid_key(column, row):
                 if caps is None:

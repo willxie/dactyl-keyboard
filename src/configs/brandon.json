@@ -1,0 +1,20 @@
+{
+  "ENGINE": "openscad",
+  "name": "BRANDON",
+  "iteration": "5x6",
+  "show_caps": false,
+  "nrows": 6,
+  "ncols": 6,
+  "plate_style": "NOTCH",
+  "plate_file_name": "derek_hotswap",
+  "plate_offset": -5.0,
+  "alpha": 0.26179916666666664,
+  "tenting_angle": 0.3,
+  "full_last_rows": false,
+  "thumb_style": "DEFAULT",
+  "other_thumb": "DEFAULT",
+  "ball_side": "right",
+  "pinky_1_5U": true,
+  "first_1_5U_row": 0,
+  "last_1_5U_row": 5
+}
