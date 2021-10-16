@@ -438,9 +438,6 @@ def rotate_around_y(position, angle):
     )
     return np.matmul(t_matrix, position)
 
-
-
-
 def apply_key_geometry(
         shape,
         translate_fn,
