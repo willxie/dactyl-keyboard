@@ -10,8 +10,8 @@ r2d = 180 / pi
 
 shape_config = {
 
-    # 'ENGINE': 'solid',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
-    'ENGINE': 'cadquery',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
+    'ENGINE': 'solid',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
+    # 'ENGINE': 'cadquery',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
 
 
     ######################
@@ -30,7 +30,7 @@ shape_config = {
     'alpha':  pi / 12.0,  # curvature of the columns
     'beta':  pi / 36.0,  # curvature of the rows
     'centercol':  3,  # controls left_right tilt / tenting (higher number is more tenting)
-    'centerrow_offset':  3,  # rows from max, controls front_back tilt
+    'centerrow_offset': 3,  # rows from max, controls front_back tilt
     'tenting_angle':  pi / 12.0,  # or, change this for more precise tenting control
 
     # symmetry states if it is a symmetric or asymmetric bui.  If asymmetric it doubles the generation time.
@@ -59,7 +59,7 @@ shape_config = {
     ##############################
 
     # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key, 'TRACKBALL_ORBYL', 'TRACKBALL_CJ'
-    'thumb_style': 'TRACKBALL_ORBYL',
+    'thumb_style': 'DEFAULT',
     'default_1U_cluster': True, # only used with default, makes top right thumb cluster key 1U
     # Thumb key size.  May need slight oversizing, check w/ caps.  Additional spacing will be automatically added for larger keys.
     'minidox_Usize': 1.6,
@@ -89,21 +89,21 @@ shape_config = {
     'thumb_plate_bl_rotation': 0.0,  # Bottom right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
     ##############################
     # EXPERIMENTAL
-    'separable_thumb': True,  #creates a separable thumb section with additional screws to hold it down.  Only attached at base.
+    'separable_thumb': False,  #creates a separable thumb section with additional screws to hold it down.  Only attached at base.
     ##############################
 
     ###################################
     ## Trackball in Wall             ##
     ###################################
     'trackball_in_wall': False,  # Separate trackball option, placing it in the OLED area
-    'tbiw_ball_center_row': 0.2, # up from cornerrow instead of down from top
-    'tbiw_translational_offset': (0.0, 0.0, 0.0),
-    'tbiw_rotation_offset': (0.0, 0.0, 0.0),
+    'tbiw_ball_center_row': 0,  # up from cornerrow instead of down from top
+    'tbiw_translational_offset': (2.0, -12.0, -10.0),
+    'tbiw_rotation_offset': (30.0, -10.0, 0.0),
     'tbiw_left_wall_x_offset_override': 50.0,
     'tbiw_left_wall_z_offset_override': 0.0,
-    'tbiw_left_wall_lower_x_offset': 0.0,
-    'tbiw_left_wall_lower_y_offset': 0.0,
-    'tbiw_left_wall_lower_z_offset': 0.0,
+    'tbiw_left_wall_lower_x_offset': 15.0,
+    'tbiw_left_wall_lower_y_offset': -15.0,
+    'tbiw_left_wall_lower_z_offset': -25.0,
 
     'tbiw_oled_center_row': .75,  # not none, offsets are from this position
     'tbiw_oled_translation_offset': (-3.5, 0, 1.5),  # Z offset tweaks are expected depending on curvature and OLED mount choice.
@@ -112,13 +112,13 @@ shape_config = {
     ##########################################################################
     ## Finger Trackball in Wall EXPERIMENTAL WIP!!!!                        ##
     ##########################################################################
-    'finger_trackball_in_wall': False,  # Separate trackball option, placing it in the OLED area
-    'tbiw_ball_center_column': 0.2,  # up from cornerrow instead of down from top
-    'tbiw_translational_offset': (0.0, 0.0, 0.0),
-    'tbiw_rotation_offset': (0.0, 0.0, 0.0),
-    'tbiw_top_wall_y_offset_override': 50.0,
-    'tbiw_top_wall_z_offset_override': 0.0,
-    'tbiw_top_wall_extension_cols': 4,
+    # 'finger_trackball_in_wall': False,  # Separate trackball option, placing it in the OLED area
+    # 'tbiw_ball_center_column': 0.2,  # up from cornerrow instead of down from top
+    # 'tbiw_translational_offset': (0.0, 0.0, 0.0),
+    # 'tbiw_rotation_offset': (0.0, 0.0, 0.0),
+    # 'tbiw_top_wall_y_offset_override': 50.0,
+    # 'tbiw_top_wall_z_offset_override': 0.0,
+    # 'tbiw_top_wall_extension_cols': 4,
 
 
 
@@ -186,10 +186,7 @@ shape_config = {
     'pinky_1_5U': False,  # LEAVE AS FALSE, CURRENTLY BROKEN
     'first_1_5U_row': 0,
     'last_1_5U_row': 5,
-
-    'skeletal': False,
     ##############################
-
 
 
     'wall_z_offset':  15,  # length of the first downward_sloping part of the wall
@@ -241,7 +238,7 @@ shape_config = {
 
     'undercut_keyswitch_height':  14.0,
     'undercut_keyswitch_width':  14.0,
-    'notch_width': 6.0, # If using notch, it is identical to undecut, but only locally by the switch clip
+    'notch_width': 5.0, # If using notch, it is identical to undecut, but only locally by the switch clip
 
     'sa_profile_key_height':  12.7,
     'sa_length': 18.5,
@@ -250,7 +247,7 @@ shape_config = {
 
     'plate_rim': 1.5 + 0.5,
     # Undercut style dimensions
-    'clip_thickness':  1.1,
+    'clip_thickness':  1.3,
     'clip_undercut':  1.0,
     'undercut_transition':  .2,  # NOT FUNCTIONAL WITH OPENSCAD, ONLY WORKS WITH CADQUERY
 
@@ -500,5 +497,5 @@ if __name__ == '__main__':
     save_config()
 
     ## HERE FOR QUICK TESTING, SHOULD BE COMMENTED ON COMMIT
-    # from dactyl_manuform import *
-    # run()
+    from dactyl_manuform import *
+    run()
