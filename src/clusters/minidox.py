@@ -68,7 +68,7 @@ class MinidoxCluster(DefaultCluster):
             self.tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])),
             self.tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])),
             self.ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])),
-            self.fl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
+            # self.fl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
         ])
 
     # def thumb_15x_layout(self, shape, cap=False, plate=True):
