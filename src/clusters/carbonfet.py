@@ -83,7 +83,7 @@ class CarbonfetCluster(DefaultCluster):
 
         return shape
 
-    def thumb_connectors(self):
+    def thumb_connectors(self, side="right"):
         print('thumb_connectors()')
         hulls = []
 

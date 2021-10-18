@@ -5,7 +5,7 @@ class TrackballWild(TrackballOrbyl):
 
     @staticmethod
     def name():
-        return "TRACKBALL_ORBYL"
+        return "TRACKBALL_WILD"
 
     def __init__(self, parent_locals):
         super().__init__(parent_locals)
@@ -14,144 +14,61 @@ class TrackballWild(TrackballOrbyl):
 
     def position_rotation(self):
         rot = [10, -15, 5]
-        pos = self.thumborigin()
+        pos = main_thumborigin()
         # Changes size based on key diameter around ball, shifting off of the top left cluster key.
-        shift = [-.9*tbjs_key_diameter/2+27-42, -.1*tbjs_key_diameter/2+3-20, -5]
+        shift = [-.9*wild_key_diameter/2+27-42, -.1*wild_key_diameter/2+3-20, -5]
         for i in range(len(pos)):
-            pos[i] = pos[i] + shift[i] + tbjs_translation_offset[i]
+            pos[i] = pos[i] + shift[i] + wild_translation_offset[i]
 
         for i in range(len(rot)):
-            rot[i] = rot[i] + tbjs_rotation_offset[i]
+            rot[i] = rot[i] + wild_rotation_offset[i]
 
         return pos, rot
 
-    def tbjs_place(self, shape):
-        pos, rot = self.position_rotation()
-        shape = rotate(shape, rot)
-        shape = translate(shape, pos)
-        return shape
 
     def tl_place(self, shape):
         shape = rotate(shape, [0, 0, 0])
-        t_off = tbjs_key_translation_offsets[0]
-        shape = rotate(shape, tbjs_key_rotation_offsets[0])
-        shape = translate(shape, (t_off[0], t_off[1]+tbjs_key_diameter/2, t_off[2]))
+        t_off = wild_key_translation_offsets[0]
+        shape = rotate(shape, wild_key_rotation_offsets[0])
+        shape = translate(shape, (t_off[0], t_off[1]+wild_key_diameter/2, t_off[2]))
         shape = rotate(shape, [0,0,-80])
-        shape = self.tbjs_place(shape)
+        shape = self.track_place(shape)
 
         return shape
 
     def mr_place(self, shape):
         shape = rotate(shape, [0, 0, 0])
-        shape = rotate(shape, tbjs_key_rotation_offsets[1])
-        t_off = tbjs_key_translation_offsets[1]
-        shape = translate(shape, (t_off[0], t_off[1]+tbjs_key_diameter/2, t_off[2]))
-        shape = rotate(shape, [0,0,-130])
-        shape = self.tbjs_place(shape)
+        shape = rotate(shape, wild_key_rotation_offsets[1])
+        t_off = wild_key_translation_offsets[1]
+        shape = translate(shape, (t_off[0], t_off[1]+wild_key_diameter/2, t_off[2]))
+        shape = rotate(shape, [0,0,-150])
+        shape = self.track_place(shape)
 
         return shape
 
     def br_place(self, shape):
         shape = rotate(shape, [0, 0, 180])
-        shape = rotate(shape, tbjs_key_rotation_offsets[2])
-        t_off = tbjs_key_translation_offsets[2]
-        shape = translate(shape, (t_off[0], t_off[1]+tbjs_key_diameter/2, t_off[2]))
-        shape = rotate(shape, [0,0,-180])
-        shape = self.tbjs_place(shape)
+        shape = rotate(shape, wild_key_rotation_offsets[2])
+        t_off = wild_key_translation_offsets[2]
+        shape = translate(shape, (t_off[0], t_off[1]+wild_key_diameter/2, t_off[2]))
+        shape = rotate(shape, [0,0,-195])
+        shape = self.track_place(shape)
 
         return shape
 
     def bl_place(self, shape):
         debugprint('thumb_bl_place()')
         shape = rotate(shape, [0, 0, 180])
-        shape = rotate(shape, tbjs_key_rotation_offsets[3])
-        t_off = tbjs_key_translation_offsets[3]
-        shape = translate(shape, (t_off[0], t_off[1]+tbjs_key_diameter/2, t_off[2]))
-        shape = rotate(shape, [0,0,-230])
-        shape = self.tbjs_place(shape)
+        shape = rotate(shape, wild_key_rotation_offsets[3])
+        t_off = wild_key_translation_offsets[3]
+        shape = translate(shape, (t_off[0], t_off[1]+wild_key_diameter/2, t_off[2]))
+        shape = rotate(shape, [0,0,-240])
+        shape = self.track_place(shape)
 
         return shape
 
-    def thumb_1x_layout(self, shape, cap=False):
-        debugprint('thumb_1x_layout()')
-        return union([
-            self.tl_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])),
-            self.mr_place(rotate(shape, [0, 0, thumb_plate_mr_rotation])),
-            self.bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
-            self.br_place(rotate(shape, [0, 0, thumb_plate_br_rotation])),
-        ])
 
-    def thumb_fx_layout(self, shape):
-        return union([])
-
-    def trackball_layout(self, shape):
-        return union([
-            # Relocating positioning to individual parts due to complexity.
-            # tbjs_place(rotate(shape, [0, 0, trackball_rotation])),
-            self.tbjs_place(shape),
-        ])
-
-    def thumbcaps(self):
-        t1 = self.thumb_1x_layout(sa_cap(1))
-        return t1
-
-
-    def tbjs_post_r(self):
-        debugprint('post_r()')
-        radius = ball_diameter/2 + ball_wall_thickness + ball_gap
-        return translate(web_post(),
-                         [1.0*(radius - post_adj), 0.0*(radius - post_adj), 0]
-                         )
-
-    def tbjs_post_tr(self):
-        debugprint('post_tr()')
-        radius = ball_diameter/2+ball_wall_thickness + ball_gap
-        return translate(web_post(),
-                         [0.5*(radius - post_adj), 0.866*(radius - post_adj), 0]
-                         )
-
-
-    def tbjs_post_tl(self):
-        debugprint('post_tl()')
-        radius = ball_diameter/2+ball_wall_thickness + ball_gap
-        return translate(web_post(),
-                         [-0.5*(radius - post_adj), 0.866*(radius - post_adj), 0]
-                         )
-
-
-    def tbjs_post_l(self):
-        debugprint('post_l()')
-        radius = ball_diameter/2+ball_wall_thickness + ball_gap
-        return translate(web_post(),
-                         [-1.0*(radius - post_adj), 0.0*(radius - post_adj), 0]
-                         )
-
-    def tbjs_post_bl(self):
-        debugprint('post_bl()')
-        radius = ball_diameter/2+ball_wall_thickness + ball_gap
-        return translate(web_post(),
-                         [-0.5*(radius - post_adj), -0.866*(radius - post_adj), 0]
-                         )
-
-
-    def tbjs_post_br(self):
-        debugprint('post_br()')
-        radius = ball_diameter/2+ball_wall_thickness + ball_gap
-        return translate(web_post(),
-                         [0.5*(radius - post_adj), -0.866*(radius - post_adj), 0]
-                         )
-
-    def thumb(self, side="right"):
-        print('thumb()')
-        shape = self.thumb_fx_layout(rotate(single_plate(side=side), [0.0, 0.0, -90]))
-        shape = union([shape, self.thumb_fx_layout(double_plate())])
-        shape = union([shape, self.thumb_1x_layout(single_plate(side=side))])
-
-        # shape = union([shape, trackball_layout(trackball_socket())])
-        # shape = self.1x_layout(single_plate(side=side))
-        return shape
-
-    def thumb_connectors(self):
+    def thumb_connectors(self, side="right"):
         print('thumb_connectors()')
         hulls = []
 
@@ -159,25 +76,25 @@ class TrackballWild(TrackballOrbyl):
         hulls.append(
             triangle_hulls(
                 [
-                    tbjs_place(self.tbjs_post_l()),
+                    self.track_place(self.tb_post_l()),
                     self.bl_place(web_post_tl()),
-                    tbjs_place(self.tbjs_post_bl()),
+                    self.track_place(self.tb_post_bl()),
                     self.bl_place(web_post_tr()),
                     self.br_place(web_post_tl()),
-                    tbjs_place(self.tbjs_post_bl()),
+                    self.track_place(self.tb_post_bl()),
                     self.br_place(web_post_tr()),
-                    tbjs_place(self.tbjs_post_br()),
+                    self.track_place(self.tb_post_br()),
                     self.br_place(web_post_tr()),
-                    tbjs_place(self.tbjs_post_br()),
+                    self.track_place(self.tb_post_br()),
                     self.mr_place(web_post_br()),
-                    tbjs_place(self.tbjs_post_r()),
+                    self.track_place(self.tb_post_r()),
                     self.mr_place(web_post_bl()),
                     self.tl_place(web_post_br()),
-                    tbjs_place(self.tbjs_post_r()),
+                    self.track_place(self.tb_post_r()),
                     self.tl_place(web_post_bl()),
-                    tbjs_place(self.tbjs_post_tr()),
+                    self.track_place(self.tb_post_tr()),
                     key_place(web_post_bl(), 0, cornerrow),
-                    tbjs_place(self.tbjs_post_tl()),
+                    self.track_place(self.tb_post_tl()),
                 ]
             )
         )
@@ -243,6 +160,7 @@ class TrackballWild(TrackballOrbyl):
 
         return union(hulls)
 
+    # todo update walls for wild track, still identical to orbyl
     def walls(self):
         print('thumb_walls()')
         # thumb, walls
@@ -268,15 +186,15 @@ class TrackballWild(TrackballOrbyl):
         )])
 
         shape = union([shape, wall_brace(
-            tbjs_place, -1.5, 0, self.tbjs_post_tl(),
+            self.track_place, -1.5, 0, self.tb_post_tl(),
             (lambda sh: left_key_place(sh, lastrow - 1, -1, side=ball_side, low_corner=True)), -1, 0, web_post(),
         )])
         shape = union([shape, wall_brace(
-            tbjs_place, -1.5, 0, self.tbjs_post_tl(),
-            tbjs_place, -1, 0, self.tbjs_post_l(),
+            self.track_place, -1.5, 0, self.tb_post_tl(),
+            self.track_place, -1, 0, self.tb_post_l(),
         )])
         shape = union([shape, wall_brace(
-            tbjs_place, -1, 0, self.tbjs_post_l(),
+            self.track_place, -1, 0, self.tb_post_l(),
             self.bl_place, -1, 0, web_post_tl(),
         )])
         shape = union([shape, wall_brace(
@@ -295,7 +213,7 @@ class TrackballWild(TrackballOrbyl):
                 [
                     key_place(web_post_bl(), 0, cornerrow),
                     left_key_place(web_post(), lastrow - 1, -1, side=side, low_corner=True),                # left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True),
-                    tbjs_place(self.tbjs_post_tl()),
+                    self.track_place(self.tb_post_tl()),
                 ]
             )
         )

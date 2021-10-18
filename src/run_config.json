@@ -177,7 +177,7 @@
     ],
     "trackball_modular": false,
     "trackball_Usize": 1.5,
-    "ball_side": "right",
+    "ball_side": "both",
     "ball_diameter": 34.0,
     "ball_wall_thickness": 3,
     "ball_gap": 1.0,

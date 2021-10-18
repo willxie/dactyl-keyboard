@@ -120,7 +120,7 @@ class MinidoxCluster(DefaultCluster):
                          [(mount_width / 2) - post_adj, -((mount_height/2) + adjustable_plate_size(minidox_Usize)) + post_adj, 0]
                          )
 
-    def thumb_connectors(self):
+    def thumb_connectors(self, side="right"):
         print('thumb_connectors()')
         hulls = []
 
