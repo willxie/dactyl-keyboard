@@ -1,14 +1,13 @@
 from src.clusters.default import DefaultCluster
 
-
-class MinidoxCluster(DefaultCluster):
+class MiniCluster(DefaultCluster):
 
     @staticmethod
     def name():
-        return "MINIDOX"
+        return "MINI"
 
     def __init__(self, parent_locals):
-        self.num_keys = 3
+        self.num_keys = 5
         super().__init__(parent_locals)
         # have to repeat this for all classes/namespaces
         for item in parent_locals:
@@ -16,37 +15,31 @@ class MinidoxCluster(DefaultCluster):
 
     def tl_place(self, shape):
         shape = rotate(shape, [10, -23, 25])
-        shape = translate(shape, self.thumborigin())
+        shape = translate(shape, main_thumborigin())
         shape = translate(shape, [-35, -16, -2])
         return shape
 
     def tr_place(self, shape):
         shape = rotate(shape, [14, -15, 10])
-        shape = translate(shape, self.thumborigin())
+        shape = translate(shape, main_thumborigin())
         shape = translate(shape, [-15, -10, 5])
-        return shape
-
-    def ml_place(self, shape):
-        shape = rotate(shape, [6, -34, 40])
-        shape = translate(shape, self.thumborigin())
-        shape = translate(shape, [-53, -26, -12])
         return shape
 
     def mr_place(self, shape):
         shape = rotate(shape, [10, -23, 25])
-        shape = translate(shape, self.thumborigin())
+        shape = translate(shape, main_thumborigin())
         shape = translate(shape, [-23, -34, -6])
         return shape
 
     def br_place(self, shape):
-        shape = rotate(shape, [6, -32, 35])
-        shape = translate(shape, self.thumborigin())
-        shape = translate(shape, [-51, -25, -11.5])
+        shape = rotate(shape, [6, -34, 35])
+        shape = translate(shape, main_thumborigin())
+        shape = translate(shape, [-39, -43, -16])
         return shape
 
     def bl_place(self, shape):
         shape = rotate(shape, [6, -32, 35])
-        shape = translate(shape, self.thumborigin())
+        shape = translate(shape, main_thumborigin())
         shape = translate(shape, [-51, -25, -11.5])
         return shape
 
@@ -59,66 +52,52 @@ class MinidoxCluster(DefaultCluster):
     def thumb_1x_layout(self, shape, cap=False):
         debugprint('thumb_1x_layout()')
         return union([
-            self.tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])),
+            self.mr_place(rotate(shape, [0, 0, thumb_plate_mr_rotation])),
+            self.br_place(rotate(shape, [0, 0, thumb_plate_br_rotation])),
             self.tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])),
-            self.ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])),
+            self.bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
         ])
 
-    def thumb_fx_layout(self, shape):
-        return union([
-            self.tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])),
-            self.tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])),
-            self.ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])),
-            # self.fl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
-        ])
 
-    # def thumb_15x_layout(self, shape, cap=False, plate=True):
-    #     debugprint('thumb_15x_layout()')
-    #     if plate:
-    #         return union([
-    #             self.bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
-    #             self.ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation]))
-    #         ])
-    #     else:
-    #         return union([
-    #             self.bl_place(shape),
-    #             self.ml_place(shape)
-    #         ])
+    def thumb_15x_layout(self, shape, cap=False, plate=True):
+        debugprint('thumb_15x_layout()')
+        return union([self.tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation]))])
 
     def thumbcaps(self):
         t1 = self.thumb_1x_layout(sa_cap(1))
-        return t1
+        t15 = self.thumb_15x_layout(rotate(sa_cap(1), [0, 0, rad2deg(pi / 2)]))
+        return t1.add(t15)
 
     def thumb(self, side="right"):
         print('thumb()')
-        shape = self.thumb_fx_layout(rotate(single_plate(side=side), [0.0, 0.0, -90]))
-        shape = union([shape, self.thumb_fx_layout(adjustable_plate(minidox_Usize))])
+        shape = self.thumb_1x_layout(single_plate(side=side))
+        shape = union([shape, self.thumb_15x_layout(single_plate(side=side))])
 
         return shape
 
     def thumb_post_tr(self):
         debugprint('thumb_post_tr()')
         return translate(web_post(),
-                         [(mount_width / 2) - post_adj, ((mount_height/2) + adjustable_plate_size(minidox_Usize)) - post_adj, 0]
-                         )
+                         [(mount_width / 2) - post_adj, (mount_height / 2) - post_adj, 0]
+                    )
 
     def thumb_post_tl(self):
         debugprint('thumb_post_tl()')
         return translate(web_post(),
-                         [-(mount_width / 2) + post_adj, ((mount_height/2) + adjustable_plate_size(minidox_Usize)) - post_adj, 0]
-                         )
+                         [-(mount_width / 2) + post_adj, (mount_height / 2) - post_adj, 0]
+                    )
 
     def thumb_post_bl(self):
         debugprint('thumb_post_bl()')
         return translate(web_post(),
-                         [-(mount_width / 2) + post_adj, -((mount_height/2) + adjustable_plate_size(minidox_Usize)) + post_adj, 0]
-                         )
+                         [-(mount_width / 2) + post_adj, -(mount_height / 2) + post_adj, 0]
+                    )
 
     def thumb_post_br(self):
         debugprint('thumb_post_br()')
         return translate(web_post(),
-                         [(mount_width / 2) - post_adj, -((mount_height/2) + adjustable_plate_size(minidox_Usize)) + post_adj, 0]
-                         )
+                         [(mount_width / 2) - post_adj, -(mount_height / 2) + post_adj, 0]
+                    )
 
     def thumb_connectors(self):
         print('thumb_connectors()')
@@ -128,8 +107,8 @@ class MinidoxCluster(DefaultCluster):
         hulls.append(
             triangle_hulls(
                 [
-                    self.tl_place(self.thumb_post_tr()),
-                    self.tl_place(self.thumb_post_br()),
+                    self.tl_place(web_post_tr()),
+                    self.tl_place(web_post_br()),
                     self.tr_place(self.thumb_post_tl()),
                     self.tr_place(self.thumb_post_bl()),
                 ]
@@ -140,22 +119,65 @@ class MinidoxCluster(DefaultCluster):
         hulls.append(
             triangle_hulls(
                 [
-                    self.tl_place(self.thumb_post_tl()),
-                    self.tl_place(self.thumb_post_bl()),
-                    self.ml_place(self.thumb_post_tr()),
-                    self.ml_place(self.thumb_post_br()),
+                    self.br_place(web_post_tr()),
+                    self.br_place(web_post_br()),
+                    self.mr_place(web_post_tl()),
+                    self.mr_place(web_post_bl()),
                 ]
             )
         )
 
+        # bottom two on the left
+        hulls.append(
+            triangle_hulls(
+                [
+                    self.mr_place(web_post_tr()),
+                    self.mr_place(web_post_br()),
+                    self.tr_place(self.thumb_post_br()),
+                ]
+            )
+        )
 
+        # between top and bottom row
+        hulls.append(
+            triangle_hulls(
+                [
+                    self.br_place(web_post_tl()),
+                    self.bl_place(web_post_bl()),
+                    self.br_place(web_post_tr()),
+                    self.bl_place(web_post_br()),
+                    self.mr_place(web_post_tl()),
+                    self.tl_place(web_post_bl()),
+                    self.mr_place(web_post_tr()),
+                    self.tl_place(web_post_br()),
+                    self.tr_place(web_post_bl()),
+                    self.mr_place(web_post_tr()),
+                    self.tr_place(web_post_br()),
+                ]
+            )
+        )
         # top two to the main keyboard, starting on the left
         hulls.append(
             triangle_hulls(
                 [
-                    self.tl_place(self.thumb_post_tl()),
+                    self.tl_place(web_post_tl()),
+                    self.bl_place(web_post_tr()),
+                    self.tl_place(web_post_bl()),
+                    self.bl_place(web_post_br()),
+                    self.mr_place(web_post_tr()),
+                    self.tl_place(web_post_bl()),
+                    self.tl_place(web_post_br()),
+                    self.mr_place(web_post_tr()),
+                ]
+            )
+        )
+        # top two to the main keyboard, starting on the left
+        hulls.append(
+            triangle_hulls(
+                [
+                    self.tl_place(web_post_tl()),
                     key_place(web_post_bl(), 0, cornerrow),
-                    self.tl_place(self.thumb_post_tr()),
+                    self.tl_place(web_post_tr()),
                     key_place(web_post_br(), 0, cornerrow),
                     self.tr_place(self.thumb_post_tl()),
                     key_place(web_post_bl(), 1, cornerrow),
@@ -213,20 +235,22 @@ class MinidoxCluster(DefaultCluster):
     def walls(self):
         print('thumb_walls()')
         # thumb, walls
-        shape = union([wall_brace(self.tr_place, 0, -1, self.thumb_post_br(), self.tr_place, 0, -1, self.thumb_post_bl())])
-        shape = union([shape, wall_brace(self.tr_place, 0, -1, self.thumb_post_bl(), self.tl_place, 0, -1, self.thumb_post_br())])
-        shape = union([shape, wall_brace(self.tl_place, 0, -1, self.thumb_post_br(), self.tl_place, 0, -1, self.thumb_post_bl())])
-        shape = union([shape, wall_brace(self.tl_place, 0, -1, self.thumb_post_bl(), self.ml_place, -1, -1, self.thumb_post_br())])
-        shape = union([shape, wall_brace(self.ml_place, -1, -1, self.thumb_post_br(), self.ml_place, 0, -1, self.thumb_post_bl())])
-        shape = union([shape, wall_brace(self.ml_place, 0, -1, self.thumb_post_bl(), self.ml_place, -1, 0, self.thumb_post_bl())])
+        shape = union([wall_brace(self.mr_place, 0, -1, web_post_br(), self.tr_place, 0, -1, self.thumb_post_br())])
+        shape = union([shape, wall_brace(self.mr_place, 0, -1, web_post_br(), self.mr_place, 0, -1, web_post_bl())])
+        shape = union([shape, wall_brace(self.br_place, 0, -1, web_post_br(), self.br_place, 0, -1, web_post_bl())])
+        shape = union([shape, wall_brace(self.bl_place, 0, 1, web_post_tr(), self.bl_place, 0, 1, web_post_tl())])
+        shape = union([shape, wall_brace(self.br_place, -1, 0, web_post_tl(), self.br_place, -1, 0, web_post_bl())])
+        shape = union([shape, wall_brace(self.bl_place, -1, 0, web_post_tl(), self.bl_place, -1, 0, web_post_bl())])
         # thumb, corners
-        shape = union([shape, wall_brace(self.ml_place, -1, 0, self.thumb_post_bl(), self.ml_place, -1, 0, self.thumb_post_tl())])
-        shape = union([shape, wall_brace(self.ml_place, -1, 0, self.thumb_post_tl(), self.ml_place, 0, 1, self.thumb_post_tl())])
+        shape = union([shape, wall_brace(self.br_place, -1, 0, web_post_bl(), self.br_place, 0, -1, web_post_bl())])
+        shape = union([shape, wall_brace(self.bl_place, -1, 0, web_post_tl(), self.bl_place, 0, 1, web_post_tl())])
         # thumb, tweeners
-        shape = union([shape, wall_brace(self.ml_place, 0, 1, self.thumb_post_tr(), self.ml_place, 0, 1, self.thumb_post_tl())])
+        shape = union([shape, wall_brace(self.mr_place, 0, -1, web_post_bl(), self.br_place, 0, -1, web_post_br())])
+        shape = union([shape, wall_brace(self.bl_place, -1, 0, web_post_bl(), self.br_place, -1, 0, web_post_tl())])
         shape = union([shape, wall_brace(self.tr_place, 0, -1, self.thumb_post_br(), (lambda sh: key_place(sh, 3, lastrow)), 0, -1, web_post_bl())])
 
         return shape
+
 
     def connection(self, side='right'):
         print('thumb_connection()')
@@ -236,8 +260,8 @@ class MinidoxCluster(DefaultCluster):
             [
                 left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True, side=side),
                 left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True, side=side),
-                self.bl_place(translate(self.thumb_post_tr(), wall_locate2(-0.3, 1))),
-                self.bl_place(translate(self.thumb_post_tr(), wall_locate3(-0.3, 1))),
+                self.bl_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
+                self.bl_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
             ]
         )])
 
@@ -246,9 +270,9 @@ class MinidoxCluster(DefaultCluster):
                            [
                                left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True, side=side),
                                left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True, side=side),
-                               self.ml_place(translate(self.thumb_post_tr(), wall_locate2(-0.3, 1))),
-                               self.ml_place(translate(self.thumb_post_tr(), wall_locate3(-0.3, 1))),
-                               self.tl_place(self.thumb_post_tl()),
+                               self.bl_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
+                               self.bl_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
+                               self.tl_place(web_post_tl()),
                            ]
                        )])
 
@@ -259,7 +283,7 @@ class MinidoxCluster(DefaultCluster):
                                left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True, side=side),
                                left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True, side=side),
                                left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True, side=side),
-                               self.tl_place(self.thumb_post_tl()),
+                               self.tl_place(web_post_tl()),
                            ]
                        )])
 
@@ -269,19 +293,18 @@ class MinidoxCluster(DefaultCluster):
                                left_key_place(web_post(), cornerrow, -1, low_corner=True, side=side),
                                left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True, side=side),
                                key_place(web_post_bl(), 0, cornerrow),
-                               # key_place(translate(web_post_bl(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True),
-                               self.tl_place(self.thumb_post_tl()),
+                               self.tl_place(web_post_tl()),
                            ]
                        )])
 
         shape = union([shape,
                        hull_from_shapes(
                            [
-                               self.ml_place(self.thumb_post_tr()),
-                               self.ml_place(translate(self.thumb_post_tr(), wall_locate1(0, 1))),
-                               self.ml_place(translate(self.thumb_post_tr(), wall_locate2(0, 1))),
-                               self.ml_place(translate(self.thumb_post_tr(), wall_locate3(0, 1))),
-                               self.tl_place(self.thumb_post_tl()),
+                               self.bl_place(web_post_tr()),
+                               self.bl_place(translate(web_post_tr(), wall_locate1(-0.3, 1))),
+                               self.bl_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
+                               self.bl_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
+                               self.tl_place(web_post_tl()),
                            ]
                        )])
 
@@ -289,8 +312,7 @@ class MinidoxCluster(DefaultCluster):
 
     def screw_positions(self):
         position = self.thumborigin()
-        position = list(np.array(position) + np.array([-37, -32, -16]))
-        position[1] = position[1] - .4 * (minidox_Usize - 1) * sa_length
+        position = list(np.array(position) + np.array([-29, -51, -16]))
         position[2] = 0
 
         return position

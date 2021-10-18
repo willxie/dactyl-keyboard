@@ -7,6 +7,7 @@ import os
 import shutil
 from src.clusters.default import DefaultCluster
 from src.clusters.carbonfet import CarbonfetCluster
+from src.clusters.mini import MiniCluster
 from src.clusters.minidox import MinidoxCluster
 
 
@@ -717,7 +718,7 @@ def thumbcaps(side='right', style_override=None):
         _thumb_style = style_override
 
     if _thumb_style == "MINI":
-        return mini_thumbcaps()
+        return cluster.thumbcaps()
     elif _thumb_style == "MINIDOX":
         return cluster.thumbcaps()
     elif _thumb_style == "CARBONFET":
@@ -746,7 +747,7 @@ def thumb(side="right", style_override=None):
         _thumb_style = style_override
 
     if _thumb_style == "MINI":
-        return mini_thumb(side)
+        return cluster.thumb(side)
     elif _thumb_style == "MINIDOX":
         return cluster.thumb(side)
     elif _thumb_style == "CARBONFET":
@@ -775,7 +776,7 @@ def thumb_connectors(side='right', style_override=None):
         _thumb_style = style_override
 
     if _thumb_style == "MINI":
-        return mini_thumb_connectors()
+        return cluster.thumb_connectors()
     elif _thumb_style == "MINIDOX":
         return cluster.thumb_connectors()
     elif _thumb_style == "CARBONFET":
@@ -2525,7 +2526,7 @@ def thumb_walls(side='right', style_override=None):
         _thumb_style = style_override
 
     if _thumb_style == "MINI":
-        return mini_thumb_walls()
+        return cluster.walls()
     elif _thumb_style == "MINIDOX":
         return cluster.walls()
     elif _thumb_style == "CARBONFET":
@@ -2553,7 +2554,7 @@ def thumb_connection(side='right', style_override=None):
         _thumb_style = style_override
 
     if _thumb_style == "MINI":
-        return mini_thumb_connection(side=side)
+        return cluster.connection(side=side)
     elif _thumb_style == "MINIDOX":
         return cluster.connection(side=side)
     elif _thumb_style == "CARBONFET":
@@ -3543,8 +3544,7 @@ def screw_insert(column, row, bottom_radius, top_radius, height, side='right'):
 def screw_insert_thumb(bottom_radius, top_radius, height):
     position = main_thumborigin()
     if thumb_style == 'MINI':
-        position = list(np.array(position) + np.array([-29, -51, -16]))
-        position[2] = 0
+        position = cluster.screw_positions()
     elif thumb_style == 'MINIDOX':
         position = cluster.screw_positions()
     elif thumb_style == 'CARBONFET':
@@ -3872,6 +3872,8 @@ def run():
 
 if thumb_style == CarbonfetCluster.name():
     cluster = CarbonfetCluster(globals())
+elif thumb_style == MiniCluster.name():
+    cluster = MiniCluster(globals())
 elif thumb_style == MinidoxCluster.name():
     cluster = MinidoxCluster(globals())
 else:
