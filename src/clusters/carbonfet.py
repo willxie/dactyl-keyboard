@@ -11,7 +11,6 @@ class CarbonfetCluster(DefaultCluster):
         super().__init__(parent_locals)
         for item in parent_locals:
             globals()[item] = parent_locals[item]
-        print(self.name, " built")
 
     def tl_place(self, shape):
         shape = rotate(shape, [10, -24, 10])
