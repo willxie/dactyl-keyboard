@@ -5,13 +5,13 @@ import getopt, sys
 import json
 import os
 import shutil
-from src.clusters.default import DefaultCluster
-from src.clusters.carbonfet import CarbonfetCluster
-from src.clusters.mini import MiniCluster
-from src.clusters.minidox import MinidoxCluster
-from src.clusters.trackball_orbyl import TrackballOrbyl
-from src.clusters.trackball_wilder import TrackballWild
-
+from clusters.default import DefaultCluster
+from clusters.carbonfet import CarbonfetCluster
+from clusters.mini import MiniCluster
+from clusters.minidox import MinidoxCluster
+from clusters.trackball_orbyl import TrackballOrbyl
+from clusters.trackball_wilder import TrackballWild
+from clusters.trackball_cj import TrackballCJ
 
 def deg2rad(degrees: float) -> float:
     return degrees * pi / 180
@@ -21,8 +21,8 @@ def rad2deg(rad: float) -> float:
     return rad * 180 / pi
 
 
-cluster = None
-other_cluster = None
+right_cluster = None
+left_cluster = None
 
 ###############################################
 # EXTREMELY UGLY BUT FUNCTIONAL BOOTSTRAP
@@ -715,89 +715,23 @@ def double_plate():
 
 def thumbcaps(side='right', style_override=None):
     if style_override is None:
-        _thumb_style = thumb_style
+        return right_cluster.thumbcaps()
     else:
-        _thumb_style = style_override
-
-    if _thumb_style == "MINI":
-        return cluster.thumbcaps()
-    elif _thumb_style == "MINIDOX":
-        return cluster.thumbcaps()
-    elif _thumb_style == "CARBONFET":
-        return cluster.thumbcaps()
-    elif _thumb_style == "FOURKEY":
-        return four_key_thumbcaps()
-    elif "TRACKBALL" in _thumb_style:
-        if (side == ball_side or ball_side == 'both'):
-            if _thumb_style == "TRACKBALL_ORBYL":
-                return cluster.thumbcaps()
-            elif _thumb_style == "TRACKBALL_CJ":
-                return tbcj_thumbcaps()
-            elif _thumb_style == "TRACKBALL_WILD":
-                return cluster.thumbcaps()
-        else:
-            return thumbcaps(side, style_override=other_thumb)
-
-    else:
-        return cluster.thumbcaps()
+        return left_cluster.thumbcaps()
 
 
 def thumb(side="right", style_override=None):
     if style_override is None:
-        _thumb_style = thumb_style
+        return right_cluster.thumb(side)
     else:
-        _thumb_style = style_override
-
-    if _thumb_style == "MINI":
-        return cluster.thumb(side)
-    elif _thumb_style == "MINIDOX":
-        return cluster.thumb(side)
-    elif _thumb_style == "CARBONFET":
-        return cluster.thumb(side)
-    elif _thumb_style == "FOURKEY":
-        return four_key_thumb(side)
-    elif "TRACKBALL" in _thumb_style:
-        if (side == ball_side or ball_side == 'both'):
-            if _thumb_style == "TRACKBALL_ORBYL":
-                return cluster.thumb(side)
-            elif _thumb_style == "TRACKBALL_CJ":
-                return tbcj_thumb(side)
-            elif _thumb_style == "TRACKBALL_WILD":
-                return cluster.thumb(side)
-        else:
-            return thumb(side, style_override=other_thumb)
-
-    else:
-        return cluster.thumb(side)
+        return left_cluster.thumb(side)
 
 
 def thumb_connectors(side='right', style_override=None):
     if style_override is None:
-        _thumb_style = thumb_style
+        return right_cluster.thumb_connectors(side)
     else:
-        _thumb_style = style_override
-
-    if _thumb_style == "MINI":
-        return cluster.thumb_connectors()
-    elif _thumb_style == "MINIDOX":
-        return cluster.thumb_connectors()
-    elif _thumb_style == "CARBONFET":
-        return cluster.thumb_connectors()
-    elif _thumb_style == "FOURKEY":
-        return four_key_thumb_connectors()
-    elif "TRACKBALL" in _thumb_style:
-        if (side == ball_side or ball_side == 'both'):
-            if _thumb_style == "TRACKBALL_ORBYL":
-                return cluster.thumb_connectors()
-            elif _thumb_style == "TRACKBALL_CJ":
-                return tbcj_thumb_connectors()
-            elif _thumb_style == "TRACKBALL_WILD":
-                return cluster.thumb_connectors()
-        else:
-            return thumb_connectors(side, style_override=other_thumb)
-
-    else:
-        return cluster.thumb_connectors()
+        return left_cluster.thumb_connectors(side)
 
 
 def thumb_post_tr():
@@ -828,428 +762,6 @@ def thumb_post_br():
                      )
 
 
-# four key thumb test
-
-def four_key_thumb_tl_place(shape):
-    debugprint('thumb_tl_place()')
-    shape = rotate(shape, [7.5, -18, 10])
-    shape = translate(shape, main_thumborigin())
-    shape = translate(shape, [-32.5, -14.5, -2.5])
-    return shape
-
-
-def four_key_thumb_tr_place(shape):
-    debugprint('thumb_tr_place()')
-    shape = rotate(shape, [10, -15, 10])
-    shape = translate(shape, main_thumborigin())
-    shape = translate(shape, [-12, -16, 3])
-    return shape
-
-
-def four_key_thumb_mr_place(shape):
-    debugprint('thumb_mr_place()')
-    shape = rotate(shape, [-6, -34, 48])
-    shape = translate(shape, main_thumborigin())
-    shape = translate(shape, [-29, -40, -13])
-    return shape
-
-
-def four_key_thumb_ml_place(shape):
-    debugprint('thumb_ml_place()')
-    shape = rotate(shape, [6, -34, 40])
-    shape = translate(shape, main_thumborigin())
-    shape = translate(shape, [-51, -25, -12])
-    return shape
-
-
-def four_key_thumb_br_place(shape):
-    debugprint('thumb_br_place()')
-    shape = rotate(shape, [-16, -33, 54])
-    shape = translate(shape, main_thumborigin())
-    shape = translate(shape, [-37.8, -55.3, -25.3])
-    return shape
-
-
-def four_key_thumb_bl_place(shape):
-    debugprint('thumb_bl_place()')
-    shape = rotate(shape, [-4, -35, 52])
-    shape = translate(shape, main_thumborigin())
-    shape = translate(shape, [-56.3, -43.3, -23.5])
-    return shape
-
-
-def four_key_thumb_1x_layout(shape, cap=False):
-    print('thumb_1x_layout()')
-    if cap:
-        shape_list = [
-            four_key_thumb_mr_place(rotate(shape, [0, 0, thumb_plate_mr_rotation])),
-            four_key_thumb_ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])),
-            # four_key_thumb_br_place(rotate(shape, [0, 0, thumb_plate_br_rotation])),
-            # four_key_thumb_bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
-        ]
-
-        if default_1U_cluster:
-            shape_list.append(
-                four_key_thumb_tr_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, thumb_plate_tr_rotation])))
-            shape_list.append(
-                four_key_thumb_tr_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, thumb_plate_tr_rotation])))
-            shape_list.append(four_key_thumb_tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])))
-        shapes = add(shape_list)
-
-    else:
-        shape_list = [
-            four_key_thumb_mr_place(rotate(shape, [0, 0, thumb_plate_mr_rotation])),
-            four_key_thumb_ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])),
-            # four_key_thumb_br_place(rotate(shape, [0, 0, thumb_plate_br_rotation])),
-            # four_key_thumb_bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
-        ]
-        if default_1U_cluster:
-            shape_list.append(
-                four_key_thumb_tr_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, thumb_plate_tr_rotation])))
-        shapes = union(shape_list)
-    return shapes
-
-
-def four_key_thumb_15x_layout(shape, cap=False, plate=True):
-    print('thumb_15x_layout()')
-    if plate:
-        if cap:
-            shape = rotate(shape, (0, 0, 90))
-            cap_list = [four_key_thumb_tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation]))]
-            cap_list.append(four_key_thumb_tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])))
-            return add(cap_list)
-        else:
-            shape_list = [four_key_thumb_tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation]))]
-            if not default_1U_cluster:
-                shape_list.append(four_key_thumb_tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])))
-            return union(shape_list)
-    else:
-        if cap:
-            shape = rotate(shape, (0, 0, 90))
-            shape_list = [
-                four_key_thumb_tl_place(shape),
-            ]
-            shape_list.append(four_key_thumb_tr_place(shape))
-
-            return add(shape_list)
-        else:
-            shape_list = [
-                four_key_thumb_tl_place(shape),
-            ]
-            if not default_1U_cluster:
-                shape_list.append(four_key_thumb_tr_place(shape))
-
-            return union(shape_list)
-
-
-def four_key_thumbcaps():
-    t1 = four_key_thumb_1x_layout(sa_cap(1), cap=True)
-    if not default_1U_cluster:
-        t1.add(four_key_thumb_15x_layout(sa_cap(1.5), cap=True))
-    return t1
-
-
-def four_key_thumb(side="right"):
-    print('thumb()')
-    shape = four_key_thumb_1x_layout(rotate(single_plate(side=side), (0, 0, -90)))
-    shape = union([shape, four_key_thumb_15x_layout(rotate(single_plate(side=side), (0, 0, -90)))])
-    shape = union([shape, four_key_thumb_15x_layout(double_plate(), plate=False)])
-    return shape
-
-
-def four_key_thumb_connectors():
-    print('thumb_connectors()')
-    hulls = []
-
-    # Top two
-    if default_1U_cluster:
-        hulls.append(
-            triangle_hulls(
-                [
-                    four_key_thumb_tl_place(thumb_post_tr()),
-                    four_key_thumb_tl_place(thumb_post_br()),
-                    four_key_thumb_tr_place(web_post_tl()),
-                    four_key_thumb_tr_place(web_post_bl()),
-                ]
-            )
-        )
-    else:
-        hulls.append(
-            triangle_hulls(
-                [
-                    four_key_thumb_tl_place(thumb_post_tr()),
-                    four_key_thumb_tl_place(thumb_post_br()),
-                    four_key_thumb_tr_place(thumb_post_tl()),
-                    four_key_thumb_tr_place(thumb_post_bl()),
-                ]
-            )
-        )
-
-    # bottom two on the right
-    # hulls.append(
-    #     triangle_hulls(
-    #         [
-    #             four_key_thumb_br_place(web_post_tr()),
-    #             four_key_thumb_br_place(web_post_br()),
-    #             four_key_thumb_mr_place(web_post_tl()),
-    #             four_key_thumb_mr_place(web_post_bl()),
-    #         ]
-    #     )
-    # )
-
-    # bottom two on the left
-    # hulls.append(
-    #     triangle_hulls(
-    #         [
-    #             four_key_thumb_br_place(web_post_tr()),
-    #             four_key_thumb_br_place(web_post_br()),
-    #             four_key_thumb_mr_place(web_post_tl()),
-    #             four_key_thumb_mr_place(web_post_bl()),
-    #         ]
-    #     )
-    # )
-    # centers of the bottom four
-    hulls.append(
-        triangle_hulls(
-            [
-                four_key_thumb_bl_place(web_post_tr()),
-                four_key_thumb_bl_place(web_post_br()),
-                four_key_thumb_ml_place(web_post_tl()),
-                four_key_thumb_ml_place(web_post_bl()),
-            ]
-        )
-    )
-
-    # top two to the middle two, starting on the left
-    hulls.append(
-        triangle_hulls(
-            [
-                # four_key_thumb_br_place(web_post_tl()),
-                # four_key_thumb_bl_place(web_post_bl()),
-                # four_key_thumb_br_place(web_post_tr()),
-                # four_key_thumb_bl_place(web_post_br()),
-                four_key_thumb_mr_place(web_post_tl()),
-                four_key_thumb_ml_place(web_post_bl()),
-                four_key_thumb_mr_place(web_post_tr()),
-                four_key_thumb_ml_place(web_post_br()),
-            ]
-        )
-    )
-
-    if default_1U_cluster:
-        hulls.append(
-            triangle_hulls(
-                [
-                    four_key_thumb_tl_place(thumb_post_tl()),
-                    four_key_thumb_ml_place(web_post_tr()),
-                    four_key_thumb_tl_place(thumb_post_bl()),
-                    four_key_thumb_ml_place(web_post_br()),
-                    four_key_thumb_tl_place(thumb_post_br()),
-                    four_key_thumb_mr_place(web_post_tr()),
-                    four_key_thumb_tr_place(web_post_bl()),
-                    four_key_thumb_mr_place(web_post_br()),
-                    four_key_thumb_tr_place(web_post_br()),
-                ]
-            )
-        )
-    else:
-        # top two to the main keyboard, starting on the left
-        hulls.append(
-            triangle_hulls(
-                [
-                    four_key_thumb_tl_place(thumb_post_tl()),
-                    four_key_thumb_ml_place(web_post_tr()),
-                    four_key_thumb_tl_place(thumb_post_bl()),
-                    four_key_thumb_ml_place(web_post_br()),
-                    four_key_thumb_tl_place(thumb_post_br()),
-                    four_key_thumb_mr_place(web_post_tr()),
-                    four_key_thumb_tr_place(thumb_post_bl()),
-                    four_key_thumb_mr_place(web_post_br()),
-                    four_key_thumb_tr_place(thumb_post_br()),
-                ]
-            )
-        )
-
-    if default_1U_cluster:
-        hulls.append(
-            triangle_hulls(
-                [
-                    four_key_thumb_tl_place(thumb_post_tl()),
-                    key_place(web_post_bl(), 0, cornerrow),
-                    four_key_thumb_tl_place(thumb_post_tr()),
-                    key_place(web_post_br(), 0, cornerrow),
-                    four_key_thumb_tr_place(web_post_tl()),
-                    key_place(web_post_bl(), 1, cornerrow),
-                    four_key_thumb_tr_place(web_post_tr()),
-                    key_place(web_post_br(), 1, cornerrow),
-                    key_place(web_post_tl(), 2, lastrow),
-                    key_place(web_post_bl(), 2, lastrow),
-                    four_key_thumb_tr_place(web_post_tr()),
-                    key_place(web_post_bl(), 2, lastrow),
-                    four_key_thumb_tr_place(web_post_br()),
-                    key_place(web_post_br(), 2, lastrow),
-                    key_place(web_post_bl(), 3, lastrow),
-                    key_place(web_post_tr(), 2, lastrow),
-                    key_place(web_post_tl(), 3, lastrow),
-                    key_place(web_post_bl(), 3, cornerrow),
-                    key_place(web_post_tr(), 3, lastrow),
-                    key_place(web_post_br(), 3, cornerrow),
-                    key_place(web_post_bl(), 4, cornerrow),
-                ]
-            )
-        )
-    else:
-        hulls.append(
-            triangle_hulls(
-                [
-                    four_key_thumb_tl_place(thumb_post_tl()),
-                    key_place(web_post_bl(), 0, cornerrow),
-                    four_key_thumb_tl_place(thumb_post_tr()),
-                    key_place(web_post_br(), 0, cornerrow),
-                    four_key_thumb_tr_place(thumb_post_tl()),
-                    key_place(web_post_bl(), 1, cornerrow),
-                    four_key_thumb_tr_place(thumb_post_tr()),
-                    key_place(web_post_br(), 1, cornerrow),
-                    key_place(web_post_tl(), 2, lastrow),
-                    key_place(web_post_bl(), 2, lastrow),
-                    four_key_thumb_tr_place(thumb_post_tr()),
-                    key_place(web_post_bl(), 2, lastrow),
-                    four_key_thumb_tr_place(thumb_post_br()),
-                    key_place(web_post_br(), 2, lastrow),
-                    key_place(web_post_bl(), 3, lastrow),
-                    key_place(web_post_tr(), 2, lastrow),
-                    key_place(web_post_tl(), 3, lastrow),
-                    key_place(web_post_bl(), 3, cornerrow),
-                    key_place(web_post_tr(), 3, lastrow),
-                    key_place(web_post_br(), 3, cornerrow),
-                    key_place(web_post_bl(), 4, cornerrow),
-                ]
-            )
-        )
-
-    hulls.append(
-        triangle_hulls(
-            [
-                key_place(web_post_br(), 1, cornerrow),
-                key_place(web_post_tl(), 2, lastrow),
-                key_place(web_post_bl(), 2, cornerrow),
-                key_place(web_post_tr(), 2, lastrow),
-                key_place(web_post_br(), 2, cornerrow),
-                key_place(web_post_bl(), 3, cornerrow),
-            ]
-        )
-    )
-
-    hulls.append(
-        triangle_hulls(
-            [
-                key_place(web_post_tr(), 3, lastrow),
-                key_place(web_post_br(), 3, lastrow),
-                key_place(web_post_tr(), 3, lastrow),
-                key_place(web_post_bl(), 4, cornerrow),
-            ]
-        )
-    )
-
-    return union(hulls)
-
-
-def four_key_thumb_connection(side='right'):
-    print('thumb_connection()')
-    # clunky bit on the top left thumb connection  (normal connectors don't work well)
-    shape = union([bottom_hull(
-        [
-            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True, side=side),
-            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True, side=side),
-            cluster.ml_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
-            cluster.ml_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
-        ]
-    )])
-
-    shape = union([shape,
-                   hull_from_shapes(
-                       [
-                           left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True,
-                                          side=side),
-                           left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True,
-                                          side=side),
-                           cluster.ml_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
-                           cluster.ml_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
-                           cluster.tl_place(thumb_post_tl()),
-                       ]
-                   )
-                   ])  # )
-
-    shape = union([shape, hull_from_shapes(
-        [
-            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True, side=side),
-            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True, side=side),
-            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True, side=side),
-            cluster.tl_place(thumb_post_tl()),
-        ]
-    )])
-
-    shape = union([shape, hull_from_shapes(
-        [
-            left_key_place(web_post(), cornerrow, -1, low_corner=True, side=side),
-            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True, side=side),
-            key_place(web_post_bl(), 0, cornerrow),
-            cluster.tl_place(thumb_post_tl()),
-        ]
-    )])
-
-    shape = union([shape, hull_from_shapes(
-        [
-            cluster.ml_place(web_post_tr()),
-            cluster.ml_place(translate(web_post_tr(), wall_locate1(-0.3, 1))),
-            cluster.ml_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
-            cluster.ml_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
-            cluster.tl_place(thumb_post_tl()),
-        ]
-    )])
-
-    return shape
-
-
-def four_key_thumb_walls():
-    print('thumb_walls()')
-    # thumb, walls
-    if default_1U_cluster:
-        # print("no")
-        shape = union(
-            [wall_brace(four_key_thumb_mr_place, 0, -1, web_post_br(), four_key_thumb_tr_place, 0, -1, web_post_br())])
-    else:
-        shape = union([wall_brace(four_key_thumb_mr_place, 0, -1, web_post_br(), four_key_thumb_tr_place, 0, -1,
-                                  thumb_post_br())])
-    shape = union([shape, wall_brace(four_key_thumb_mr_place, 0, -1, web_post_br(), four_key_thumb_mr_place, 0, -1,
-                                     web_post_bl())])
-    ############ shape = union([shape, wall_brace(four_key_thumb_br_place, 0, -1, web_post_br(), four_key_thumb_br_place, 0, -1, web_post_bl())])
-    shape = union([shape, wall_brace(four_key_thumb_ml_place, -0.3, 1, web_post_tr(), four_key_thumb_ml_place, 0, 1,
-                                     web_post_tl())])
-
-    ############ shape = union([shape, wall_brace(four_key_thumb_bl_place, 0, 1, web_post_tr(), four_key_thumb_bl_place, 0, 1, web_post_tl())])
-    ############ shape = union([shape, wall_brace(four_key_thumb_br_place, -1, 0, web_post_tl(), four_key_thumb_br_place, -1, 0, web_post_bl())])
-    ############ shape = union([shape, wall_brace(four_key_thumb_bl_place, -1, 0, web_post_tl(), four_key_thumb_bl_place, -1, 0, web_post_bl())])
-    ############ thumb, corners
-    ############ shape = union([shape, wall_brace(four_key_thumb_br_place, -1, 0, web_post_bl(), four_key_thumb_br_place, 0, -1, web_post_bl())])
-    ############ shape = union([shape, wall_brace(four_key_thumb_bl_place, -1, 0, web_post_tl(), four_key_thumb_bl_place, 0, 1, web_post_tl())])
-    ############ thumb, tweeners
-
-    ############ shape = union([shape, wall_brace(four_key_thumb_mr_place, 0, -1, web_post_bl(), four_key_thumb_br_place, 0, -1, web_post_br())])
-    shape = union(
-        [shape, wall_brace(four_key_thumb_ml_place, 0, 1, web_post_tl(), four_key_thumb_bl_place, 0, 1, web_post_tr())])
-    ############ shape = union([shape, wall_brace(four_key_thumb_bl_place, -1, 0, web_post_bl(), four_key_thumb_br_place, -1, 0, web_post_tl())])
-    if default_1U_cluster:
-        shape = union([shape,
-                       wall_brace(four_key_thumb_tr_place, 0, -1, web_post_br(), (lambda sh: key_place(sh, 3, lastrow)),
-                                  0, -1, web_post_bl())])
-    else:
-        shape = union([shape, wall_brace(four_key_thumb_tr_place, 0, -1, thumb_post_br(),
-                                         (lambda sh: key_place(sh, 3, lastrow)), 0, -1, web_post_bl())])
-
-    return shape
-
-
 ############################
 # MINI THUMB CLUSTER
 ############################
@@ -1271,299 +783,10 @@ def four_key_thumb_walls():
 
 
 ############################
-# TRACKBALL THUMB CLUSTER
+# CJ TRACKBALL THUMB CLUSTER
 ############################
 
 # single_plate = the switch shape
-
-def tbcj_thumb_tr_place(shape):
-    shape = rotate(shape, [10, -15, 10])
-    shape = translate(shape, main_thumborigin())
-    shape = translate(shape, [-12, -16, 3])
-    return shape
-
-
-def tbcj_thumb_tl_place(shape):
-    shape = rotate(shape, [7.5, -18, 10])
-    shape = translate(shape, main_thumborigin())
-    shape = translate(shape, [-32.5, -14.5, -2.5])
-    return shape
-
-
-def tbcj_thumb_ml_place(shape):
-    shape = rotate(shape, [6, -34, 40])
-    shape = translate(shape, main_thumborigin())
-    shape = translate(shape, [-51, -25, -12])
-    return shape
-
-
-def tbcj_thumb_bl_place(shape):
-    shape = rotate(shape, [-4, -35, 52])
-    shape = translate(shape, main_thumborigin())
-    shape = translate(shape, [-56.3, -43.3, -23.5])
-    return shape
-
-
-def tbcj_thumb_layout(shape):
-    return union([
-        tbcj_thumb_tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])),
-        tbcj_thumb_tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])),
-        tbcj_thumb_ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])),
-        tbcj_thumb_bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
-    ])
-
-
-# def oct_corner(i, radius, shape):
-#    i = (i+1)%8
-#
-#    points_x = [1, 2, 2, 1, -1, -2, -2, -1]
-#    points_y = [2, 1, -1, -2, -2, -1, 1, 2]
-#
-#    return translate(shape, (points_x[i] * radius / 2, points_y[i] * radius / 2, 0))
-
-import math
-
-
-def oct_corner(i, diameter, shape):
-    radius = diameter / 2
-    i = (i + 1) % 8
-
-    r = radius
-    m = radius * math.tan(math.pi / 8)
-
-    points_x = [m, r, r, m, -m, -r, -r, -m]
-    points_y = [r, m, -m, -r, -r, -m, m, r]
-
-    return translate(shape, (points_x[i], points_y[i], 0))
-
-
-def tbcj_edge_post(i):
-    shape = box(post_size, post_size, tbcj_thickness)
-    shape = oct_corner(i, tbcj_outer_diameter, shape)
-    return shape
-
-
-def tbcj_web_post(i):
-    shape = box(post_size, post_size, tbcj_thickness)
-    shape = oct_corner(i, tbcj_outer_diameter, shape)
-    return shape
-
-
-def tbcj_holder():
-    center = box(post_size, post_size, tbcj_thickness)
-
-    shape = []
-    for i in range(8):
-        shape_ = hull_from_shapes([
-            center,
-            tbcj_edge_post(i),
-            tbcj_edge_post(i + 1),
-        ])
-        shape.append(shape_)
-    shape = union(shape)
-
-    shape = difference(
-        shape,
-        [cylinder(tbcj_inner_diameter / 2, tbcj_thickness + 0.1)]
-    )
-
-    return shape
-
-
-def tbcj_thumb_position_rotation():
-    # loc = np.array([-15, -60, -12]) + thumborigin()
-    # shape = translate(shape, loc)
-    # shape = rotate(shape, (0,0,0))
-    pos = np.array([-15, -60, -12]) + main_thumborigin()
-    rot = (0, 0, 0)
-    return pos, rot
-
-
-def tbcj_place(shape):
-    loc = np.array([-15, -60, -12]) + main_thumborigin()
-    shape = translate(shape, loc)
-    shape = rotate(shape, (0, 0, 0))
-    return shape
-
-
-def tbcj_thumb(side="right"):
-    t = tbcj_thumb_layout(single_plate(side=side))
-    tb = tbcj_place(tbcj_holder())
-    return union([t, tb])
-
-
-def tbcj_thumbcaps():
-    t = tbcj_thumb_layout(sa_cap(1))
-    return t
-
-
-# TODO:  VERIFY THEY CAN BE DELETED.  THEY LOOK LIKE REPLICATES.
-# def thumb_post_tr():
-#     return translate(web_post(),
-#                      [(mount_width / 2) - post_adj, ((mount_height/2) + double_plate_height) - post_adj, 0]
-#                      )
-#
-#
-# def thumb_post_tl():
-#     return translate(web_post(),
-#                      [-(mount_width / 2) + post_adj, ((mount_height/2) + double_plate_height) - post_adj, 0]
-#                      )
-#
-#
-# def thumb_post_bl():
-#     return translate(web_post(),
-#                      [-(mount_width / 2) + post_adj, -((mount_height/2) + double_plate_height) + post_adj, 0]
-#                      )
-#
-#
-# def thumb_post_br():
-#     return translate(web_post(),
-#                      [(mount_width / 2) - post_adj, -((mount_height/2) + double_plate_height) + post_adj, 0]
-#                      )
-
-def tbcj_thumb_connectors():
-    hulls = []
-
-    # Top two
-    hulls.append(
-        triangle_hulls(
-            [
-                tbcj_thumb_tl_place(web_post_tr()),
-                tbcj_thumb_tl_place(web_post_br()),
-                tbcj_thumb_tr_place(web_post_tl()),
-                tbcj_thumb_tr_place(web_post_bl()),
-            ]
-        )
-    )
-
-    # centers of the bottom four
-    hulls.append(
-        triangle_hulls(
-            [
-                tbcj_thumb_bl_place(web_post_tr()),
-                tbcj_thumb_bl_place(web_post_br()),
-                tbcj_thumb_ml_place(web_post_tl()),
-                tbcj_thumb_ml_place(web_post_bl()),
-            ]
-        )
-    )
-
-    # top two to the middle two, starting on the left
-
-    hulls.append(
-        triangle_hulls(
-            [
-                tbcj_thumb_tl_place(web_post_tl()),
-                tbcj_thumb_ml_place(web_post_tr()),
-                tbcj_thumb_tl_place(web_post_bl()),
-                tbcj_thumb_ml_place(web_post_br()),
-                tbcj_thumb_tl_place(web_post_br()),
-                tbcj_thumb_tr_place(web_post_bl()),
-                tbcj_thumb_tr_place(web_post_br()),
-            ]
-        )
-    )
-
-    hulls.append(
-        triangle_hulls(
-            [
-                tbcj_thumb_tl_place(web_post_tl()),
-                key_place(web_post_bl(), 0, cornerrow),
-                tbcj_thumb_tl_place(web_post_tr()),
-                key_place(web_post_br(), 0, cornerrow),
-                tbcj_thumb_tr_place(web_post_tl()),
-                key_place(web_post_bl(), 1, cornerrow),
-                tbcj_thumb_tr_place(web_post_tr()),
-                key_place(web_post_br(), 1, cornerrow),
-                key_place(web_post_tl(), 2, lastrow),
-                key_place(web_post_bl(), 2, lastrow),
-                tbcj_thumb_tr_place(web_post_tr()),
-                key_place(web_post_bl(), 2, lastrow),
-                tbcj_thumb_tr_place(web_post_br()),
-                key_place(web_post_br(), 2, lastrow),
-                key_place(web_post_bl(), 3, lastrow),
-                key_place(web_post_tr(), 2, lastrow),
-                key_place(web_post_tl(), 3, lastrow),
-                key_place(web_post_bl(), 3, cornerrow),
-                key_place(web_post_tr(), 3, lastrow),
-                key_place(web_post_br(), 3, cornerrow),
-                key_place(web_post_bl(), 4, cornerrow),
-            ]
-        )
-    )
-
-    hulls.append(
-        triangle_hulls(
-            [
-                key_place(web_post_br(), 1, cornerrow),
-                key_place(web_post_tl(), 2, lastrow),
-                key_place(web_post_bl(), 2, cornerrow),
-                key_place(web_post_tr(), 2, lastrow),
-                key_place(web_post_br(), 2, cornerrow),
-                key_place(web_post_bl(), 3, cornerrow),
-            ]
-        )
-    )
-
-    hulls.append(
-        triangle_hulls(
-            [
-                key_place(web_post_tr(), 3, lastrow),
-                key_place(web_post_br(), 3, lastrow),
-                key_place(web_post_tr(), 3, lastrow),
-                key_place(web_post_bl(), 4, cornerrow),
-            ]
-        )
-    )
-
-    hulls.append(
-        triangle_hulls(
-            [
-                tbcj_place(tbcj_web_post(4)),
-                tbcj_thumb_bl_place(web_post_bl()),
-                tbcj_place(tbcj_web_post(5)),
-                tbcj_thumb_bl_place(web_post_br()),
-                tbcj_place(tbcj_web_post(6)),
-            ]
-        )
-    )
-
-    hulls.append(
-        triangle_hulls(
-            [
-                tbcj_thumb_bl_place(web_post_br()),
-                tbcj_place(tbcj_web_post(6)),
-                tbcj_thumb_ml_place(web_post_bl()),
-            ]
-        )
-    )
-
-    hulls.append(
-        triangle_hulls(
-            [
-                tbcj_thumb_ml_place(web_post_bl()),
-                tbcj_place(tbcj_web_post(6)),
-                tbcj_thumb_ml_place(web_post_br()),
-                tbcj_thumb_tr_place(web_post_bl()),
-            ]
-        )
-    )
-
-    hulls.append(
-        triangle_hulls(
-            [
-                tbcj_place(tbcj_web_post(6)),
-                tbcj_thumb_tr_place(web_post_bl()),
-                tbcj_place(tbcj_web_post(7)),
-                tbcj_thumb_tr_place(web_post_br()),
-                tbcj_place(tbcj_web_post(0)),
-                tbcj_thumb_tr_place(web_post_br()),
-                key_place(web_post_bl(), 3, lastrow),
-            ]
-        )
-    )
-
-    return union(hulls)
 
 
 ##########
@@ -1810,146 +1033,16 @@ def front_wall():
 
 def thumb_walls(side='right', style_override=None):
     if style_override is None:
-        _thumb_style = thumb_style
+        return right_cluster.walls(side)
     else:
-        _thumb_style = style_override
-
-    if _thumb_style == "MINI":
-        return cluster.walls()
-    elif _thumb_style == "MINIDOX":
-        return cluster.walls()
-    elif _thumb_style == "CARBONFET":
-        return cluster.walls()
-    elif _thumb_style == "FOURKEY":
-        return four_key_thumb_walls()
-    elif "TRACKBALL" in _thumb_style:
-        if (side == ball_side or ball_side == 'both'):
-            if _thumb_style == "TRACKBALL_ORBYL":
-                return cluster.walls()
-            elif thumb_style == "TRACKBALL_CJ":
-                return tbcj_thumb_walls()
-            elif thumb_style == "TRACKBALL_WILD":
-                return cluster.walls()
-
-        else:
-            return thumb_walls(side, style_override=other_thumb)
-    else:
-        return cluster.walls()
+        return left_cluster.walls(side)
 
 
 def thumb_connection(side='right', style_override=None):
     if style_override is None:
-        _thumb_style = thumb_style
+        return right_cluster.connection(side)
     else:
-        _thumb_style = style_override
-
-    if _thumb_style == "MINI":
-        return cluster.connection(side=side)
-    elif _thumb_style == "MINIDOX":
-        return cluster.connection(side=side)
-    elif _thumb_style == "CARBONFET":
-        return cluster.connection(side=side)
-    elif _thumb_style == "FOURKEY":
-        return four_key_thumb_connection(side=side)
-    elif "TRACKBALL" in _thumb_style:
-        if (side == ball_side or ball_side == 'both'):
-            if _thumb_style == "TRACKBALL_ORBYL":
-                return cluster.connection(side=side)
-            elif thumb_style == "TRACKBALL_CJ":
-                return tbcj_thumb_connection(side=side)
-            elif thumb_style == "TRACKBALL_WILD":
-                return cluster.connection(side=side)
-        else:
-            return thumb_connection(side, style_override=other_thumb)
-    else:
-        return cluster.connection(side=side)
-
-
-def tbcj_thumb_connection(side='right'):
-    # clunky bit on the top left thumb connection  (normal connectors don't work well)
-    shape = union([bottom_hull(
-        [
-            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True, side=side),
-            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True, side=side),
-            cluster.ml_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
-            cluster.ml_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
-        ]
-    )])
-
-    shape = union([shape,
-                   hull_from_shapes(
-                       [
-                           left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True,
-                                          side=side),
-                           left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True,
-                                          side=side),
-                           cluster.ml_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
-                           cluster.ml_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
-                           cluster.tl_place(web_post_tl()),
-                       ]
-                   )
-                   ])  # )
-
-    shape = union([shape, hull_from_shapes(
-        [
-            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True, side=side),
-            left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True, side=side),
-            left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True, side=side),
-            cluster.tl_place(web_post_tl()),
-        ]
-    )])
-
-    shape = union([shape, hull_from_shapes(
-        [
-            left_key_place(web_post(), cornerrow, -1, low_corner=True, side=side),
-            left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True, side=side),
-            key_place(web_post_bl(), 0, cornerrow),
-            cluster.tl_place(web_post_tl()),
-        ]
-    )])
-
-    shape = union([shape, hull_from_shapes(
-        [
-            cluster.ml_place(web_post_tr()),
-            cluster.ml_place(translate(web_post_tr(), wall_locate1(-0.3, 1))),
-            cluster.ml_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
-            cluster.ml_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
-            cluster.tl_place(web_post_tl()),
-        ]
-    )])
-
-    return shape
-
-
-def tbcj_thumb_walls():
-    shape = union([wall_brace(tbcj_thumb_ml_place, -0.3, 1, web_post_tr(), tbcj_thumb_ml_place, 0, 1, web_post_tl())])
-    shape = union(
-        [shape, wall_brace(tbcj_thumb_bl_place, 0, 1, web_post_tr(), tbcj_thumb_bl_place, 0, 1, web_post_tl())])
-    shape = union(
-        [shape, wall_brace(tbcj_thumb_bl_place, -1, 0, web_post_tl(), tbcj_thumb_bl_place, -1, 0, web_post_bl())])
-    shape = union(
-        [shape, wall_brace(tbcj_thumb_bl_place, -1, 0, web_post_tl(), tbcj_thumb_bl_place, 0, 1, web_post_tl())])
-    shape = union(
-        [shape, wall_brace(tbcj_thumb_ml_place, 0, 1, web_post_tl(), tbcj_thumb_bl_place, 0, 1, web_post_tr())])
-
-    corner = box(1, 1, tbcj_thickness)
-
-    points = [
-        (tbcj_thumb_bl_place, -1, 0, web_post_bl()),
-        (tbcj_place, 0, -1, tbcj_web_post(4)),
-        (tbcj_place, 0, -1, tbcj_web_post(3)),
-        (tbcj_place, 0, -1, tbcj_web_post(2)),
-        (tbcj_place, 1, -1, tbcj_web_post(1)),
-        (tbcj_place, 1, 0, tbcj_web_post(0)),
-        ((lambda sh: key_place(sh, 3, lastrow)), 0, -1, web_post_bl()),
-    ]
-    for i, _ in enumerate(points[:-1]):
-        (pa, dxa, dya, sa) = points[i]
-        (pb, dxb, dyb, sb) = points[i + 1]
-
-        shape = union([shape, wall_brace(pa, dxa, dya, sa, pb, dxb, dyb, sb)])
-
-    return shape
+        return left_cluster.connection(side)
 
 
 def case_walls(side='right'):
@@ -2109,12 +1202,7 @@ def generate_trackball(pos, rot):
 
 
 def generate_trackball_in_cluster():
-    if thumb_style == 'TRACKBALL_ORBYL':
-        pos, rot = cluster.position_rotation()
-    elif thumb_style == 'TRACKBALL_CJ':
-        pos, rot = tbcj_thumb_position_rotation()
-    elif thumb_style == 'TRACKBALL_WILD':
-        pos, rot = cluster.position_rotation()
+    pos, rot = right_cluster.position_rotation() if ball_side != "left" else left_cluster.position_rotation()
     return generate_trackball(pos, rot)
 
 
@@ -2577,22 +1665,7 @@ def screw_insert(column, row, bottom_radius, top_radius, height, side='right'):
 
 
 def screw_insert_thumb(bottom_radius, top_radius, height):
-    position = main_thumborigin()
-    if thumb_style == 'MINI':
-        position = cluster.screw_positions()
-    elif thumb_style == 'MINIDOX':
-        position = cluster.screw_positions()
-    elif thumb_style == 'CARBONFET':
-        position = cluster.screw_positions()
-    elif thumb_style == 'FOURKEY':
-        position = list(np.array(position) + np.array([-21, -48, 0]))
-        position[2] = 0
-    elif thumb_style == 'TRACKBALL':
-        position = list(np.array(position) + np.array([-72, -40, -16]))
-        position[2] = 0
-
-    else:
-        position = cluster.screw_positions()
+    position = right_cluster.screw_positions()
 
     shape = screw_insert_shape(bottom_radius, top_radius, height)
     shape = translate(shape, [position[0], position[1], height / 2])
@@ -2658,9 +1731,9 @@ def wire_post(direction, offset):
 
 def wire_posts():
     debugprint('wire_posts()')
-    shape = cluster.ml_place(wire_post(1, 0).translate([-5, 0, -2]))
-    shape = union([shape, cluster.ml_place(wire_post(-1, 6).translate([0, 0, -2.5]))])
-    shape = union([shape, cluster.ml_place(wire_post(1, 0).translate([5, 0, -2]))])
+    shape = right_cluster.ml_place(wire_post(1, 0).translate([-5, 0, -2]))
+    shape = union([shape, right_cluster.ml_place(wire_post(-1, 6).translate([0, 0, -2.5]))])
+    shape = union([shape, right_cluster.ml_place(wire_post(1, 0).translate([5, 0, -2]))])
 
     for column in range(lastcol):
         for row in range(lastrow - 1):
@@ -2686,7 +1759,7 @@ def model_side(side="right"):
     if debug_exports:
         export_file(shape=thumb_shape, fname=path.join(r"..", "things", r"debug_thumb_shape"))
     shape = union([shape, thumb_shape])
-    thumb_connector_shape = cluster.thumb_connectors(side=side)
+    thumb_connector_shape = right_cluster.thumb_connectors(side=side)
     shape = union([shape, thumb_connector_shape])
     if debug_exports:
         export_file(shape=shape, fname=path.join(r"..", "things", r"debug_thumb_connector_shape"))
@@ -2865,6 +1938,7 @@ def baseplate(wedge_angle=None, side='right'):
 
 
 def run():
+
     mod_r = model_side(side="right")
     export_file(shape=mod_r, fname=path.join(save_path, config_name + r"_right"))
 
@@ -2886,6 +1960,15 @@ def run():
         lbase = mirror(base, 'YZ')
         export_file(shape=lbase, fname=path.join(save_path, config_name + r"_left_plate"))
         export_dxf(shape=lbase, fname=path.join(save_path, config_name + r"_left_plate"))
+
+    # if ENGINE == 'cadquery':
+    import freecad_that as freecad
+    freecad.generate_freecad_script(path.abspath(save_path), [
+        config_name + r"_right",
+        config_name + r"_left",
+        config_name + r"_right_plate",
+        config_name + r"_left_plate"
+    ])
 
     if oled_mount_type == 'UNDERCUT':
         export_file(shape=oled_undercut_mount_frame()[1],
@@ -2916,27 +1999,32 @@ def get_cluster(style):
         clust = TrackballOrbyl(globals())
     elif style == TrackballWild.name():
         clust = TrackballWild(globals())
+    elif style == TrackballCJ.name():
+        clust = TrackballCJ(globals())
     else:
         clust = DefaultCluster(globals())
 
     return clust
 
 
-cluster = get_cluster(thumb_style)
+right_cluster = get_cluster(thumb_style)
 
 # TODO need to refine all this cluster/side logic
-if cluster.is_tb:
+if right_cluster.is_tb:
     if ball_side == "both":
-        other_cluster = cluster
+        left_cluster = right_cluster
     elif ball_side == "left":
-        other_cluster = cluster
-        cluster = get_cluster(other_thumb)
+        left_cluster = right_cluster
+        right_cluster = get_cluster(other_thumb)
     else:
-        other_cluster = get_cluster(other_thumb)
+        left_cluster = get_cluster(other_thumb)
 elif other_thumb != "DEFAULT" and other_thumb != thumb_style:
-    other_cluster = get_cluster(other_thumb)
+    left_cluster = get_cluster(other_thumb)
 else:
-    other_cluster = get_cluster("DEFAULT")
+    left_cluster = get_cluster("DEFAULT")
+
+right_cluster.set_side(right=True, other=left_cluster)
+left_cluster.set_side(right=False, other=right_cluster)
 
 # base = baseplate()
 # export_file(shape=base, fname=path.join(save_path, config_name + r"_plate"))

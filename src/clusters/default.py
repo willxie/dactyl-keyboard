@@ -1,6 +1,8 @@
 class DefaultCluster:
     num_keys = 6
     is_tb = False
+    right = True
+    opposite = None
 
     @staticmethod
     def name():
@@ -10,6 +12,19 @@ class DefaultCluster:
         for item in parent_locals:
             globals()[item] = parent_locals[item]
         print(self.name(), " built")
+
+    def is_right(self):
+        return self.right
+
+    def set_side(self, right, other):
+        self.right = right
+        self.opposite = other
+
+    def get_right(self):
+        return self if self.right else self.opposite
+
+    def get_left(self):
+        return self if not self.right else self.opposite
 
     def thumborigin(self):
         # debugprint('thumborigin()')
@@ -358,7 +373,7 @@ class DefaultCluster:
 
         return union(hulls)
 
-    def walls(self):
+    def walls(self, side="right"):
         print('thumb_walls()')
         # thumb, walls
         if default_1U_cluster:

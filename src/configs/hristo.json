@@ -1,6 +1,6 @@
 {
   "ENGINE": "openscad",
-  "override_name": "CLUSTER_cj_WOAH",
+  "override_name": "hristo",
   "iteration": "5x6",
   "show_caps": false,
   "nrows": 5,
@@ -13,7 +13,7 @@
   "column_style_gt5": "orthographic",
   "column_style": "standard",
   "full_last_rows": false,
-  "thumb_style": "TRACKBALL_CJ",
+  "thumb_style": "DEFAULT",
   "other_thumb": "DEFAULT",
   "ball_side": "right",
   "pinky_1_5U": false,

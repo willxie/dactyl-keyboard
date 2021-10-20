@@ -1,6 +1,6 @@
 {
     "ENGINE": "openscad",
-    "overrides": "brad.json",
+    "overrides": "hristo.json",
     "save_dir": ".",
     "config_name": "MINI_6x6_no_hotswap",
     "show_caps": false,

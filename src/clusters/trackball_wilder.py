@@ -1,4 +1,4 @@
-from src.clusters.trackball_orbyl import TrackballOrbyl
+from clusters.trackball_orbyl import TrackballOrbyl
 
 
 class TrackballWild(TrackballOrbyl):
@@ -161,7 +161,7 @@ class TrackballWild(TrackballOrbyl):
         return union(hulls)
 
     # todo update walls for wild track, still identical to orbyl
-    def walls(self):
+    def walls(self, side="right"):
         print('thumb_walls()')
         # thumb, walls
         shape = wall_brace(

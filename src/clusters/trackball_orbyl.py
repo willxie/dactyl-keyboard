@@ -1,4 +1,4 @@
-from src.clusters.default import DefaultCluster
+from clusters.default import DefaultCluster
 
 
 class TrackballOrbyl(DefaultCluster):
@@ -238,7 +238,7 @@ class TrackballOrbyl(DefaultCluster):
 
         return union(hulls)
 
-    def walls(self):
+    def walls(self, side="right"):
         print('thumb_walls()')
         # thumb, walls
         shape = wall_brace(

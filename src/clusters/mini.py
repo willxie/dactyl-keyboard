@@ -1,4 +1,4 @@
-from src.clusters.default import DefaultCluster
+from clusters.default import DefaultCluster
 
 class MiniCluster(DefaultCluster):
 
@@ -232,7 +232,7 @@ class MiniCluster(DefaultCluster):
 
         return union(hulls)
 
-    def walls(self):
+    def walls(self, side="right"):
         print('thumb_walls()')
         # thumb, walls
         shape = union([wall_brace(self.mr_place, 0, -1, web_post_br(), self.tr_place, 0, -1, self.thumb_post_br())])
