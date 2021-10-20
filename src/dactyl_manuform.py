@@ -1961,14 +1961,14 @@ def run():
         export_file(shape=lbase, fname=path.join(save_path, config_name + r"_left_plate"))
         export_dxf(shape=lbase, fname=path.join(save_path, config_name + r"_left_plate"))
 
-    # if ENGINE == 'cadquery':
-    import freecad_that as freecad
-    freecad.generate_freecad_script(path.abspath(save_path), [
-        config_name + r"_right",
-        config_name + r"_left",
-        config_name + r"_right_plate",
-        config_name + r"_left_plate"
-    ])
+    if ENGINE == 'cadquery':
+        import freecad_that as freecad
+        freecad.generate_freecad_script(path.abspath(save_path), [
+            config_name + r"_right",
+            config_name + r"_left",
+            config_name + r"_right_plate",
+            config_name + r"_left_plate"
+        ])
 
     if oled_mount_type == 'UNDERCUT':
         export_file(shape=oled_undercut_mount_frame()[1],
