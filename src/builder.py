@@ -1,5 +1,5 @@
 # from dactyl_manuform import *
-from clusters.default import DefaultCluster
+from clusters.default_cluster import DefaultCluster
 import numpy as np
 from numpy import pi
 import os.path as path

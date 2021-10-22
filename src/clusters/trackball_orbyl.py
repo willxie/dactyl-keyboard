@@ -1,4 +1,4 @@
-from clusters.default import DefaultCluster
+from clusters.default_cluster import DefaultCluster
 
 
 class TrackballOrbyl(DefaultCluster):
