@@ -647,7 +647,8 @@ def connectors():
             hulls.append(triangle_hulls(places))
 
 
-    return union(hulls)
+    # return union(hulls)
+    return add(hulls)
 
 
 ############
@@ -937,8 +938,10 @@ def default_thumbcaps():
 def default_thumb(side="right"):
     print('thumb()')
     shape = default_thumb_1x_layout(rotate(single_plate(side=side), (0, 0, -90)))
-    shape = union([shape, default_thumb_15x_layout(rotate(single_plate(side=side), (0, 0, -90)))])
-    shape = union([shape, default_thumb_15x_layout(double_plate(), plate=False)])
+    # shape = union([shape, default_thumb_15x_layout(rotate(single_plate(side=side), (0, 0, -90)))])
+    # shape = union([shape, default_thumb_15x_layout(double_plate(), plate=False)])
+    shape = add([shape, default_thumb_15x_layout(rotate(single_plate(side=side), (0, 0, -90)))])
+    shape = add([shape, default_thumb_15x_layout(double_plate(), plate=False)])
     shape = difference(shape, [default_thumb_pcb_plate_cutouts()])
     return shape
 
@@ -1127,7 +1130,8 @@ def default_thumb_connectors():
             )
         )
 
-    return union(hulls)
+    return add(hulls)
+    # return union(hulls)
 
 ############################
 # MINI THUMB CLUSTER
@@ -1170,7 +1174,8 @@ def mini_thumb_bl_place(shape):
 
 
 def mini_thumb_1x_layout(shape):
-    return union([
+    # return union([
+    return add([
         mini_thumb_mr_place(rotate(shape, [0, 0, thumb_plate_mr_rotation])),
         mini_thumb_br_place(rotate(shape, [0, 0, thumb_plate_br_rotation])),
         mini_thumb_tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])),
@@ -1179,7 +1184,8 @@ def mini_thumb_1x_layout(shape):
 
 
 def mini_thumb_15x_layout(shape):
-    return union([mini_thumb_tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation]))])
+    # return union([mini_thumb_tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation]))])
+    return add([mini_thumb_tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation]))])
 
 
 def mini_thumbcaps():
@@ -1190,13 +1196,15 @@ def mini_thumbcaps():
 
 def mini_thumb(side="right"):
     shape = mini_thumb_1x_layout(single_plate(side=side))
-    shape = union([shape, mini_thumb_15x_layout(single_plate(side=side))])
+    # shape = union([shape, mini_thumb_15x_layout(single_plate(side=side))])
+    shape = add([shape, mini_thumb_15x_layout(single_plate(side=side))])
 
     return shape
 
 def mini_thumb_pcb_plate_cutouts(side="right"):
     shape = mini_thumb_1x_layout(plate_pcb_cutout(side=side))
-    shape = union([shape, mini_thumb_15x_layout(plate_pcb_cutout(side=side))])
+    # shape = union([shape, mini_thumb_15x_layout(plate_pcb_cutout(side=side))])
+    shape = add([shape, mini_thumb_15x_layout(plate_pcb_cutout(side=side))])
     return shape
 
 
@@ -1318,7 +1326,8 @@ def mini_thumb_connectors():
         )
     )
 
-    return union(hulls)
+    # return union(hulls)
+    return add(hulls)
 
 
 ############################
@@ -1365,7 +1374,8 @@ def minidox_thumb_br_place(shape):
 
 
 def minidox_thumb_1x_layout(shape):
-    return union([
+    # return union([
+    return add([
         minidox_thumb_tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])),
         minidox_thumb_tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])),
         minidox_thumb_ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])),
@@ -1373,7 +1383,8 @@ def minidox_thumb_1x_layout(shape):
 
 
 def minidox_thumb_fx_layout(shape):
-    return union([
+    # return union([
+    return add([
         minidox_thumb_tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])),
         minidox_thumb_tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])),
         minidox_thumb_ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])),
@@ -1388,13 +1399,15 @@ def minidox_thumbcaps():
 def minidox_thumb(side="right"):
 
     shape = minidox_thumb_fx_layout(rotate(single_plate(side=side), [0.0, 0.0, -90]))
-    shape = union([shape, minidox_thumb_fx_layout(adjustable_plate(minidox_Usize))])
+    # shape = union([shape, minidox_thumb_fx_layout(adjustable_plate(minidox_Usize))])
+    shape = add([shape, minidox_thumb_fx_layout(adjustable_plate(minidox_Usize))])
     # shape = minidox_thumb_1x_layout(single_plate(side=side))
     return shape
 
 def minidox_thumb_pcb_plate_cutouts(side="right"):
     shape = minidox_thumb_fx_layout(plate_pcb_cutout(side=side))
-    shape = union([shape, minidox_thumb_fx_layout(plate_pcb_cutout())])
+    # shape = union([shape, minidox_thumb_fx_layout(plate_pcb_cutout())])
+    shape = add([shape, minidox_thumb_fx_layout(plate_pcb_cutout())])
     return shape
 
 def minidox_thumb_post_tr():
@@ -1475,7 +1488,8 @@ def minidox_thumb_connectors():
         )
     )
 
-    return union(hulls)
+    # return union(hulls)
+    return add(hulls)
 
 
 ############################
@@ -1521,7 +1535,8 @@ def carbonfet_thumb_bl_place(shape):
 
 
 def carbonfet_thumb_1x_layout(shape):
-    return union([
+    # return union([
+    return add([
         carbonfet_thumb_tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])),
         carbonfet_thumb_mr_place(rotate(shape, [0, 0, thumb_plate_mr_rotation])),
         carbonfet_thumb_br_place(rotate(shape, [0, 0, thumb_plate_br_rotation])),
@@ -1531,12 +1546,14 @@ def carbonfet_thumb_1x_layout(shape):
 
 def carbonfet_thumb_15x_layout(shape, plate=True):
     if plate:
-        return union([
+        # return union([
+        return add([
             carbonfet_thumb_bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
             carbonfet_thumb_ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation]))
         ])
     else:
-        return union([
+        # return union([
+        return add([
             carbonfet_thumb_bl_place(shape),
             carbonfet_thumb_ml_place(shape)
         ])
@@ -1550,14 +1567,17 @@ def carbonfet_thumbcaps():
 
 def carbonfet_thumb(side="right"):
     shape = carbonfet_thumb_1x_layout(single_plate(side=side))
-    shape = union([shape, carbonfet_thumb_15x_layout(double_plate_half(), plate=False)])
-    shape = union([shape, carbonfet_thumb_15x_layout(single_plate(side=side))])
+    # shape = union([shape, carbonfet_thumb_15x_layout(double_plate_half(), plate=False)])
+    # shape = union([shape, carbonfet_thumb_15x_layout(single_plate(side=side))])
+    shape = add([shape, carbonfet_thumb_15x_layout(double_plate_half(), plate=False)])
+    shape = add([shape, carbonfet_thumb_15x_layout(single_plate(side=side))])
 
     return shape
 
 def carbonfet_thumb_pcb_plate_cutouts(side="right"):
     shape = carbonfet_thumb_1x_layout(plate_pcb_cutout(side=side))
-    shape = union([shape, carbonfet_thumb_15x_layout(plate_pcb_cutout())])
+    # shape = union([shape, carbonfet_thumb_15x_layout(plate_pcb_cutout())])
+    shape = add([shape, carbonfet_thumb_15x_layout(plate_pcb_cutout())])
     return shape
 
 def carbonfet_thumb_post_tr():
@@ -1695,7 +1715,8 @@ def carbonfet_thumb_connectors():
         )
     )
 
-    return union(hulls)
+    # return union(hulls)
+    return add(hulls)
 
 
 ############################
@@ -1772,7 +1793,8 @@ def tbjs_thumb_bl_place(shape):
 
 
 def tbjs_thumb_1x_layout(shape):
-    return union([
+    # return union([
+    return add([
         tbjs_thumb_tl_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])),
         tbjs_thumb_mr_place(rotate(shape, [0, 0, thumb_plate_mr_rotation])),
         tbjs_thumb_bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
@@ -1792,7 +1814,8 @@ def tbjs_thumb_fx_layout(shape):
     ]
 
 def trackball_layout(shape):
-    return union([
+    # return union([
+    return add([
         tbjs_place(shape),
     ])
 
@@ -1808,7 +1831,8 @@ def tbjs_thumb(side="right"):
     # shape = tbjs_thumb_fx_layout(rotate(single_plate(side=side), [0.0, 0.0, -90]))
     shape = tbjs_thumb_1x_layout(single_plate(side=side))
     # shape = tbjs_thumb_fx_layout(adjustable_square_plate(Uwidth=tbjs_Uwidth, Uheight=tbjs_Uheight))
-    shape = union([shape, *tbjs_thumb_fx_layout(adjustable_square_plate(Uwidth=tbjs_Uwidth, Uheight=tbjs_Uheight))])
+    # shape = union([shape, *tbjs_thumb_fx_layout(adjustable_square_plate(Uwidth=tbjs_Uwidth, Uheight=tbjs_Uheight))])
+    shape = add([shape, *tbjs_thumb_fx_layout(adjustable_square_plate(Uwidth=tbjs_Uwidth, Uheight=tbjs_Uheight))])
 
     # shape = union([shape, trackball_layout(trackball_socket())])
     # shape = tbjs_thumb_1x_layout(single_plate(side=side))
@@ -1957,7 +1981,8 @@ def tbjs_thumb_connectors():
         )
     )
 
-    return union(hulls)
+    # return union(hulls)
+    return add(hulls)
 
 
 
@@ -1994,7 +2019,8 @@ def tbcj_thumb_bl_place(shape):
     return shape
 
 def tbcj_thumb_layout(shape):
-    return union([
+    # return union([
+    return add([
             tbcj_thumb_tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])),
             tbcj_thumb_tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])),
             tbcj_thumb_ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])),
@@ -2068,7 +2094,8 @@ def tbcj_place(shape):
 def tbcj_thumb(side="right"):
     t = tbcj_thumb_layout(single_plate(side=side))
     tb = tbcj_place(tbcj_holder())
-    return union([t, tb])
+    # return union([t, tb])
+    return add([t, tb])
 
 def tbcj_thumb_pcb_plate_cutouts(side="right"):
     t = tbcj_thumb_layout(plate_pcb_cutout(side=side))
@@ -2214,7 +2241,8 @@ def tbcj_thumb_connectors():
         )
     )
 
-    return union(hulls)
+    # return union(hulls)
+    return add(hulls)
 
 
 
@@ -2320,7 +2348,8 @@ def wall_brace(place1, dx1, dy1, post1, place2, dx2, dy2, post2, back=False, ske
 
     if len(hulls)>0:
         shape2 = bottom_hull(hulls)
-        shape1 = union([shape1, shape2])
+        # shape1 = union([shape1, shape2])
+        shape1 = add([shape1, shape2])
 
     return shape1
 
@@ -2380,7 +2409,7 @@ def right_wall(skeleton=False):
 
     shape = None
 
-    shape = union([shape,key_wall_brace(
+    shape = union([shape, key_wall_brace(
         lastcol, y, 1, 0, web_post_tr(), lastcol, y, 1, 0, web_post_br(),
         skeleton=skeleton,
     )])
@@ -3896,7 +3925,8 @@ def wire_posts():
 
 def model_side(side="right"):
     print('model_right()')
-    shape = union([key_holes(side=side)])
+    shape = add([key_holes(side=side)])
+    # shape = union([key_holes(side=side)])
     if debug_exports:
         export_file(shape=shape, fname=path.join(r"..", "things", r"debug_key_plates"))
     connector_shape = connectors()

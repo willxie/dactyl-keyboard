@@ -1,11 +1,11 @@
 {
     "ENGINE": "cadquery",
-    "save_dir": "DM_4x5_NOTCHPLT_DEFTMB_OLED_EXTCTRL",
-    "config_name": "DM_4x5_NOTCHPLT_DEFTMB_OLED_EXTCTRL",
+    "save_dir": ".",
+    "config_name": "DM",
     "show_caps": false,
     "show_pcbs": false,
-    "nrows": 4,
-    "ncols": 5,
+    "nrows": 6,
+    "ncols": 6,
     "alpha": 0.26179916666666664,
     "beta": 0.08726638888888888,
     "centercol": 3,
@@ -25,7 +25,7 @@
     "web_thickness": 5.1,
     "post_size": 0.1,
     "post_adj": 0,
-    "thumb_style": "DEFAULT",
+    "thumb_style": "TRACKBALL_ORBYL",
     "default_1U_cluster": true,
     "minidox_Usize": 1.6,
     "default_thumb_screw_xy_locations": [
@@ -146,7 +146,7 @@
     "thumb_plate_ml_rotation": 0.0,
     "thumb_plate_br_rotation": 0.0,
     "thumb_plate_bl_rotation": 0.0,
-    "separable_thumb": true,
+    "separable_thumb": false,
     "trackball_in_wall": false,
     "tbiw_ball_center_row": 0.2,
     "tbiw_translational_offset": [
