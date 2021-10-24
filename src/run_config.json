@@ -25,7 +25,7 @@
     "web_thickness": 5.1,
     "post_size": 0.1,
     "post_adj": 0,
-    "thumb_style": "TRACKBALL_ORBYL",
+    "thumb_style": "DEFAULT",
     "default_1U_cluster": true,
     "minidox_Usize": 1.6,
     "default_thumb_screw_xy_locations": [
