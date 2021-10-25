@@ -3,6 +3,7 @@ import os
 script_template = """
 import FreeCAD
 import ImportGui
+import Mesh
 
 def closeDocs():
     documentList = App.listDocuments()
@@ -32,7 +33,8 @@ for file in files:
         print(f"Error {err=}, {type(err)=}")
 
 
-print('Done')"""
+print('Done')
+"""
 
 
 def generate_freecad_script(target_dir, filenames):

@@ -86,7 +86,7 @@ class TrackballOrbyl(DefaultCluster):
     def thumb_fx_layout(self, shape):
         return union([])
 
-    def thumbcaps(self):
+    def thumbcaps(self, side='right'):
         t1 = self.thumb_1x_layout(sa_cap(1))
         return t1
 

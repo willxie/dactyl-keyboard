@@ -1,0 +1,22 @@
+{
+  "ENGINE": "cadquery",
+  "override_name": "amiran",
+  "iteration": "6x7",
+  "show_caps": false,
+  "nrows": 6,
+  "ncols": 7,
+  "plate_style": "NOTCH",
+  "plate_file_name": "derek_hotswap",
+  "plate_offset": -5.0,
+  "alpha": 0.26179916666666664,
+  "symmetry": "symmetric",
+  "column_style_gt5": "orthographic",
+  "column_style": "standard",
+  "full_last_rows": false,
+  "thumb_style": "DEFAULT",
+  "other_thumb": "DEFALUT",
+  "ball_side": "right",
+  "pinky_1_5U": false,
+  "first_1_5U_row": 0,
+  "last_1_5U_row": 5
+}

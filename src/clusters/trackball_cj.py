@@ -105,7 +105,7 @@ class TrackballCJ(TrackballOrbyl):
         tb = self.track_place(self.tbcj_holder())
         return union([t, tb])
 
-    def thumbcaps(self):
+    def thumbcaps(self, side='right'):
         t = self.thumb_layout(sa_cap(1))
         return t
 

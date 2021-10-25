@@ -1,8 +1,8 @@
 {
     "ENGINE": "openscad",
-    "overrides": "hristo.json",
+    "overrides": "brandon2.json",
     "save_dir": ".",
-    "config_name": "MINI_6x6_no_hotswap",
+    "config_name": "5x6",
     "show_caps": false,
     "show_pcbs": false,
     "nrows": 6,

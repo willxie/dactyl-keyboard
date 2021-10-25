@@ -1,8 +1,8 @@
 class DefaultCluster:
     num_keys = 6
     is_tb = False
-    right = True
-    opposite = None
+    # right = True
+    # opposite = None
 
     @staticmethod
     def name():
@@ -13,18 +13,18 @@ class DefaultCluster:
             globals()[item] = parent_locals[item]
         print(self.name(), " built")
 
-    def is_right(self):
-        return self.right
-
-    def set_side(self, right, other):
-        self.right = right
-        self.opposite = other
-
-    def get_right(self):
-        return self if self.right else self.opposite
-
-    def get_left(self):
-        return self if not self.right else self.opposite
+    # def is_right(self):
+    #     return self.right
+    #
+    # def set_side(self, right, other):
+    #     self.right = right
+    #     self.opposite = other
+    #
+    # def get_right(self):
+    #     return self if self.right else self.opposite
+    #
+    # def get_left(self):
+    #     return self if not self.right else self.opposite
 
     def thumborigin(self):
         # debugprint('thumborigin()')
@@ -139,7 +139,7 @@ class DefaultCluster:
 
                 return union(shape_list)
 
-    def thumbcaps(self):
+    def thumbcaps(self, side='right'):
         t1 = self.thumb_1x_layout(sa_cap(1), cap=True)
         if not default_1U_cluster:
             t1.add(self.thumb_15x_layout(sa_cap(1.5), cap=True))
@@ -178,7 +178,7 @@ class DefaultCluster:
                          )
 
     def thumb_connectors(self, side="right"):
-        print('thumb_connectors()')
+        print('default thumb_connectors()')
         hulls = []
 
         # Top two

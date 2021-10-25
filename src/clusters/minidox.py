@@ -85,7 +85,7 @@ class MinidoxCluster(DefaultCluster):
     #             self.ml_place(shape)
     #         ])
 
-    def thumbcaps(self):
+    def thumbcaps(self, side='right'):
         t1 = self.thumb_1x_layout(sa_cap(1))
         return t1
 

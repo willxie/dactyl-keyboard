@@ -14,7 +14,7 @@ class TrackballWild(TrackballOrbyl):
 
     def position_rotation(self):
         rot = [10, -15, 5]
-        pos = main_thumborigin()
+        pos = self.thumborigin()
         # Changes size based on key diameter around ball, shifting off of the top left cluster key.
         shift = [-.9*wild_key_diameter/2+27-42, -.1*wild_key_diameter/2+3-20, -5]
         for i in range(len(pos)):

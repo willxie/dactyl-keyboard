@@ -25,6 +25,11 @@ def rad2deg(rad: float) -> float:
 
 right_cluster = None
 left_cluster = None
+current_cluster = None
+
+
+def cluster(side="right"):
+    return right_cluster if side == "right" else left_cluster
 
 ###############################################
 # EXTREMELY UGLY BUT FUNCTIONAL BOOTSTRAP
@@ -703,24 +708,30 @@ def double_plate():
 
 
 def thumbcaps(side='right', style_override=None):
-    if style_override is None:
-        return right_cluster.thumbcaps()
-    else:
-        return left_cluster.thumbcaps()
+    print('thumbcaps ' + side)
+    return cluster(side).thumbcaps(side)
+    # if style_override is None or side == 'right':
+    #     return right_cluster.thumbcaps()
+    # else:
+    #     return left_cluster.thumbcaps()
 
 
 def thumb(side="right", style_override=None):
-    if style_override is None:
-        return right_cluster.thumb(side)
-    else:
-        return left_cluster.thumb(side)
+    print('thumb ' + side)
+    return cluster(side).thumb(side)
+    # if style_override is None or side == 'right':
+    #     return right_cluster.thumb(side)
+    # else:
+    #     return left_cluster.thumb(side)
 
 
 def thumb_connectors(side='right', style_override=None):
-    if style_override is None:
-        return right_cluster.thumb_connectors(side)
-    else:
-        return left_cluster.thumb_connectors(side)
+    print('thumbconnectors ' + side)
+    return cluster(side).thumb_connectors(side)
+    # if style_override is None or side == 'right':
+    #     return right_cluster.thumb_connectors(side)
+    # else:
+    #     return left_cluster.thumb_connectors(side)
 
 ############################
 # MINI THUMB CLUSTER
@@ -992,17 +1003,13 @@ def front_wall():
 
 
 def thumb_walls(side='right', style_override=None):
-    if style_override is None:
-        return right_cluster.walls(side)
-    else:
-        return left_cluster.walls(side)
+    print('thumb_walls ' + side)
+    return cluster(side).walls(side)
 
 
 def thumb_connection(side='right', style_override=None):
-    if style_override is None:
-        return right_cluster.connection(side)
-    else:
-        return left_cluster.connection(side)
+    print('thumb_connection ' + side)
+    return cluster(side).connection(side)
 
 
 def case_walls(side='right'):
@@ -1161,8 +1168,8 @@ def generate_trackball(pos, rot):
     return precut, shape, cutout, sensor, ball
 
 
-def generate_trackball_in_cluster():
-    pos, rot = right_cluster.position_rotation() if ball_side != "left" else left_cluster.position_rotation()
+def generate_trackball_in_cluster(cluster):
+    pos, rot = cluster.position_rotation() if ball_side != "left" else left_cluster.position_rotation()
     return generate_trackball(pos, rot)
 
 
@@ -1624,8 +1631,8 @@ def screw_insert(column, row, bottom_radius, top_radius, height, side='right'):
     return shape
 
 
-def screw_insert_thumb(bottom_radius, top_radius, height):
-    position = right_cluster.screw_positions()
+def screw_insert_thumb(bottom_radius, top_radius, height, side='right'):
+    position = cluster(side).screw_positions()
 
     shape = screw_insert_shape(bottom_radius, top_radius, height)
     shape = translate(shape, [position[0], position[1], height / 2])
@@ -1642,7 +1649,7 @@ def screw_insert_all_shapes(bottom_radius, top_radius, height, offset=0, side='r
         translate(screw_insert(3, 0, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
         translate(screw_insert(lastcol, 0, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
         translate(screw_insert(lastcol, lastrow - 1, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
-        translate(screw_insert_thumb(bottom_radius, top_radius, height), (0, 0, offset)),
+        translate(screw_insert_thumb(bottom_radius, top_radius, height, side=side), (0, 0, offset)),
     )
 
     return shape
@@ -1688,26 +1695,26 @@ def wire_post(direction, offset):
 
     return shape
 
-
-def wire_posts():
-    debugprint('wire_posts()')
-    shape = right_cluster.ml_place(wire_post(1, 0).translate([-5, 0, -2]))
-    shape = union([shape, right_cluster.ml_place(wire_post(-1, 6).translate([0, 0, -2.5]))])
-    shape = union([shape, right_cluster.ml_place(wire_post(1, 0).translate([5, 0, -2]))])
-
-    for column in range(lastcol):
-        for row in range(lastrow - 1):
-            shape = union([
-                shape,
-                key_place(wire_post(1, 0).translate([-5, 0, 0]), column, row),
-                key_place(wire_post(-1, 6).translate([0, 0, 0]), column, row),
-                key_place(wire_post(1, 0).translate([5, 0, 0]), column, row),
-            ])
-    return shape
+# not referenced?  WIP?
+# def wire_posts():
+#     debugprint('wire_posts()')
+#     shape = current_cluster.ml_place(wire_post(1, 0).translate([-5, 0, -2]))
+#     shape = union([shape, current_cluster.ml_place(wire_post(-1, 6).translate([0, 0, -2.5]))])
+#     shape = union([shape, current_cluster.ml_place(wire_post(1, 0).translate([5, 0, -2]))])
+#
+#     for column in range(lastcol):
+#         for row in range(lastrow - 1):
+#             shape = union([
+#                 shape,
+#                 key_place(wire_post(1, 0).translate([-5, 0, 0]), column, row),
+#                 key_place(wire_post(-1, 6).translate([0, 0, 0]), column, row),
+#                 key_place(wire_post(1, 0).translate([5, 0, 0]), column, row),
+#             ])
+#     return shape
 
 
 def model_side(side="right"):
-    print('model_right()')
+    print('model_side()' + side)
     shape = union([key_holes(side=side)])
     if debug_exports:
         export_file(shape=shape, fname=path.join(r"..", "things", r"debug_key_plates"))
@@ -1715,11 +1722,11 @@ def model_side(side="right"):
     shape = union([shape, connector_shape])
     if debug_exports:
         export_file(shape=shape, fname=path.join(r"..", "things", r"debug_connector_shape"))
-    thumb_shape = thumb(side=side)
+    thumb_shape = cluster(side).thumb(side=side)
     if debug_exports:
         export_file(shape=thumb_shape, fname=path.join(r"..", "things", r"debug_thumb_shape"))
     shape = union([shape, thumb_shape])
-    thumb_connector_shape = right_cluster.thumb_connectors(side=side)
+    thumb_connector_shape = cluster(side).thumb_connectors(side=side)
     shape = union([shape, thumb_connector_shape])
     if debug_exports:
         export_file(shape=shape, fname=path.join(r"..", "things", r"debug_thumb_connector_shape"))
@@ -1782,7 +1789,7 @@ def model_side(side="right"):
             shape = add([shape, ball])
 
     if (trackball_in_wall or ('TRACKBALL' in thumb_style)) and (side == ball_side or ball_side == 'both'):
-        tbprecut, tb, tbcutout, sensor, ball = generate_trackball_in_cluster()
+        tbprecut, tb, tbcutout, sensor, ball = generate_trackball_in_cluster(cluster(side))
 
         shape = difference(shape, [tbprecut])
         # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_1"))
@@ -1801,7 +1808,7 @@ def model_side(side="right"):
     shape = difference(shape, [block])
 
     if show_caps:
-        shape = add([shape, thumbcaps(side=side)])
+        shape = add([shape, cluster(side).thumbcaps(side=side)])
         shape = add([shape, caps()])
 
     if side == "left":
@@ -1907,6 +1914,7 @@ def run():
     export_dxf(shape=base, fname=path.join(save_path, config_name + r"_right_plate"))
 
     if symmetry == "asymmetric":
+
         mod_l = model_side(side="left")
         export_file(shape=mod_l, fname=path.join(save_path, config_name + r"_left"))
 
@@ -1985,8 +1993,11 @@ elif other_thumb != "DEFAULT" and other_thumb != thumb_style:
 else:
     left_cluster = get_cluster("DEFAULT")
 
-right_cluster.set_side(right=True, other=left_cluster)
-left_cluster.set_side(right=False, other=right_cluster)
+# right_cluster.set_side(right=True, other=left_cluster)
+# left_cluster.set_side(right=False, other=right_cluster)
+
+current_cluster = right_cluster
+
 
 # base = baseplate()
 # export_file(shape=base, fname=path.join(save_path, config_name + r"_plate"))
