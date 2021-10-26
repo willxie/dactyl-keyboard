@@ -1,0 +1,17 @@
+{
+  "ENGINE": "cadquery",
+  "override_name": "NATHAN_KNOWLES",
+  "iteration": "6x6",
+  "show_caps": false,
+  "nrows": 6,
+  "ncols": 6,
+  "plate_style": "HS_NOTCH",
+  "plate_file_name": "derek_hotswap",
+  "plate_offset": -5.0,
+  "symmetry": "symmetric",
+  "column_style_gt5": "orthographic",
+  "column_style": "standard",
+  "thumb_style": "DEFAULT",
+  "other_thumb": "DEFAULT"
+}
+

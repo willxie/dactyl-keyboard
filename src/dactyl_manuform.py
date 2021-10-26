@@ -707,32 +707,6 @@ def double_plate():
     return union((top_plate, mirror(top_plate, 'XZ')))
 
 
-def thumbcaps(side='right', style_override=None):
-    print('thumbcaps ' + side)
-    return cluster(side).thumbcaps(side)
-    # if style_override is None or side == 'right':
-    #     return right_cluster.thumbcaps()
-    # else:
-    #     return left_cluster.thumbcaps()
-
-
-def thumb(side="right", style_override=None):
-    print('thumb ' + side)
-    return cluster(side).thumb(side)
-    # if style_override is None or side == 'right':
-    #     return right_cluster.thumb(side)
-    # else:
-    #     return left_cluster.thumb(side)
-
-
-def thumb_connectors(side='right', style_override=None):
-    print('thumbconnectors ' + side)
-    return cluster(side).thumb_connectors(side)
-    # if style_override is None or side == 'right':
-    #     return right_cluster.thumb_connectors(side)
-    # else:
-    #     return left_cluster.thumb_connectors(side)
-
 ############################
 # MINI THUMB CLUSTER
 ############################
@@ -1002,16 +976,6 @@ def front_wall():
     return shape
 
 
-def thumb_walls(side='right', style_override=None):
-    print('thumb_walls ' + side)
-    return cluster(side).walls(side)
-
-
-def thumb_connection(side='right', style_override=None):
-    print('thumb_connection ' + side)
-    return cluster(side).connection(side)
-
-
 def case_walls(side='right'):
     print('case_walls()')
     return (
@@ -1020,8 +984,8 @@ def case_walls(side='right'):
             left_wall(side=side),
             right_wall(),
             front_wall(),
-            thumb_walls(side=side),
-            thumb_connection(side=side),
+            cluster(side=side).walls(side=side),
+            cluster(side=side).connection(side=side),
         ])
     )
 
@@ -1979,7 +1943,6 @@ def get_cluster(style):
 
 right_cluster = get_cluster(thumb_style)
 
-# TODO need to refine all this cluster/side logic
 if right_cluster.is_tb:
     if ball_side == "both":
         left_cluster = right_cluster
@@ -1991,10 +1954,8 @@ if right_cluster.is_tb:
 elif other_thumb != "DEFAULT" and other_thumb != thumb_style:
     left_cluster = get_cluster(other_thumb)
 else:
-    left_cluster = get_cluster("DEFAULT")
+    left_cluster = right_cluster  # this assumes thumb_style always overrides DEFAULT other_thumb
 
-# right_cluster.set_side(right=True, other=left_cluster)
-# left_cluster.set_side(right=False, other=right_cluster)
 
 current_cluster = right_cluster
 
