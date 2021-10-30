@@ -1,5 +1,5 @@
 {
-    "ENGINE": "openscad",
+    "ENGINE": "solid",
     "overrides": "nathan_knowles.json",
     "save_dir": ".",
     "config_name": "5x6",

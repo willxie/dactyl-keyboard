@@ -56,17 +56,12 @@ else:
 for item in data:
     globals()[item] = data[item]
 
-full_dir_name = save_dir
-
 if overrides is not None:
     with open(os.path.join(r".", r"configs", overrides), mode='r') as fid:
         override_data = json.load(fid)
     for item in override_data:
         globals()[item] = override_data[item]
 
-    full_dir_name = override_name
-    if iteration is not None:
-        full_dir_name = override_name + "_" + iteration
     config_name = override_name + "_" + str(nrows) + "x" + str(ncols) + "_" + thumb_style
 
 # Really rough setup.  Check for ENGINE, set it not present from configuration.
