@@ -24,8 +24,8 @@ shape_config = {
     'show_caps': False,
     'show_pcbs': False, #only runs if caps are shown, easist place to initially inject geometry
 
-    'nrows':  6, #5,  # key rows
-    'ncols':  6, #6,  # key columns
+    'nrows':  5, #5,  # key rows
+    'ncols':  3, #6,  # key columns
 
     'alpha':  pi / 12.0,  # curvature of the columns
     'beta':  pi / 36.0,  # curvature of the rows
@@ -38,6 +38,8 @@ shape_config = {
 
     'column_style_gt5':  "orthographic",
     'column_style':  "standard",  # options include :standard, :orthographic, and :fixed
+    'reduced_outer_keys': True,
+
 
     'thumb_offsets':  [6, -3, 7],
     'keyboard_z_offset':  (
