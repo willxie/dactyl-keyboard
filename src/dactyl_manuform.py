@@ -25,7 +25,6 @@ def rad2deg(rad: float) -> float:
 
 right_cluster = None
 left_cluster = None
-current_cluster = None
 
 
 def cluster(side="right"):
@@ -1956,8 +1955,6 @@ elif other_thumb != "DEFAULT" and other_thumb != thumb_style:
 else:
     left_cluster = right_cluster  # this assumes thumb_style always overrides DEFAULT other_thumb
 
-
-current_cluster = right_cluster
 
 
 # base = baseplate()
