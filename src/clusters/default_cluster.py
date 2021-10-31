@@ -1,3 +1,7 @@
+import json
+import os
+
+
 class DefaultCluster:
     num_keys = 6
     is_tb = False
@@ -8,10 +12,19 @@ class DefaultCluster:
     def name():
         return "DEFAULT"
 
+    def get_config(self):
+        with open(os.path.join(r"..", "configs", "clusters", "DEFAULT.json"), mode='r') as fid:
+            return json.load(fid)
+
     def __init__(self, parent_locals):
         for item in parent_locals:
             globals()[item] = parent_locals[item]
+        data = self.get_config()
+        for item in data:
+            globals()[item] = data[item]
         print(self.name(), " built")
+
+
 
     # def is_right(self):
     #     return self.right

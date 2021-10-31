@@ -7,6 +7,14 @@ class CarbonfetCluster(DefaultCluster):
     def name():
         return "CARBONFET"
 
+    # NO CARBONFET-SPECIFIC DATA IN CONFIGS
+    # def get_config(self):
+    #     data = super().get_config()
+    #     with open(os.path.join(r"..", "configs", "clusters", "CAR.json"), mode='r') as fid:
+    #         data += json.load(fid)
+    #
+    #     return data
+
     def __init__(self, parent_locals):
         super().__init__(parent_locals)
         for item in parent_locals:

@@ -1,4 +1,6 @@
 from clusters.default_cluster import DefaultCluster
+import os
+import json
 
 
 class MinidoxCluster(DefaultCluster):
@@ -6,6 +8,13 @@ class MinidoxCluster(DefaultCluster):
     @staticmethod
     def name():
         return "MINIDOX"
+
+    def get_config(self):
+        data = super().get_config()
+        with open(os.path.join(r"..", "configs", "clusters", "MINIDOX.json"), mode='r') as fid:
+            data += json.load(fid)
+
+        return data
 
     def __init__(self, parent_locals):
         self.num_keys = 3
