@@ -1,0 +1,60 @@
+{
+    "wild_key_diameter": 75,
+    "wild_translation_offset": [
+        10,
+        0,
+        0
+    ],
+    "wild_rotation_offset": [
+        10,
+        -10,
+        0
+    ],
+    "wild_key_translation_offsets": [
+        [
+            0.0,
+            -5.0,
+            -3.0
+        ],
+        [
+            0.0,
+            -3.0,
+            -5.0
+        ],
+        [
+            0.0,
+            1.0,
+            -3.0
+        ],
+        [
+            0.0,
+            1.0,
+            -2.0
+        ]
+    ],
+    "wild_key_rotation_offsets": [
+        [
+            0.0,
+            0.0,
+            15
+        ],
+        [
+            0.0,
+            0.0,
+            -5
+        ],
+        [
+            0.0,
+            -20.0,
+            41.0
+        ],
+        [
+            25.0,
+            0.0,
+            -4.0
+        ]
+    ],
+    "wild_key_to_thumb_rotation": [
+        -80, -150, -195, -240
+    ]
+}

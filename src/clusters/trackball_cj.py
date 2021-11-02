@@ -3,10 +3,29 @@ import math
 
 
 class TrackballCJ(TrackballOrbyl):
-
+    tbcj_inner_diameter = 42
+    tbcj_thickness = 2
+    tbcj_outer_diameter = 53
+    
     @staticmethod
     def name():
         return "TRACKBALL_CJ"
+
+    def get_config(self):
+        with open(os.path.join(".", "configs", "clusters", "TRACKBALL_CJ.json"), mode='r') as fid:
+            data = json.load(fid)
+
+        superdata = super().get_config()
+
+        # overwrite any super variables with this class' needs
+        for item in data:
+            superdata[item] = data[item]
+
+        for item in superdata:
+            if not hasattr(self, str(item)):
+                print(self.name() + ": NO MEMBER VARIABLE FOR " + str(item))
+                continue
+            setattr(self, str(item), superdata[item])
 
     def __init__(self, parent_locals):
         super().__init__(parent_locals)
@@ -64,24 +83,24 @@ class TrackballCJ(TrackballOrbyl):
 
     def thumb_layout(self, shape):
         return union([
-            self.tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])),
-            self.tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])),
-            self.ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])),
-            self.bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
+            self.tr_place(rotate(shape, [0, 0, self.thumb_plate_tr_rotation])),
+            self.tl_place(rotate(shape, [0, 0, self.thumb_plate_tl_rotation])),
+            self.ml_place(rotate(shape, [0, 0, self.thumb_plate_ml_rotation])),
+            self.bl_place(rotate(shape, [0, 0, self.thumb_plate_bl_rotation])),
         ])
 
     def tbcj_edge_post(self, i):
-        shape = box(post_size, post_size, tbcj_thickness)
-        shape = self.oct_corner(i, tbcj_outer_diameter, shape)
+        shape = box(post_size, post_size, self.tbcj_thickness)
+        shape = self.oct_corner(i, self.tbcj_outer_diameter, shape)
         return shape
 
     def tbcj_web_post(self, i):
-        shape = box(post_size, post_size, tbcj_thickness)
-        shape = self.oct_corner(i, tbcj_outer_diameter, shape)
+        shape = box(post_size, post_size, self.tbcj_thickness)
+        shape = self.oct_corner(i, self.tbcj_outer_diameter, shape)
         return shape
 
     def tbcj_holder(self):
-        center = box(post_size, post_size, tbcj_thickness)
+        center = box(post_size, post_size, self.tbcj_thickness)
 
         shape = []
         for i in range(8):
@@ -95,7 +114,7 @@ class TrackballCJ(TrackballOrbyl):
 
         shape = difference(
             shape,
-            [cylinder(tbcj_inner_diameter / 2, tbcj_thickness + 0.1)]
+            [cylinder(self.tbcj_inner_diameter / 2, self.tbcj_thickness + 0.1)]
         )
 
         return shape
@@ -268,7 +287,7 @@ class TrackballCJ(TrackballOrbyl):
         shape = union(
             [shape, wall_brace(self.ml_place, 0, 1, web_post_tl(), self.bl_place, 0, 1, web_post_tr())])
 
-        corner = box(1, 1, tbcj_thickness)
+        corner = box(1, 1, self.tbcj_thickness)
 
         points = [
             (self.bl_place, -1, 0, web_post_bl()),

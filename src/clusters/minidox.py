@@ -4,17 +4,27 @@ import json
 
 
 class MinidoxCluster(DefaultCluster):
+    minidox_Usize = 1.6
 
     @staticmethod
     def name():
         return "MINIDOX"
 
     def get_config(self):
-        data = super().get_config()
-        with open(os.path.join(r"..", "configs", "clusters", "MINIDOX.json"), mode='r') as fid:
-            data += json.load(fid)
+        with open(os.path.join(".", "configs", "clusters", "MINIDOX.json"), mode='r') as fid:
+            data = json.load(fid)
 
-        return data
+        superdata = super().get_config()
+
+        # overwrite any super variables with this class' needs
+        for item in data:
+            superdata[item] = data[item]
+
+        for item in superdata:
+            if not hasattr(self, str(item)):
+                print(self.name() + ": NO MEMBER VARIABLE FOR " + str(item))
+                continue
+            setattr(self, str(item), superdata[item])
 
     def __init__(self, parent_locals):
         self.num_keys = 3
@@ -68,25 +78,25 @@ class MinidoxCluster(DefaultCluster):
     def thumb_1x_layout(self, shape, cap=False):
         debugprint('thumb_1x_layout()')
         return union([
-            self.tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])),
-            self.tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])),
-            self.ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])),
+            self.tr_place(rotate(shape, [0, 0, self.thumb_plate_tr_rotation])),
+            self.tl_place(rotate(shape, [0, 0, self.thumb_plate_tl_rotation])),
+            self.ml_place(rotate(shape, [0, 0, self.thumb_plate_ml_rotation])),
         ])
 
     def thumb_fx_layout(self, shape):
         return union([
-            self.tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])),
-            self.tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])),
-            self.ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])),
-            # self.fl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
+            self.tr_place(rotate(shape, [0, 0, self.thumb_plate_tr_rotation])),
+            self.tl_place(rotate(shape, [0, 0, self.thumb_plate_tl_rotation])),
+            self.ml_place(rotate(shape, [0, 0, self.thumb_plate_ml_rotation])),
+            # self.fl_place(rotate(shape, [0, 0, self.thumb_plate_bl_rotation])),
         ])
 
     # def thumb_15x_layout(self, shape, cap=False, plate=True):
     #     debugprint('thumb_15x_layout()')
     #     if plate:
     #         return union([
-    #             self.bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
-    #             self.ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation]))
+    #             self.bl_place(rotate(shape, [0, 0, self.thumb_plate_bl_rotation])),
+    #             self.ml_place(rotate(shape, [0, 0, self.thumb_plate_ml_rotation]))
     #         ])
     #     else:
     #         return union([
@@ -101,32 +111,32 @@ class MinidoxCluster(DefaultCluster):
     def thumb(self, side="right"):
         print('thumb()')
         shape = self.thumb_fx_layout(rotate(single_plate(side=side), [0.0, 0.0, -90]))
-        shape = union([shape, self.thumb_fx_layout(adjustable_plate(minidox_Usize))])
+        shape = union([shape, self.thumb_fx_layout(adjustable_plate(self.minidox_Usize))])
 
         return shape
 
     def thumb_post_tr(self):
         debugprint('thumb_post_tr()')
         return translate(web_post(),
-                         [(mount_width / 2) - post_adj, ((mount_height/2) + adjustable_plate_size(minidox_Usize)) - post_adj, 0]
+                         [(mount_width / 2) - post_adj, ((mount_height/2) + adjustable_plate_size(self.minidox_Usize)) - post_adj, 0]
                          )
 
     def thumb_post_tl(self):
         debugprint('thumb_post_tl()')
         return translate(web_post(),
-                         [-(mount_width / 2) + post_adj, ((mount_height/2) + adjustable_plate_size(minidox_Usize)) - post_adj, 0]
+                         [-(mount_width / 2) + post_adj, ((mount_height/2) + adjustable_plate_size(self.minidox_Usize)) - post_adj, 0]
                          )
 
     def thumb_post_bl(self):
         debugprint('thumb_post_bl()')
         return translate(web_post(),
-                         [-(mount_width / 2) + post_adj, -((mount_height/2) + adjustable_plate_size(minidox_Usize)) + post_adj, 0]
+                         [-(mount_width / 2) + post_adj, -((mount_height/2) + adjustable_plate_size(self.minidox_Usize)) + post_adj, 0]
                          )
 
     def thumb_post_br(self):
         debugprint('thumb_post_br()')
         return translate(web_post(),
-                         [(mount_width / 2) - post_adj, -((mount_height/2) + adjustable_plate_size(minidox_Usize)) + post_adj, 0]
+                         [(mount_width / 2) - post_adj, -((mount_height/2) + adjustable_plate_size(self.minidox_Usize)) + post_adj, 0]
                          )
 
     def thumb_connectors(self, side="right"):
@@ -299,7 +309,7 @@ class MinidoxCluster(DefaultCluster):
     def screw_positions(self):
         position = self.thumborigin()
         position = list(np.array(position) + np.array([-37, -32, -16]))
-        position[1] = position[1] - .4 * (minidox_Usize - 1) * sa_length
+        position[1] = position[1] - .4 * (self.minidox_Usize - 1) * sa_length
         position[2] = 0
 
         return position

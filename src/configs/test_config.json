@@ -1,5 +1,5 @@
 {
-  "ENGINE": "cadquery",
+  "ENGINE": "solid",
   "override_name": "testing",
   "iteration": "5x6",
   "show_caps": false,

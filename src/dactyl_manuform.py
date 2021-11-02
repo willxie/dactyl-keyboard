@@ -308,7 +308,7 @@ def single_plate(cylinder_segments=100, side="right"):
 
 
 def trackball_cutout(segments=100, side="right"):
-    shape = cylinder(trackball_hole_diameter / 2, trackball_hole_height)
+    shape = cylinder(cluster(side).trackball_hole_diameter / 2, cluster(side).trackball_hole_height)
     return shape
 
 
@@ -338,7 +338,7 @@ def trackball_socket(segments=100, side="right"):
 
 
 def trackball_ball(segments=100, side="right"):
-    shape = sphere(ball_diameter / 2)
+    shape = sphere(cluster(side).ball_diameter / 2)
     return shape
 
 

@@ -2,49 +2,49 @@ import json
 import os
 
 
-class DefaultCluster:
+class DefaultCluster(object):
     num_keys = 6
     is_tb = False
-    # right = True
-    # opposite = None
+    thumb_offsets = [
+        6,
+        -3,
+        7
+    ]
+    thumb_plate_tr_rotation = 0
+    thumb_plate_tl_rotation = 0
+    thumb_plate_mr_rotation = 0
+    thumb_plate_ml_rotation = 0
+    thumb_plate_br_rotation = 0
+    thumb_plate_bl_rotation = 0
 
     @staticmethod
     def name():
         return "DEFAULT"
 
+
     def get_config(self):
-        with open(os.path.join(r"..", "configs", "clusters", "DEFAULT.json"), mode='r') as fid:
-            return json.load(fid)
+        print(os.getcwd())
+        with open(os.path.join(".", "configs", "clusters", "DEFAULT.json"), mode='r') as fid:
+            data = json.load(fid)
+        for item in data:
+            if not hasattr(self, str(item)):
+                print(self.name() + ": NO MEMBER VARIABLE FOR " + str(item))
+                continue
+            setattr(self, str(item), data[item])
+        return data
 
     def __init__(self, parent_locals):
         for item in parent_locals:
             globals()[item] = parent_locals[item]
-        data = self.get_config()
-        for item in data:
-            globals()[item] = data[item]
+        self.get_config()
         print(self.name(), " built")
-
-
-
-    # def is_right(self):
-    #     return self.right
-    #
-    # def set_side(self, right, other):
-    #     self.right = right
-    #     self.opposite = other
-    #
-    # def get_right(self):
-    #     return self if self.right else self.opposite
-    #
-    # def get_left(self):
-    #     return self if not self.right else self.opposite
 
     def thumborigin(self):
         # debugprint('thumborigin()')
         origin = key_position([mount_width / 2, -(mount_height / 2), 0], 1, cornerrow)
 
         for i in range(len(origin)):
-            origin[i] = origin[i] + thumb_offsets[i]
+            origin[i] = origin[i] + self.thumb_offsets[i]
 
         if thumb_style == 'MINIDOX':
             origin[1] = origin[1] - .4 * (trackball_Usize - 1) * sa_length
@@ -97,27 +97,27 @@ class DefaultCluster:
         debugprint('thumb_1x_layout()')
         if cap:
             shape_list = [
-                self.mr_place(rotate(shape, [0, 0, thumb_plate_mr_rotation])),
-                self.ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])),
-                self.br_place(rotate(shape, [0, 0, thumb_plate_br_rotation])),
-                self.bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
+                self.mr_place(rotate(shape, [0, 0, self.thumb_plate_mr_rotation])),
+                self.ml_place(rotate(shape, [0, 0, self.thumb_plate_ml_rotation])),
+                self.br_place(rotate(shape, [0, 0, self.thumb_plate_br_rotation])),
+                self.bl_place(rotate(shape, [0, 0, self.thumb_plate_bl_rotation])),
             ]
 
             if default_1U_cluster:
-                shape_list.append(self.tr_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, thumb_plate_tr_rotation])))
-                shape_list.append(self.tr_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, thumb_plate_tr_rotation])))
-                shape_list.append(self.tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])))
+                shape_list.append(self.tr_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, self.thumb_plate_tr_rotation])))
+                shape_list.append(self.tr_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, self.thumb_plate_tr_rotation])))
+                shape_list.append(self.tl_place(rotate(shape, [0, 0, self.thumb_plate_tl_rotation])))
             shapes = add(shape_list)
 
         else:
             shape_list = [
-                self.mr_place(rotate(shape, [0, 0, thumb_plate_mr_rotation])),
-                self.ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])),
-                self.br_place(rotate(shape, [0, 0, thumb_plate_br_rotation])),
-                self.bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
+                self.mr_place(rotate(shape, [0, 0, self.thumb_plate_mr_rotation])),
+                self.ml_place(rotate(shape, [0, 0, self.thumb_plate_ml_rotation])),
+                self.br_place(rotate(shape, [0, 0, self.thumb_plate_br_rotation])),
+                self.bl_place(rotate(shape, [0, 0, self.thumb_plate_bl_rotation])),
             ]
             if default_1U_cluster:
-                shape_list.append(self.tr_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, thumb_plate_tr_rotation])))
+                shape_list.append(self.tr_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, self.thumb_plate_tr_rotation])))
             shapes = union(shape_list)
         return shapes
 
@@ -126,13 +126,13 @@ class DefaultCluster:
         if plate:
             if cap:
                 shape = rotate(shape, (0, 0, 90))
-                cap_list = [self.tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation]))]
-                cap_list.append(self.tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])))
+                cap_list = [self.tl_place(rotate(shape, [0, 0, self.thumb_plate_tl_rotation]))]
+                cap_list.append(self.tr_place(rotate(shape, [0, 0, self.thumb_plate_tr_rotation])))
                 return add(cap_list)
             else:
-                shape_list = [self.tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation]))]
+                shape_list = [self.tl_place(rotate(shape, [0, 0, self.thumb_plate_tl_rotation]))]
                 if not default_1U_cluster:
-                    shape_list.append(self.tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])))
+                    shape_list.append(self.tr_place(rotate(shape, [0, 0, self.thumb_plate_tr_rotation])))
                 return union(shape_list)
         else:
             if cap:

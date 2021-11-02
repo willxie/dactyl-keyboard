@@ -7,13 +7,22 @@ class CarbonfetCluster(DefaultCluster):
     def name():
         return "CARBONFET"
 
-    # NO CARBONFET-SPECIFIC DATA IN CONFIGS
-    # def get_config(self):
-    #     data = super().get_config()
-    #     with open(os.path.join(r"..", "configs", "clusters", "CAR.json"), mode='r') as fid:
-    #         data += json.load(fid)
-    #
-    #     return data
+
+    def get_config(self):
+        with open(os.path.join(".", "configs", "clusters", "CARBONFET.json"), mode='r') as fid:
+            data = json.load(fid)
+
+        superdata = super().get_config()
+
+        # overwrite any super variables with this class' needs
+        for item in data:
+            superdata[item] = data[item]
+
+        for item in superdata:
+            if not hasattr(self, str(item)):
+                print(self.name() + ": NO MEMBER VARIABLE FOR " + str(item))
+                continue
+            setattr(self, str(item), superdata[item])
 
     def __init__(self, parent_locals):
         super().__init__(parent_locals)

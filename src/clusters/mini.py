@@ -6,6 +6,22 @@ class MiniCluster(DefaultCluster):
     def name():
         return "MINI"
 
+    def get_config(self):
+        with open(os.path.join(".", "configs", "clusters", "MINI.json"), mode='r') as fid:
+            data = json.load(fid)
+
+        superdata = super().get_config()
+
+        # overwrite any super variables with this class' needs
+        for item in data:
+            superdata[item] = data[item]
+
+        for item in superdata:
+            if not hasattr(self, str(item)):
+                print(self.name() + ": NO MEMBER VARIABLE FOR " + str(item))
+                continue
+            setattr(self, str(item), superdata[item])
+
     def __init__(self, parent_locals):
         self.num_keys = 5
         super().__init__(parent_locals)
@@ -15,31 +31,31 @@ class MiniCluster(DefaultCluster):
 
     def tl_place(self, shape):
         shape = rotate(shape, [10, -23, 25])
-        shape = translate(shape, main_thumborigin())
+        shape = translate(shape, self.thumborigin())
         shape = translate(shape, [-35, -16, -2])
         return shape
 
     def tr_place(self, shape):
         shape = rotate(shape, [14, -15, 10])
-        shape = translate(shape, main_thumborigin())
+        shape = translate(shape, self.thumborigin())
         shape = translate(shape, [-15, -10, 5])
         return shape
 
     def mr_place(self, shape):
         shape = rotate(shape, [10, -23, 25])
-        shape = translate(shape, main_thumborigin())
+        shape = translate(shape, self.thumborigin())
         shape = translate(shape, [-23, -34, -6])
         return shape
 
     def br_place(self, shape):
         shape = rotate(shape, [6, -34, 35])
-        shape = translate(shape, main_thumborigin())
+        shape = translate(shape, self.thumborigin())
         shape = translate(shape, [-39, -43, -16])
         return shape
 
     def bl_place(self, shape):
         shape = rotate(shape, [6, -32, 35])
-        shape = translate(shape, main_thumborigin())
+        shape = translate(shape, self.thumborigin())
         shape = translate(shape, [-51, -25, -11.5])
         return shape
 
@@ -52,16 +68,16 @@ class MiniCluster(DefaultCluster):
     def thumb_1x_layout(self, shape, cap=False):
         debugprint('thumb_1x_layout()')
         return union([
-            self.mr_place(rotate(shape, [0, 0, thumb_plate_mr_rotation])),
-            self.br_place(rotate(shape, [0, 0, thumb_plate_br_rotation])),
-            self.tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation])),
-            self.bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
+            self.mr_place(rotate(shape, [0, 0, self.thumb_plate_mr_rotation])),
+            self.br_place(rotate(shape, [0, 0, self.thumb_plate_br_rotation])),
+            self.tl_place(rotate(shape, [0, 0, self.thumb_plate_tl_rotation])),
+            self.bl_place(rotate(shape, [0, 0, self.thumb_plate_bl_rotation])),
         ])
 
 
     def thumb_15x_layout(self, shape, cap=False, plate=True):
         debugprint('thumb_15x_layout()')
-        return union([self.tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation]))])
+        return union([self.tr_place(rotate(shape, [0, 0, self.thumb_plate_tr_rotation]))])
 
     def thumbcaps(self, side='right'):
         t1 = self.thumb_1x_layout(sa_cap(1))

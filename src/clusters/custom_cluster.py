@@ -7,6 +7,22 @@ class CustomCluster(DefaultCluster):
     def name():
         return "CUSTOM"
 
+    def get_config(self):
+        with open(os.path.join(".", "configs", "clusters", "CUSTOM.json"), mode='r') as fid:
+            data = json.load(fid)
+
+        superdata = super().get_config()
+
+        # overwrite any super variables with this class' needs
+        for item in data:
+            superdata[item] = data[item]
+
+        for item in superdata:
+            if not hasattr(self, str(item)):
+                print(self.name() + ": NO MEMBER VARIABLE FOR " + str(item))
+                continue
+            setattr(self, str(item), superdata[item])
+
     def __init__(self, parent_locals):
         self.num_keys = 7
         super().__init__(parent_locals)
@@ -60,28 +76,28 @@ class CustomCluster(DefaultCluster):
         debugprint('thumb_1x_layout()')
         if cap:
             shape_list = [
-                self.mr_place(rotate(shape, [0, 0, thumb_plate_mr_rotation])),
-                self.ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])),
-                self.br_place(rotate(shape, [0, 0, thumb_plate_br_rotation])),
-                self.bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
-                self.tr_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, thumb_plate_tr_rotation])),
-                self.tl_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, thumb_plate_tl_rotation]))
+                self.mr_place(rotate(shape, [0, 0, self.thumb_plate_mr_rotation])),
+                self.ml_place(rotate(shape, [0, 0, self.thumb_plate_ml_rotation])),
+                self.br_place(rotate(shape, [0, 0, self.thumb_plate_br_rotation])),
+                self.bl_place(rotate(shape, [0, 0, self.thumb_plate_bl_rotation])),
+                self.tr_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, self.thumb_plate_tr_rotation])),
+                self.tl_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, self.thumb_plate_tl_rotation]))
             ]
 
             # if default_1U_cluster:
-            #     # shape_list.append(self.tr_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, thumb_plate_tr_rotation])))
-            #     shape_list.append(self.tr_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, thumb_plate_tr_rotation])))
-            #     shape_list.append(self.tl_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, thumb_plate_tl_rotation])))
+            #     # shape_list.append(self.tr_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, self.thumb_plate_tr_rotation])))
+            #     shape_list.append(self.tr_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, self.thumb_plate_tr_rotation])))
+            #     shape_list.append(self.tl_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, self.thumb_plate_tl_rotation])))
             shapes = add(shape_list)
 
         else:
             shape_list = [
-                self.mr_place(rotate(shape, [0, 0, thumb_plate_mr_rotation])),
-                self.ml_place(rotate(shape, [0, 0, thumb_plate_ml_rotation])),
-                self.br_place(rotate(shape, [0, 0, thumb_plate_br_rotation])),
-                self.bl_place(rotate(shape, [0, 0, thumb_plate_bl_rotation])),
-                self.tr_place(rotate(shape, [0, 0, thumb_plate_tr_rotation])),
-                self.tl_place(rotate(shape, [0, 0, thumb_plate_tl_rotation]))
+                self.mr_place(rotate(shape, [0, 0, self.thumb_plate_mr_rotation])),
+                self.ml_place(rotate(shape, [0, 0, self.thumb_plate_ml_rotation])),
+                self.br_place(rotate(shape, [0, 0, self.thumb_plate_br_rotation])),
+                self.bl_place(rotate(shape, [0, 0, self.thumb_plate_bl_rotation])),
+                self.tr_place(rotate(shape, [0, 0, self.thumb_plate_tr_rotation])),
+                self.tl_place(rotate(shape, [0, 0, self.thumb_plate_tl_rotation]))
             ]
 
             shapes = union(shape_list)
