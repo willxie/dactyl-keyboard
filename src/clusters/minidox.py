@@ -26,6 +26,8 @@ class MinidoxCluster(DefaultCluster):
                 continue
             setattr(self, str(item), superdata[item])
 
+        return superdata
+
     def __init__(self, parent_locals):
         self.num_keys = 3
         super().__init__(parent_locals)

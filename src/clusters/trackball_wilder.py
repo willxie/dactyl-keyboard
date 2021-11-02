@@ -1,4 +1,6 @@
 from clusters.trackball_orbyl import TrackballOrbyl
+import json
+import os
 
 
 class TrackballWild(TrackballOrbyl):
@@ -81,6 +83,8 @@ class TrackballWild(TrackballOrbyl):
                 print(self.name() + ": NO MEMBER VARIABLE FOR " + str(item))
                 continue
             setattr(self, str(item), superdata[item])
+
+        return superdata
 
     def __init__(self, parent_locals):
         super().__init__(parent_locals)

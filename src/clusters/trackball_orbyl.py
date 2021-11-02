@@ -1,4 +1,6 @@
 from clusters.default_cluster import DefaultCluster
+import json
+import os
 
 
 class TrackballOrbyl(DefaultCluster):
@@ -77,6 +79,8 @@ class TrackballOrbyl(DefaultCluster):
                 print(self.name() + ": NO MEMBER VARIABLE FOR " + str(item))
                 continue
             setattr(self, str(item), superdata[item])
+
+        return superdata
 
     def __init__(self, parent_locals):
         self.num_keys = 4
