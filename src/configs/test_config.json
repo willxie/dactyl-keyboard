@@ -3,15 +3,16 @@
   "override_name": "testing",
   "iteration": "5x6",
   "show_caps": false,
-  "nrows": 5,
-  "ncols": 6,
+  "nrows": 4,
+  "ncols": 5,
   "plate_style": "NOTCH",
   "plate_file_name": "derek_hotswap",
   "plate_offset": -5.0,
   "symmetry": "symmetric",
   "column_style_gt5": "orthographic",
   "column_style": "standard",
-  "thumb_style": "TRACKBALL_WILD",
-  "other_thumb": "DEFAULT"
+  "thumb_style": "DEFAULT",
+  "other_thumb": "DEFAULT",
+  "screws_offset": "INSIDE"
 }
 

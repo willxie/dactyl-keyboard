@@ -4,18 +4,18 @@ import os
 
 
 class TrackballOrbyl(DefaultCluster):
-    tbjs_key_diameter = 75
-    tbjs_translation_offset = [
+    key_diameter = 75
+    translation_offset = [
         0,
         0,
         10
     ]
-    tbjs_rotation_offset = [
+    rotation_offset = [
         0,
         0,
         0
     ]
-    tbjs_key_translation_offsets = [
+    key_translation_offsets = [
         [
             0.0,
             0.0,
@@ -37,7 +37,7 @@ class TrackballOrbyl(DefaultCluster):
             -8.0
         ]
     ]
-    tbjs_key_rotation_offsets = [
+    key_rotation_offsets = [
         [
             0.0,
             0.0,
@@ -65,7 +65,7 @@ class TrackballOrbyl(DefaultCluster):
         return "TRACKBALL_ORBYL"
 
     def get_config(self):
-        with open(os.path.join(".", "configs", "clusters", "TRACKBALL_ORBYL.json"), mode='r') as fid:
+        with open(os.path.join(".", "clusters", "json", "TRACKBALL_ORBYL.json"), mode='r') as fid:
             data = json.load(fid)
 
         superdata = super().get_config()
@@ -93,12 +93,12 @@ class TrackballOrbyl(DefaultCluster):
         rot = [10, -15, 5]
         pos = self.thumborigin()
         # Changes size based on key diameter around ball, shifting off of the top left cluster key.
-        shift = [-.9 * self.tbjs_key_diameter/2 + 27 - 42, -.1 * self.tbjs_key_diameter / 2 + 3 - 20, -5]
+        shift = [-.9 * self.key_diameter/2 + 27 - 42, -.1 * self.key_diameter / 2 + 3 - 20, -5]
         for i in range(len(pos)):
-            pos[i] = pos[i] + shift[i] + self.tbjs_translation_offset[i]
+            pos[i] = pos[i] + shift[i] + self.translation_offset[i]
 
         for i in range(len(rot)):
-            rot[i] = rot[i] + self.tbjs_rotation_offset[i]
+            rot[i] = rot[i] + self.rotation_offset[i]
 
         return pos, rot
 
@@ -110,9 +110,9 @@ class TrackballOrbyl(DefaultCluster):
 
     def tl_place(self, shape):
         shape = rotate(shape, [0, 0, 0])
-        t_off = self.tbjs_key_translation_offsets[0]
-        shape = rotate(shape, self.tbjs_key_rotation_offsets[0])
-        shape = translate(shape, (t_off[0], t_off[1] + self.tbjs_key_diameter / 2, t_off[2]))
+        t_off = self.key_translation_offsets[0]
+        shape = rotate(shape, self.key_rotation_offsets[0])
+        shape = translate(shape, (t_off[0], t_off[1] + self.key_diameter / 2, t_off[2]))
         shape = rotate(shape, [0,0,-80])
         shape = self.track_place(shape)
 
@@ -120,9 +120,9 @@ class TrackballOrbyl(DefaultCluster):
 
     def mr_place(self, shape):
         shape = rotate(shape, [0, 0, 0])
-        shape = rotate(shape, self.tbjs_key_rotation_offsets[1])
-        t_off = self.tbjs_key_translation_offsets[1]
-        shape = translate(shape, (t_off[0], t_off[1] + self.tbjs_key_diameter/2, t_off[2]))
+        shape = rotate(shape, self.key_rotation_offsets[1])
+        t_off = self.key_translation_offsets[1]
+        shape = translate(shape, (t_off[0], t_off[1] + self.key_diameter/2, t_off[2]))
         shape = rotate(shape, [0,0,-130])
         shape = self.track_place(shape)
 
@@ -130,9 +130,9 @@ class TrackballOrbyl(DefaultCluster):
 
     def br_place(self, shape):
         shape = rotate(shape, [0, 0, 180])
-        shape = rotate(shape, self.tbjs_key_rotation_offsets[2])
-        t_off = self.tbjs_key_translation_offsets[2]
-        shape = translate(shape, (t_off[0], t_off[1]+self.tbjs_key_diameter/2, t_off[2]))
+        shape = rotate(shape, self.key_rotation_offsets[2])
+        t_off = self.key_translation_offsets[2]
+        shape = translate(shape, (t_off[0], t_off[1]+self.key_diameter/2, t_off[2]))
         shape = rotate(shape, [0,0,-180])
         shape = self.track_place(shape)
 
@@ -141,9 +141,9 @@ class TrackballOrbyl(DefaultCluster):
     def bl_place(self, shape):
         debugprint('thumb_bl_place()')
         shape = rotate(shape, [0, 0, 180])
-        shape = rotate(shape, self.tbjs_key_rotation_offsets[3])
-        t_off = self.tbjs_key_translation_offsets[3]
-        shape = translate(shape, (t_off[0], t_off[1]+self.tbjs_key_diameter/2, t_off[2]))
+        shape = rotate(shape, self.key_rotation_offsets[3])
+        t_off = self.key_translation_offsets[3]
+        shape = translate(shape, (t_off[0], t_off[1]+self.key_diameter/2, t_off[2]))
         shape = rotate(shape, [0,0,-230])
         shape = self.track_place(shape)
 

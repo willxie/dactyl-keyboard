@@ -14,7 +14,7 @@ class TrackballCJ(TrackballOrbyl):
         return "TRACKBALL_CJ"
 
     def get_config(self):
-        with open(os.path.join(".", "configs", "clusters", "TRACKBALL_CJ.json"), mode='r') as fid:
+        with open(os.path.join(".", "clusters", "json", "TRACKBALL_CJ.json"), mode='r') as fid:
             data = json.load(fid)
 
         superdata = super().get_config()

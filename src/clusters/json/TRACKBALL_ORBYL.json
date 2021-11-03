@@ -1,16 +1,16 @@
 {
-  "tbjs_key_diameter": 75,
-  "tbjs_translation_offset": [
+  "key_diameter": 75,
+  "translation_offset": [
     0,
     0,
     10
   ],
-  "tbjs_rotation_offset": [
+  "rotation_offset": [
     0,
     0,
     0
   ],
-  "tbjs_key_translation_offsets": [
+  "key_translation_offsets": [
     [
       0.0,
       0.0,
@@ -32,7 +32,7 @@
       -8.0
     ]
   ],
-  "tbjs_key_rotation_offsets": [
+  "key_rotation_offsets": [
     [
       0.0,
       0.0,

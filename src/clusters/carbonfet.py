@@ -10,7 +10,7 @@ class CarbonfetCluster(DefaultCluster):
 
 
     def get_config(self):
-        with open(os.path.join(".", "configs", "clusters", "CARBONFET.json"), mode='r') as fid:
+        with open(os.path.join(".", "clusters", "json", "CARBONFET.json"), mode='r') as fid:
             data = json.load(fid)
 
         superdata = super().get_config()

@@ -11,7 +11,7 @@ class MinidoxCluster(DefaultCluster):
         return "MINIDOX"
 
     def get_config(self):
-        with open(os.path.join(".", "configs", "clusters", "MINIDOX.json"), mode='r') as fid:
+        with open(os.path.join(".", "clusters", "json", "MINIDOX.json"), mode='r') as fid:
             data = json.load(fid)
 
         superdata = super().get_config()

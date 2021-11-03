@@ -1,16 +1,16 @@
 {
-    "wild_key_diameter": 75,
-    "wild_translation_offset": [
+    "key_diameter": 75,
+    "translation_offset": [
         10,
         0,
         0
     ],
-    "wild_rotation_offset": [
+    "rotation_offset": [
         10,
         -10,
         0
     ],
-    "wild_key_translation_offsets": [
+    "key_translation_offsets": [
         [
             0.0,
             -5.0,
@@ -32,7 +32,7 @@
             -2.0
         ]
     ],
-    "wild_key_rotation_offsets": [
+    "key_rotation_offsets": [
         [
             0.0,
             0.0,
@@ -54,7 +54,7 @@
             -4.0
         ]
     ],
-    "wild_key_to_thumb_rotation": [
+    "key_to_thumb_rotation": [
         -80, -150, -195, -240
     ]
 }
