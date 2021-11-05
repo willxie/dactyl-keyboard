@@ -1,6 +1,6 @@
 {
     "ENGINE": "solid",
-    "overrides": "test_config.json",
+    "overrides": "andrew_dekker.json",
     "save_dir": ".",
     "config_name": "5x6",
     "show_caps": false,
