@@ -1,0 +1,13 @@
+{
+  "ENGINE": "cadquery",
+  "override_name": "BRANDON2",
+  "iteration": "5x6",
+  "show_caps": false,
+  "nrows": 5,
+  "ncols": 6,
+  "plate_style": "NOTCH",
+  "thumb_style": "TRACKBALL_WILD",
+  "other_thumb": "DEFAULT",
+  "ball_side": "right"
+}
+
