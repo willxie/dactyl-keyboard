@@ -57,7 +57,7 @@ for item in data:
     globals()[item] = data[item]
 
 if overrides is not None:
-    with open(os.path.join(r".", r"configs", overrides), mode='r') as fid:
+    with open(os.path.join(overrides), mode='r') as fid:
         override_data = json.load(fid)
     for item in override_data:
         globals()[item] = override_data[item]
@@ -86,14 +86,14 @@ elif iteration in ['', None, '.']:
     save_path = path.join(r"..", "things", override_name)
     # parts_path = path.join(r"..", r"..", "src", "parts")
 else:
-    save_path = path.join(r"..", "things", override_name, iteration)
+    save_path = path.join(save_dir, override_name, iteration)
     # parts_path = path.jo
 
 dir_exists = os.path.isdir(save_path)
 if not dir_exists:
     os.makedirs(save_path, exist_ok=True)
 
-shutil.copy("./configs/" + overrides, save_path)
+shutil.copy(overrides, save_path)
 ###############################################
 # END EXTREMELY UGLY BOOTSTRAP
 ###############################################
