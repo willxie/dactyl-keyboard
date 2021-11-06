@@ -1,6 +1,8 @@
 {
     "ENGINE": "solid",
     "save_dir": ".",
+    "overrides": null,
+    "override_name": null,
     "config_name": "5x6",
     "show_caps": false,
     "show_pcbs": false,

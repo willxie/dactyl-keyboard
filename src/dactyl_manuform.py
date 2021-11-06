@@ -93,7 +93,8 @@ dir_exists = os.path.isdir(save_path)
 if not dir_exists:
     os.makedirs(save_path, exist_ok=True)
 
-shutil.copy(overrides, save_path)
+if overrides is not None:
+    shutil.copy(overrides, save_path)
 ###############################################
 # END EXTREMELY UGLY BOOTSTRAP
 ###############################################

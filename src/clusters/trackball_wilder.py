@@ -4,6 +4,7 @@ import os
 
 
 class TrackballWild(TrackballOrbyl):
+    key_to_thumb_rotation = [] # may no longer be used?
 
     @staticmethod
     def name():
