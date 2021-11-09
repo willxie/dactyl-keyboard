@@ -51,18 +51,14 @@ def write_config(rows, cols, engine, thumb1, plate, last_rows):
 
 # i = 1
 
-# for rows in range(4, 7): # 4, 5, 6 rows
-rows = 6
-# next is
-# cols = 7
-# for rows in range(4, 7):
-for cols in range(6, 7): # 6, 7 cols
-    for last_row in ["normal", "full"]:
-        for plate in ["normal", "hotswap"]:
-            for thumb1 in [default, trackball]:
-                write_config(rows, cols, "cadquery", thumb1, plate, last_row)
-                # print("Wrote file " + str(i))
-                dactyl_manuform.make_dactyl()
+for rows in range(4, 7): #4, 5, 6
+    for cols in range(6, 8): # 6, 7 cols
+        for last_row in ["normal", "full"]:
+            for plate in ["normal", "hotswap"]:
+                for thumb1 in [default, trackball]:
+                    write_config(rows, cols, "cadquery", thumb1, plate, last_row)
+                    # print("Wrote file " + str(i))
+                    dactyl_manuform.make_dactyl()
 
 
 
