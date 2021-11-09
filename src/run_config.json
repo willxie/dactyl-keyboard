@@ -1,7 +1,8 @@
 {
-    "ENGINE": "solid",
+    "ENGINE": "cadquery",
     "save_dir": ".",
-    "overrides": null,
+    "overrides": "/mnt/c/Users/nethe/OneDrive/Sales/Models/Customers/test_config.json",
+    "save_name": null,
     "override_name": null,
     "config_name": "5x6",
     "show_caps": false,
