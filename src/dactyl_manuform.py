@@ -43,8 +43,8 @@ def make_dactyl():
     right_cluster = None
     left_cluster = None
 
-    left_wall_x_offset = 0
-    left_wall_z_offset = 0
+    left_wall_x_offset = 8
+    left_wall_z_offset = 3
     left_wall_lower_y_offset = 0
     left_wall_lower_z_offset = 0
 
@@ -58,7 +58,7 @@ def make_dactyl():
     for item in cfg.shape_config:
         globals()[item] = cfg.shape_config[item]
 
-    if len(sys.argv) <= 1:
+    if True:
         print("NO CONFIGURATION SPECIFIED, USING run_config.json")
         with open(os.path.join(r".", 'run_config.json'), mode='r') as fid:
             data = json.load(fid)
@@ -1125,7 +1125,7 @@ def make_dactyl():
         sensor = translate(sensor, tb_socket_translation_offset)
         # sensor = rotate(sensor, tb_sensor_translation_offset)
         # sensor = translate(sensor, tb_sensor_rotation_offset)
-        sensor = translate(sensor, (0, 0, .001))
+        sensor = translate(sensor, (0, 0, .005))
         sensor = rotate(sensor, rot)
         sensor = translate(sensor, pos)
 

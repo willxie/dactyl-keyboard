@@ -1,12 +1,14 @@
 import os
 import json
+import sys
 import dactyl_manuform
 
 json_template = """
 {
   "ENGINE": "cadquery",
+  "overrides": "",
   "override_name": "",
-  "save_dir": "/mnt/c/Users/nethe/OneDrive/Sales/Models/Generated",
+  "save_dir": "",
   "save_name": null,
   "show_caps": false,
   "nrows": 6,
@@ -19,19 +21,52 @@ json_template = """
 }
 """
 
-out_file = "/mnt/c/Users/nethe/OneDrive/Sales/Models/Generated/bulk_config.json"
+gen_dir = sys.argv[1]
+
+try:
+    print(gen_dir)
+except NameError:
+    print("Must provide target directory for generating bulk models")
+    sys.exit(-1)
+
+out_file = os.path.join(gen_dir, "bulk_config.json")
 
 engine = "cadquery"
 default = "DEFAULT"
 trackball = "TRACKBALL_WILD"
 hotswap = "HS_NUB"
 normal = "NUB"
+run_config = os.path.join(r".", 'run_config.json')
+
+def write_file(file_path, data):
+    if os.path.exists(file_path):
+        os.remove(file_path)
+    f = open(file_path, "a")
+    f.write(json.dumps(data, indent=2))
+    f.close()
+
+
+def set_overrides(override):
+    with open(run_config, mode='r') as fid:
+        data = json.load(fid)
+    previous_overrides = data["overrides"]
+    data["overrides"] = override
+    write_file(run_config, data)
+    return previous_overrides
+
+previous_overrides = set_overrides(out_file)
+
+def finished():
+    set_overrides(previous_overrides)
+    sys.exit(0)
+
 
 def write_config(rows, cols, engine, thumb1, plate, last_rows):
     config = json.loads(json_template)
     name = str(rows) + "_x_" + str(cols) + "_" + plate  + "_" + last_rows  + "_" + thumb1
-    config["save_dir"] = os.path.join(config["save_dir"], str(rows) + "_x_" + str(cols), plate, last_rows)
+    config["save_dir"] = os.path.join(gen_dir, str(rows) + "_x_" + str(cols), plate, last_rows)
     print("Generating: ", name)
+    config["overrides"] = out_file
     config["save_name"] = name
     config["override_name"] = thumb1
     config["engine"] = engine
@@ -43,13 +78,7 @@ def write_config(rows, cols, engine, thumb1, plate, last_rows):
     config["full_last_rows"] = True if last_rows is "full" else False
     config["ball_side"] = "both"
 
-    if os.path.exists(out_file):
-        os.remove(out_file)
-    f = open(out_file, "a")
-    f.write(json.dumps(config))
-    f.close()
-
-# i = 1
+    write_file(out_file, config)
 
 for rows in range(4, 7): #4, 5, 6
     for cols in range(6, 8): # 6, 7 cols
@@ -60,6 +89,6 @@ for rows in range(4, 7): #4, 5, 6
                     # print("Wrote file " + str(i))
                     dactyl_manuform.make_dactyl()
 
-
+finished()
 
 
