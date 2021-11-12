@@ -16,7 +16,7 @@ def process_item(filename):
     ImportGui.open(filename + '.step')
     Gui.Selection.addSelection("Unnamed", 'Solid')
     obj = Gui.Selection.getSelection()
-    Mesh.export(obj, filename + '.stl')
+    Mesh.export(obj, filename + '_freecad.stl')
 
 files = [ %filenames% ]
 

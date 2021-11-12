@@ -319,10 +319,10 @@ def trackball_socket(segments=100, side="right"):
     # cyl = translate(cyl, (0, 0, -8))
     # shape = union([shape, cyl])
 
-    tb_file = path.join(parts_path, r"trackball_socket_body_34mm")
-    tbcut_file = path.join(parts_path, r"trackball_socket_cutter_34mm")
-    sens_file = path.join(parts_path, r"trackball_sensor_mount")
-    senscut_file = path.join(parts_path, r"trackball_sensor_cutter")
+    tb_file = path.join(parts_path, r"trackball_socket_with_sensor_complete")
+    tbcut_file = path.join(parts_path, r"trackball_cutter_with_holes")
+    # sens_file = path.join(parts_path, r"trackball_sensor_mount")
+    # senscut_file = path.join(parts_path, r"trackball_sensor_cutter")
 
     # shape = import_file(tb_file)
     # # shape = difference(shape, [import_file(senscut_file)])
@@ -330,12 +330,12 @@ def trackball_socket(segments=100, side="right"):
     # cutter = import_file(tbcut_file)
 
     shape = import_file(tb_file)
-    sensor = import_file(sens_file)
+    # sensor = import_file(sens_file)
     cutter = import_file(tbcut_file)
-    cutter = union([cutter, import_file(senscut_file)])
+    # cutter = union([cutter, import_file(senscut_file)])
 
     # return shape, cutter
-    return shape, cutter, sensor
+    return shape, cutter
 
 
 def trackball_ball(segments=100, side="right"):
@@ -1093,7 +1093,7 @@ def generate_trackball(pos, rot):
     precut = rotate(precut, rot)
     precut = translate(precut, pos)
 
-    shape, cutout, sensor = trackball_socket()
+    shape, cutout = trackball_socket()
 
     shape = rotate(shape, tb_socket_rotation_offset)
     shape = translate(shape, tb_socket_translation_offset)
@@ -1109,13 +1109,13 @@ def generate_trackball(pos, rot):
 
     # Small adjustment due to line to line surface / minute numerical error issues
     # Creates small overlap to assist engines in union function later
-    sensor = rotate(sensor, tb_socket_rotation_offset)
-    sensor = translate(sensor, tb_socket_translation_offset)
-    # sensor = rotate(sensor, tb_sensor_translation_offset)
-    # sensor = translate(sensor, tb_sensor_rotation_offset)
-    sensor = translate(sensor, (0, 0, .001))
-    sensor = rotate(sensor, rot)
-    sensor = translate(sensor, pos)
+    # sensor = rotate(sensor, tb_socket_rotation_offset)
+    # sensor = translate(sensor, tb_socket_translation_offset)
+    # # sensor = rotate(sensor, tb_sensor_translation_offset)
+    # # sensor = translate(sensor, tb_sensor_rotation_offset)
+    # sensor = translate(sensor, (0, 0, .01))
+    # sensor = rotate(sensor, rot)
+    # sensor = translate(sensor, pos)
 
     ball = trackball_ball()
     ball = rotate(ball, tb_socket_rotation_offset)
@@ -1124,7 +1124,7 @@ def generate_trackball(pos, rot):
     ball = translate(ball, pos)
 
     # return precut, shape, cutout, ball
-    return precut, shape, cutout, sensor, ball
+    return precut, shape, cutout, ball
 
 
 def generate_trackball_in_cluster(cluster):
@@ -1733,7 +1733,7 @@ def model_side(side="right"):
         shape = union([shape, frame])
 
     if trackball_in_wall and (side == ball_side or ball_side == 'both'):
-        tbprecut, tb, tbcutout, sensor, ball = generate_trackball_in_wall()
+        tbprecut, tb, tbcutout, ball = generate_trackball_in_wall()
 
         shape = difference(shape, [tbprecut])
         # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_1"))
@@ -1742,22 +1742,22 @@ def model_side(side="right"):
         shape = difference(shape, [tbcutout])
         # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_3a"))
         # export_file(shape=add([shape, sensor]), fname=path.join(save_path, config_name + r"_test_3b"))
-        shape = union([shape, sensor])
+        # shape = union([shape, sensor])
 
         if show_caps:
             shape = add([shape, ball])
 
     if (trackball_in_wall or ('TRACKBALL' in thumb_style)) and (side == ball_side or ball_side == 'both'):
-        tbprecut, tb, tbcutout, sensor, ball = generate_trackball_in_cluster(cluster(side))
+        tbprecut, tb, tbcutout, ball = generate_trackball_in_cluster(cluster(side))
 
         shape = difference(shape, [tbprecut])
         # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_1"))
         shape = union([shape, tb])
         # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_2"))
-        shape = difference(shape, [tbcutout])
+        # shape = difference(shape, [tbcutout])
         # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_3a"))
         # export_file(shape=add([shape, sensor]), fname=path.join(save_path, config_name + r"_test_3b"))
-        shape = union([shape, sensor])
+        # shape = union([shape, sensor])
 
         if show_caps:
             shape = add([shape, ball])
