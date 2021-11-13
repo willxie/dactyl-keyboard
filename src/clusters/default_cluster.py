@@ -477,3 +477,6 @@ class DefaultCluster(object):
         position[2] = 0
 
         return position
+
+    def get_extras(self, shape, pos):
+        return shape

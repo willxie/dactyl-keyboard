@@ -5,6 +5,12 @@ import os
 
 class TrackballWild(TrackballOrbyl):
     key_to_thumb_rotation = [] # may no longer be used?
+    post_offsets = [
+            [14, -8, 3],
+            [3, -9, -7],
+            [-4, 4, -6],
+            [-5, 18, 19]
+        ]
 
     @staticmethod
     def name():
@@ -275,9 +281,24 @@ class TrackballWild(TrackballOrbyl):
         shape = union(hulls)
         return shape
 
-    # def screw_positions(self):
-    #     position = self.thumborigin()
-    #     position = list(np.array(position) + np.array([-72, -40, -16]))
-    #     position[2] = 0
-    #
-    #     return position
+    def get_extras(self, shape, pos):
+        posts = [shape]
+        all_pos = []
+        for i in range(len(pos)):
+            all_pos.append(pos[i] + tb_socket_translation_offset[i])
+        z_pos = abs(pos[2])
+        for post_offset in self.post_offsets.copy():
+            support_z = z_pos + post_offset[2]
+            new_offsets = post_offset
+            new_offsets[2] = -z_pos
+            support = cylinder(1.5, support_z, 10)
+            support = translate(support, all_pos)
+            support = translate(support, new_offsets)
+            base = cylinder(4, 1, 10)
+            new_offsets[2] = 0.5 - all_pos[2]
+            base = translate(base, all_pos)
+            base = translate(base, new_offsets)
+            posts.append(base)
+            support = union([support, base])
+            posts.append(support)
+        return union(posts)
