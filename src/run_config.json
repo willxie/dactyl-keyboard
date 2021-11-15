@@ -1,7 +1,7 @@
 {
   "ENGINE": "cadquery",
   "save_dir": ".",
-  "overrides": "C:\\\\Users\\\\nethe\\\\OneDrive\\\\Sales\\\\Models\\\\Generated\\bulk_config.json",
+  "overrides": "",
   "save_name": null,
   "override_name": "",
   "config_name": "5x6",
