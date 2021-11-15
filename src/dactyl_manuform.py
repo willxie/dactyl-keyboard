@@ -76,7 +76,7 @@ else:
 ####################################################
 
 
-debug_exports = False
+debug_exports = False 
 debug_trace = False
 
 def debugprint(info):
@@ -2486,15 +2486,19 @@ def front_wall(skeleton=False):
         3, lastrow, 0, -1, web_post_bl(), 3, lastrow, 0.5, -1, web_post_br()
     )])
     shape = union([shape,key_wall_brace(
-        3, lastrow, 0.5, -1, web_post_br(), 4, cornerrow, 1, -1, web_post_bl()
+        3, lastrow, 0.5, -1, web_post_br(), 4, cornerrow, .5, -1, web_post_bl()
     )])
-    for i in range(ncols - 4):
-        x = i + 4
+    shape = union([shape,key_wall_brace(
+        4, cornerrow, .5, -1, web_post_bl(), 4, cornerrow, 0, -1, web_post_br()
+    )])
+
+    for i in range(ncols - 5):
+        x = i + 5
+
         shape = union([shape,key_wall_brace(
             x, cornerrow, 0, -1, web_post_bl(), x, cornerrow, 0, -1, web_post_br()
         )])
-    for i in range(ncols - 5):
-        x = i + 5
+
         shape = union([shape, key_wall_brace(
             x, cornerrow, 0, -1, web_post_bl(), x - 1, cornerrow, 0, -1, web_post_br()
         )])
@@ -4013,12 +4017,21 @@ def model_side(side="right"):
 
     has_trackball = False
     if ('TRACKBALL' in thumb_style) and (side == ball_side or ball_side == 'both'):
+        print("Has Trackball")
         tbprecut, tb, tbcutout, sensor, ball = generate_trackball_in_cluster()
         has_trackball = True
         thumb_section = difference(thumb_section, [tbprecut])
+        if debug_exports:
+            export_file(shape=thumb_section, fname=path.join(r"..", "things", r"debug_thumb_test_1_shape".format(side)))
         thumb_section = union([thumb_section, tb])
+        if debug_exports:
+            export_file(shape=thumb_section, fname=path.join(r"..", "things", r"debug_thumb_test_2_shape".format(side)))
         thumb_section = difference(thumb_section, [tbcutout])
+        if debug_exports:
+            export_file(shape=thumb_section, fname=path.join(r"..", "things", r"debug_thumb_test_3_shape".format(side)))
         thumb_section = union([thumb_section, sensor])
+        if debug_exports:
+            export_file(shape=thumb_section, fname=path.join(r"..", "things", r"debug_thumb_test_4_shape".format(side)))
 
     if plate_pcb_clear:
         thumb_section = difference(thumb_section, [thumb_pcb_plate_cutouts(side=side)])
@@ -4027,8 +4040,8 @@ def model_side(side="right"):
     block = translate(block, (0, 0, -20))
     main_shape = difference(main_shape, [block])
     thumb_section = difference(thumb_section, [block])
-
-
+    if debug_exports:
+        export_file(shape=thumb_section, fname=path.join(r"..", "things", r"debug_thumb_test_5_shape".format(side)))
 
     if separable_thumb:
         thumb_section = difference(thumb_section, [main_shape])
@@ -4038,6 +4051,8 @@ def model_side(side="right"):
                 thumb_section = add([thumb_section, ball])
     else:
         main_shape = union([main_shape, thumb_section])
+        if debug_exports:
+            export_file(shape=main_shape, fname=path.join(r"..", "things", r"debug_thumb_test_6_shape".format(side)))
         if show_caps:
             main_shape = add([main_shape, thumbcaps(side=side)])
             if has_trackball:

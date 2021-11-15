@@ -144,7 +144,7 @@ def extrude_poly(outer_poly, inner_polys=None, height=1):
 
 def import_file(fname, convexity=2):
     print("IMPORTING FROM {}".format(fname))
-    return sl.import_stl(fname + ".stl", convexity=convexity)
+    return sl.import_stl(fname.replace("\\", "/") + ".stl", convexity=convexity)
 
 
 def export_file(shape, fname):
