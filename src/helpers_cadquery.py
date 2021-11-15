@@ -226,11 +226,16 @@ def import_file(fname, convexity=None):
         cq.exporters.ExportTypes.STEP,
         fname + ".step"))
 
+def export_stl(shape, fname):
+    print("EXPORTING STL TO {}".format(fname))
+    cq.exporters.export(shape, fname=fname + "_cadquery.stl", exportType="STL")
 
 def export_file(shape, fname):
     print("EXPORTING TO {}".format(fname))
     cq.exporters.export(w=shape, fname=fname + ".step",
                         exportType='STEP')
+
+    export_stl(shape, fname)
 
 
 def export_dxf(shape, fname):

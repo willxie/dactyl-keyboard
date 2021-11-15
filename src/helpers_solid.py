@@ -1,4 +1,5 @@
 import solid as sl
+from subprocess import run
 
 debug_trace = False
 
@@ -150,6 +151,10 @@ def import_file(fname, convexity=2):
 def export_file(shape, fname):
     print("EXPORTING TO {}".format(fname))
     sl.scad_render_to_file(shape, fname + ".scad")
+
+def export_stl(shape, fname):
+    print("EXPORTING STL TO {}".format(fname))
+    run(["C:\\Program Files\\OpenSCAD\\openscad.com", "-o",  fname + "_openscad.stl", fname + ".scad"])
 
 
 def export_dxf(shape, fname):
