@@ -71,7 +71,7 @@ def make_dactyl():
                 with open(os.path.join(r"..", "configs", arg + '.json'), mode='r') as fid:
                     data = json.load(fid)
 
-    if data["overrides"] is not None:
+    if data["overrides"] not in [None, ""]:
         with open(os.path.join(data["overrides"]), mode='r') as fid:
             override_data = json.load(fid)
         for item in override_data:
@@ -113,7 +113,7 @@ def make_dactyl():
     if not dir_exists:
         os.makedirs(save_path, exist_ok=True)
 
-    if overrides is not None:
+    if overrides not in [None, ""]:
         shutil.copy(overrides, save_path)
     ###############################################
     # END EXTREMELY UGLY BOOTSTRAP
