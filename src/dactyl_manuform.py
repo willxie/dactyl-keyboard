@@ -734,51 +734,7 @@ def make_dactyl():
 
 
         return union(hulls)
-        #return add(hulls)
 
-
-    def connectors():
-        debugprint('connectors()')
-        hulls = []
-        for column in range(ncols - 1):
-            torow = get_torow(column)
-            for row in range(torow):  # need to consider last_row?
-                # for row in range(nrows):  # need to consider last_row?
-                places = []
-                places.append(key_place(web_post_tl(), column + 1, row))
-                places.append(key_place(web_post_tr(), column, row))
-                places.append(key_place(web_post_bl(), column + 1, row))
-                places.append(key_place(web_post_br(), column, row))
-                hulls.append(triangle_hulls(places))
-
-        for column in range(ncols):
-            torow = get_torow(column)
-            # for row in range(nrows-1):
-            for row in range(torow - 1):
-                places = []
-                places.append(key_place(web_post_bl(), column, row))
-                places.append(key_place(web_post_br(), column, row))
-                places.append(key_place(web_post_tl(), column, row + 1))
-                places.append(key_place(web_post_tr(), column, row + 1))
-                hulls.append(triangle_hulls(places))
-
-        for column in range(ncols - 1):
-            torow = get_torow(column)
-            # for row in range(nrows-1):  # need to consider last_row?
-            for row in range(torow - 1):  # need to consider last_row?
-                places = []
-                places.append(key_place(web_post_br(), column, row))
-                places.append(key_place(web_post_tr(), column, row + 1))
-                places.append(key_place(web_post_bl(), column + 1, row))
-                places.append(key_place(web_post_tl(), column + 1, row + 1))
-                hulls.append(triangle_hulls(places))
-
-        return union(hulls)
-
-
-    ############
-    ## Thumbs ##
-    ############
 
     def usize_dimention(Usize=1.5):
         return Usize * sa_length
@@ -790,7 +746,10 @@ def make_dactyl():
         print("width: {}, height: {}, thickness:{}".format(width, height, web_thickness))
         shape = box(width, height, web_thickness)
         shape = difference(shape, [box(mount_width-.01, mount_height-.01, 2*web_thickness)])
-        shape = translate(shape, (0, 0, web_thickness/2))
+        # shape = translate(shape, (0, 0, web_thickness / 2))
+        shape = translate(shape, (0, 0, plate_thickness - (web_thickness / 2)))
+
+
         return shape
 
 
@@ -2275,7 +2234,7 @@ def make_dactyl():
         has_trackball = False
         if ('TRACKBALL' in thumb_style) and (side == ball_side or ball_side == 'both'):
             print("Has Trackball")
-            tbprecut, tb, tbcutout, sensor, ball = cluster(side=side).generate_trackball_in_cluster()
+            tbprecut, tb, tbcutout, sensor, ball = generate_trackball_in_cluster(cluster(side=side))
             has_trackball = True
             thumb_section = difference(thumb_section, [tbprecut])
             if debug_exports:

@@ -162,34 +162,10 @@ class TrackballWild(TrackballOrbyl):
             )
         )
 
-        hulls.append(
-            triangle_hulls(
-                [
-                    key_place(web_post_br(), 1, cornerrow),
-                    key_place(web_post_tl(), 2, lastrow),
-                    key_place(web_post_bl(), 2, cornerrow),
-                    key_place(web_post_tr(), 2, lastrow),
-                    key_place(web_post_br(), 2, cornerrow),
-                    key_place(web_post_bl(), 3, cornerrow),
-                ]
-            )
-        )
-
-        hulls.append(
-            triangle_hulls(
-                [
-                    key_place(web_post_tr(), 3, lastrow),
-                    key_place(web_post_br(), 3, lastrow),
-                    key_place(web_post_tr(), 3, lastrow),
-                    key_place(web_post_bl(), 4, cornerrow),
-                ]
-            )
-        )
-
         return union(hulls)
 
     # todo update walls for wild track, still identical to orbyl
-    def walls(self, side="right"):
+    def walls(self, side="right", skeleton=False):
         print('thumb_walls()')
         # thumb, walls
         shape = wall_brace(
@@ -232,7 +208,7 @@ class TrackballWild(TrackballOrbyl):
 
         return shape
 
-    def connection(self, side='right'):
+    def connection(self, side='right', skeleton=False):
         print('thumb_connection()')
         # clunky bit on the top left thumb connection  (normal connectors don't work well)
         hulls = []

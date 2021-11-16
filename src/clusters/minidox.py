@@ -142,7 +142,6 @@ class MinidoxCluster(DefaultCluster):
                          )
 
     def thumb_connectors(self, side="right"):
-        print('thumb_connectors()')
         hulls = []
 
         # Top two
@@ -169,7 +168,6 @@ class MinidoxCluster(DefaultCluster):
             )
         )
 
-
         # top two to the main keyboard, starting on the left
         hulls.append(
             triangle_hulls(
@@ -182,56 +180,19 @@ class MinidoxCluster(DefaultCluster):
                     key_place(web_post_bl(), 1, cornerrow),
                     self.tr_place(self.thumb_post_tr()),
                     key_place(web_post_br(), 1, cornerrow),
-                    key_place(web_post_tl(), 2, lastrow),
                     key_place(web_post_bl(), 2, lastrow),
                     self.tr_place(self.thumb_post_tr()),
                     key_place(web_post_bl(), 2, lastrow),
                     self.tr_place(self.thumb_post_br()),
                     key_place(web_post_br(), 2, lastrow),
                     key_place(web_post_bl(), 3, lastrow),
-                    key_place(web_post_tr(), 2, lastrow),
-                    key_place(web_post_tl(), 3, lastrow),
-                    key_place(web_post_bl(), 3, cornerrow),
-                    key_place(web_post_tr(), 3, lastrow),
-                    key_place(web_post_br(), 3, cornerrow),
-                ]
-            )
-        )
-        hulls.append(
-            triangle_hulls(
-                [
-                    key_place(web_post_tr(), 3, lastrow),
-                    key_place(web_post_br(), 3, lastrow),
-                    key_place(web_post_bl(), 4, cornerrow),
-                ]
-            )
-        )
-
-        hulls.append(
-            triangle_hulls(
-                [
-                    key_place(web_post_tr(), 3, lastrow),
-                    key_place(web_post_br(), 3, cornerrow),
-                    key_place(web_post_bl(), 4, cornerrow),
-                ]
-            )
-        )
-        hulls.append(
-            triangle_hulls(
-                [
-                    key_place(web_post_br(), 1, cornerrow),
-                    key_place(web_post_tl(), 2, lastrow),
-                    key_place(web_post_bl(), 2, cornerrow),
-                    key_place(web_post_tr(), 2, lastrow),
-                    key_place(web_post_br(), 2, cornerrow),
-                    key_place(web_post_bl(), 3, cornerrow),
                 ]
             )
         )
 
         return union(hulls)
 
-    def walls(self, side="right"):
+    def walls(self, side="right", skeleton=False):
         print('thumb_walls()')
         # thumb, walls
         shape = union([wall_brace(self.tr_place, 0, -1, self.thumb_post_br(), self.tr_place, 0, -1, self.thumb_post_bl())])
@@ -249,7 +210,7 @@ class MinidoxCluster(DefaultCluster):
 
         return shape
 
-    def connection(self, side='right'):
+    def connection(self, side='right', skeleton=False):
         print('thumb_connection()')
         # clunky bit on the top left thumb connection  (normal connectors don't work well)
         # clunky bit on the top left thumb connection  (normal connectors don't work well)
@@ -315,3 +276,9 @@ class MinidoxCluster(DefaultCluster):
         position[2] = 0
 
         return position
+
+    def thumb_pcb_plate_cutouts(self, side="right"):
+        shape = self.thumb_fx_layout(plate_pcb_cutout(side=side))
+        shape = union([shape, self.thumb_fx_layout(plate_pcb_cutout())])
+        #shape = add([shape, minidox_thumb_fx_layout(plate_pcb_cutout())])
+        return shape

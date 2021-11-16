@@ -1,6 +1,6 @@
 import json
 import os
-
+import numpy as np
 
 class DefaultCluster(object):
     num_keys = 6
@@ -46,7 +46,7 @@ class DefaultCluster(object):
             origin[i] = origin[i] + self.thumb_offsets[i]
 
         if thumb_style == 'MINIDOX':
-            origin[1] = origin[1] - .4 * (trackball_Usize - 1) * sa_length
+            origin[1] = origin[1] - .4 * (minidox_Usize - 1) * sa_length
 
         return origin
 
@@ -190,7 +190,7 @@ class DefaultCluster(object):
                          )
 
     def thumb_connectors(self, side="right"):
-        print('default thumb_connectors()')
+        print('thumb_connectors()')
         hulls = []
 
         # Top two
@@ -314,19 +314,12 @@ class DefaultCluster(object):
                         key_place(web_post_bl(), 1, cornerrow),
                         self.tr_place(web_post_tr()),
                         key_place(web_post_br(), 1, cornerrow),
-                        key_place(web_post_tl(), 2, lastrow),
                         key_place(web_post_bl(), 2, lastrow),
                         self.tr_place(web_post_tr()),
                         key_place(web_post_bl(), 2, lastrow),
                         self.tr_place(web_post_br()),
                         key_place(web_post_br(), 2, lastrow),
                         key_place(web_post_bl(), 3, lastrow),
-                        key_place(web_post_tr(), 2, lastrow),
-                        key_place(web_post_tl(), 3, lastrow),
-                        key_place(web_post_bl(), 3, cornerrow),
-                        key_place(web_post_tr(), 3, lastrow),
-                        key_place(web_post_br(), 3, cornerrow),
-                        key_place(web_post_bl(), 4, cornerrow),
                     ]
                 )
             )
@@ -348,44 +341,15 @@ class DefaultCluster(object):
                         key_place(web_post_bl(), 2, lastrow),
                         self.tr_place(self.thumb_post_br()),
                         key_place(web_post_br(), 2, lastrow),
-                        key_place(web_post_bl(), 3, lastrow),
-                        key_place(web_post_tr(), 2, lastrow),
-                        key_place(web_post_tl(), 3, lastrow),
-                        key_place(web_post_bl(), 3, cornerrow),
-                        key_place(web_post_tr(), 3, lastrow),
-                        key_place(web_post_br(), 3, cornerrow),
-                        key_place(web_post_bl(), 4, cornerrow),
                     ]
                 )
             )
 
-        hulls.append(
-            triangle_hulls(
-                [
-                    key_place(web_post_br(), 1, cornerrow),
-                    key_place(web_post_tl(), 2, lastrow),
-                    key_place(web_post_bl(), 2, cornerrow),
-                    key_place(web_post_tr(), 2, lastrow),
-                    key_place(web_post_br(), 2, cornerrow),
-                    key_place(web_post_bl(), 3, cornerrow),
-                ]
-            )
-        )
-
-        hulls.append(
-            triangle_hulls(
-                [
-                    key_place(web_post_tr(), 3, lastrow),
-                    key_place(web_post_br(), 3, lastrow),
-                    key_place(web_post_tr(), 3, lastrow),
-                    key_place(web_post_bl(), 4, cornerrow),
-                ]
-            )
-        )
-
+        # return add(hulls)
         return union(hulls)
 
-    def walls(self, side="right"):
+
+    def walls(self, side="right", skeleton=False):
         print('thumb_walls()')
         # thumb, walls
         if default_1U_cluster:
@@ -415,10 +379,11 @@ class DefaultCluster(object):
 
         return shape
 
-    def connection(self, side='right'):
+    def connection(self, side='right', skeleton=False):
         print('thumb_connection()')
         # clunky bit on the top left thumb connection  (normal connectors don't work well)
-        shape = union([bottom_hull(
+        shape = None
+        shape = union([shape, bottom_hull(
             [
                 left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True, side=side),
                 left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True, side=side),
@@ -479,4 +444,9 @@ class DefaultCluster(object):
         return position
 
     def get_extras(self, shape, pos):
+        return shape
+
+    def thumb_pcb_plate_cutouts(self, side="right"):
+        shape = self.thumb_1x_layout(plate_pcb_cutout(side=side))
+        shape = union([shape, self.thumb_15x_layout(plate_pcb_cutout(side=side))])
         return shape

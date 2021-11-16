@@ -1,6 +1,8 @@
 from clusters.default_cluster import DefaultCluster
+import numpy as np
 import json
 import os
+
 
 class CarbonfetCluster(DefaultCluster):
 
@@ -128,7 +130,6 @@ class CarbonfetCluster(DefaultCluster):
         return shape
 
     def thumb_connectors(self, side="right"):
-        print('thumb_connectors()')
         hulls = []
 
         # Top two
@@ -218,7 +219,6 @@ class CarbonfetCluster(DefaultCluster):
                     key_place(web_post_bl(), 1, cornerrow),
                     self.tl_place(web_post_tr()),
                     key_place(web_post_br(), 1, cornerrow),
-                    key_place(web_post_tl(), 2, lastrow),
                     key_place(web_post_bl(), 2, lastrow),
                     self.tl_place(web_post_tr()),
                     key_place(web_post_bl(), 2, lastrow),
@@ -234,28 +234,6 @@ class CarbonfetCluster(DefaultCluster):
         hulls.append(
             triangle_hulls(
                 [
-                    key_place(web_post_tr(), 3, lastrow),
-                    key_place(web_post_br(), 3, cornerrow),
-                    key_place(web_post_tl(), 3, lastrow),
-                    key_place(web_post_bl(), 3, cornerrow),
-                ]
-            )
-        )
-
-        hulls.append(
-            triangle_hulls(
-                [
-                    key_place(web_post_tr(), 2, lastrow),
-                    key_place(web_post_br(), 2, lastrow),
-                    key_place(web_post_tl(), 3, lastrow),
-                    key_place(web_post_bl(), 3, lastrow),
-                ]
-            )
-        )
-
-        hulls.append(
-            triangle_hulls(
-                [
                     self.tr_place(web_post_br()),
                     self.tr_place(web_post_tr()),
                     key_place(web_post_bl(), 3, lastrow),
@@ -263,41 +241,8 @@ class CarbonfetCluster(DefaultCluster):
             )
         )
 
-        hulls.append(
-            triangle_hulls(
-                [
-                    key_place(web_post_br(), 1, cornerrow),
-                    key_place(web_post_tl(), 2, lastrow),
-                    key_place(web_post_bl(), 2, cornerrow),
-                    key_place(web_post_tr(), 2, lastrow),
-                    key_place(web_post_br(), 2, cornerrow),
-                    key_place(web_post_tl(), 3, lastrow),
-                    key_place(web_post_bl(), 3, cornerrow),
-                ]
-            )
-        )
-
-        hulls.append(
-            triangle_hulls(
-                [
-                    key_place(web_post_tr(), 3, lastrow),
-                    key_place(web_post_br(), 3, lastrow),
-                    key_place(web_post_bl(), 4, cornerrow),
-                ]
-            )
-        )
-
-        hulls.append(
-            triangle_hulls(
-                [
-                    key_place(web_post_tr(), 3, lastrow),
-                    key_place(web_post_br(), 3, cornerrow),
-                    key_place(web_post_bl(), 4, cornerrow),
-                ]
-            )
-        )
-
         return union(hulls)
+
 
     def walls(self, side="right", skeleton=False):
         print('thumb_walls()')
@@ -392,3 +337,9 @@ class CarbonfetCluster(DefaultCluster):
         position[2] = 0
 
         return position
+
+    def thumb_pcb_plate_cutouts(self, side="right"):
+        shape = self.thumb_1x_layout(plate_pcb_cutout(side=side))
+        shape = union([shape, self.thumb_15x_layout(plate_pcb_cutout())])
+        #shape = add([shape, carbonfet_thumb_15x_layout(plate_pcb_cutout())])
+        return shape

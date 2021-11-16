@@ -2,7 +2,7 @@ from clusters.default_cluster import DefaultCluster
 import json
 import os
 
-
+## TODO: Check plate heights.  Somehow slightly off, or walls are slightly off.
 class TrackballOrbyl(DefaultCluster):
     key_diameter = 75
     translation_offset = [
@@ -159,12 +159,44 @@ class TrackballOrbyl(DefaultCluster):
         ])
 
     def thumb_fx_layout(self, shape):
-        return union([])
+        return union([
+            self.tl_place(rotate(shape, [0, 0, self.thumb_plate_tr_rotation])),
+            self.mr_place(rotate(shape, [0, 0, self.thumb_plate_mr_rotation])),
+            self.bl_place(rotate(shape, [0, 0, self.thumb_plate_bl_rotation])),
+            self.br_place(rotate(shape, [0, 0, self.thumb_plate_br_rotation])),
+        ])
 
     def thumbcaps(self, side='right'):
         t1 = self.thumb_1x_layout(sa_cap(1))
         return t1
 
+    def thumb_post_tr(self):
+        debugprint('thumb_post_tr()')
+        return translate(web_post(),
+                         [(mount_width / 2) + adjustable_plate_size(tbjs_Uwidth) - post_adj,
+                          ((mount_height / 2) + adjustable_plate_size(tbjs_Uheight)) - post_adj, 0]
+                         )
+
+    def thumb_post_tl(self):
+        debugprint('thumb_post_tl()')
+        return translate(web_post(),
+                         [-(mount_width / 2) - adjustable_plate_size(tbjs_Uwidth) + post_adj,
+                          ((mount_height / 2) + adjustable_plate_size(tbjs_Uheight)) - post_adj, 0]
+                         )
+
+    def thumb_post_bl(self):
+        debugprint('thumb_post_bl()')
+        return translate(web_post(),
+                         [-(mount_width / 2) - adjustable_plate_size(tbjs_Uwidth) + post_adj,
+                          -((mount_height / 2) + adjustable_plate_size(tbjs_Uheight)) + post_adj, 0]
+                         )
+
+    def thumb_post_br(self):
+        debugprint('thumb_post_br()')
+        return translate(web_post(),
+                         [(mount_width / 2) + adjustable_plate_size(tbjs_Uwidth) - post_adj,
+                          - ((mount_height / 2) + adjustable_plate_size(tbjs_Uheight)) + post_adj, 0]
+                         )
 
     def tb_post_r(self):
         debugprint('post_r()')
@@ -212,14 +244,17 @@ class TrackballOrbyl(DefaultCluster):
                          )
 
     def thumb(self, side="right"):
-        print('thumb()')
-        shape = self.thumb_fx_layout(rotate(single_plate(side=side), [0.0, 0.0, -90]))
-        shape = union([shape, self.thumb_fx_layout(double_plate())])
-        shape = union([shape, self.thumb_1x_layout(single_plate(side=side))])
+        shape = self.thumb_1x_layout(single_plate(side=side))
+        shape = union([shape, self.thumb_fx_layout(adjustable_square_plate(Uwidth=tbjs_Uwidth, Uheight=tbjs_Uheight))])
+
+        # shape = tbjs_thumb_fx_layout(rotate(single_plate(side=side), [0.0, 0.0, -90]))
+        # shape = tbjs_thumb_fx_layout(adjustable_square_plate(Uwidth=tbjs_Uwidth, Uheight=tbjs_Uheight))
+        # shape = add([shape, *tbjs_thumb_fx_layout(adjustable_square_plate(Uwidth=tbjs_Uwidth, Uheight=tbjs_Uheight))])
 
         # shape = union([shape, trackball_layout(trackball_socket())])
-        # shape = self.1x_layout(single_plate(side=side))
+        # shape = tbjs_thumb_1x_layout(single_plate(side=side))
         return shape
+
 
     def thumb_connectors(self, side="right"):
         print('thumb_connectors()')
@@ -230,21 +265,21 @@ class TrackballOrbyl(DefaultCluster):
             triangle_hulls(
                 [
                     self.track_place(self.tb_post_l()),
-                    self.bl_place(web_post_tl()),
+                    self.bl_place(self.thumb_post_tl()),
                     self.track_place(self.tb_post_bl()),
-                    self.bl_place(web_post_tr()),
-                    self.br_place(web_post_tl()),
+                    self.bl_place(self.thumb_post_tr()),
+                    self.br_place(self.thumb_post_tl()),
                     self.track_place(self.tb_post_bl()),
-                    self.br_place(web_post_tr()),
+                    self.br_place(self.thumb_post_tr()),
                     self.track_place(self.tb_post_br()),
-                    self.br_place(web_post_tr()),
+                    self.br_place(self.thumb_post_tr()),
                     self.track_place(self.tb_post_br()),
-                    self.mr_place(web_post_br()),
+                    self.mr_place(self.thumb_post_br()),
                     self.track_place(self.tb_post_r()),
-                    self.mr_place(web_post_bl()),
-                    self.tl_place(web_post_br()),
+                    self.mr_place(self.thumb_post_bl()),
+                    self.tl_place(self.thumb_post_br()),
                     self.track_place(self.tb_post_r()),
-                    self.tl_place(web_post_bl()),
+                    self.tl_place(self.thumb_post_bl()),
                     self.track_place(self.tb_post_tr()),
                     key_place(web_post_bl(), 0, cornerrow),
                     self.track_place(self.tb_post_tl()),
@@ -256,10 +291,10 @@ class TrackballOrbyl(DefaultCluster):
         hulls.append(
             triangle_hulls(
                 [
-                    self.bl_place(web_post_tr()),
-                    self.br_place(web_post_tl()),
-                    self.bl_place(web_post_br()),
-                    self.br_place(web_post_bl()),
+                    self.bl_place(self.thumb_post_tr()),
+                    self.br_place(self.thumb_post_tl()),
+                    self.bl_place(self.thumb_post_br()),
+                    self.br_place(self.thumb_post_bl()),
                 ]
             )
         )
@@ -268,10 +303,10 @@ class TrackballOrbyl(DefaultCluster):
         hulls.append(
             triangle_hulls(
                 [
-                    self.br_place(web_post_tr()),
-                    self.mr_place(web_post_br()),
-                    self.br_place(web_post_br()),
-                    self.mr_place(web_post_tr()),
+                    self.br_place(self.thumb_post_tr()),
+                    self.mr_place(self.thumb_post_br()),
+                    self.br_place(self.thumb_post_br()),
+                    self.mr_place(self.thumb_post_tr()),
                 ]
             )
         )
@@ -279,67 +314,45 @@ class TrackballOrbyl(DefaultCluster):
         hulls.append(
             triangle_hulls(
                 [
-                    self.mr_place(web_post_bl()),
-                    self.tl_place(web_post_br()),
-                    self.mr_place(web_post_tl()),
-                    self.tl_place(web_post_tr()),
-                ]
-            )
-        )
-
-        hulls.append(
-            triangle_hulls(
-                [
-                    key_place(web_post_br(), 1, cornerrow),
-                    key_place(web_post_tl(), 2, lastrow),
-                    key_place(web_post_bl(), 2, cornerrow),
-                    key_place(web_post_tr(), 2, lastrow),
-                    key_place(web_post_br(), 2, cornerrow),
-                    key_place(web_post_bl(), 3, cornerrow),
-                ]
-            )
-        )
-
-        hulls.append(
-            triangle_hulls(
-                [
-                    key_place(web_post_tr(), 3, lastrow),
-                    key_place(web_post_br(), 3, lastrow),
-                    key_place(web_post_tr(), 3, lastrow),
-                    key_place(web_post_bl(), 4, cornerrow),
+                    self.mr_place(self.thumb_post_bl()),
+                    self.tl_place(self.thumb_post_br()),
+                    self.mr_place(self.thumb_post_tl()),
+                    self.tl_place(self.thumb_post_tr()),
                 ]
             )
         )
 
         return union(hulls)
 
-    def walls(self, side="right"):
+
+    def walls(self, side="right", skeleton=False):
+    # def tbjs_thumb_walls(skeleton=False):
         print('thumb_walls()')
         # thumb, walls
         shape = wall_brace(
-            self.mr_place, .5, 1, web_post_tr(),
+            self.mr_place, .5, 1, self.thumb_post_tr(),
             (lambda sh: key_place(sh, 3, lastrow)), 0, -1, web_post_bl(),
         )
         shape = union([shape, wall_brace(
-            self.mr_place, .5, 1, web_post_tr(),
-            self.br_place, 0, -1, web_post_br(),
+            self.mr_place, .5, 1, self.thumb_post_tr(),
+            self.br_place, 0, -1, self.thumb_post_br(),
         )])
         shape = union([shape, wall_brace(
-            self.br_place, 0, -1, web_post_br(),
-            self.br_place, 0, -1, web_post_bl(),
+            self.br_place, 0, -1, self.thumb_post_br(),
+            self.br_place, 0, -1, self.thumb_post_bl(),
         )])
         shape = union([shape, wall_brace(
-            self.br_place, 0, -1, web_post_bl(),
-            self.bl_place, 0, -1, web_post_br(),
+            self.br_place, 0, -1, self.thumb_post_bl(),
+            self.bl_place, 0, -1, self.thumb_post_br(),
         )])
         shape = union([shape, wall_brace(
-            self.bl_place, 0, -1, web_post_br(),
-            self.bl_place, -1, -1, web_post_bl(),
+            self.bl_place, 0, -1, self.thumb_post_br(),
+            self.bl_place, -1, -1, self.thumb_post_bl(),
         )])
 
         shape = union([shape, wall_brace(
             self.track_place, -1.5, 0, self.tb_post_tl(),
-            (lambda sh: left_key_place(sh, lastrow - 1, -1, side=ball_side, low_corner=True)), -1, 0, web_post(),
+            (lambda sh: left_key_place(sh, cornerrow, -1, side=ball_side, low_corner=True)), -1, 0, web_post(),
         )])
         shape = union([shape, wall_brace(
             self.track_place, -1.5, 0, self.tb_post_tl(),
@@ -347,16 +360,16 @@ class TrackballOrbyl(DefaultCluster):
         )])
         shape = union([shape, wall_brace(
             self.track_place, -1, 0, self.tb_post_l(),
-            self.bl_place, -1, 0, web_post_tl(),
+            self.bl_place, -1, 0, self.thumb_post_tl(),
         )])
         shape = union([shape, wall_brace(
-            self.bl_place, -1, 0, web_post_tl(),
-            self.bl_place, -1, -1, web_post_bl(),
+            self.bl_place, -1, 0, self.thumb_post_tl(),
+            self.bl_place, -1, -1, self.thumb_post_bl(),
         )])
 
         return shape
 
-    def connection(self, side='right'):
+    def connection(self, side='right', skeleton=False):
         print('thumb_connection()')
         # clunky bit on the top left thumb connection  (normal connectors don't work well)
         hulls = []
@@ -374,31 +387,23 @@ class TrackballOrbyl(DefaultCluster):
             triangle_hulls(
                 [
                     key_place(web_post_bl(), 0, cornerrow),
-                    self.tl_place(web_post_bl()),
+                    self.tl_place(self.thumb_post_bl()),
                     key_place(web_post_br(), 0, cornerrow),
-                    self.tl_place(web_post_tl()),
+                    self.tl_place(self.thumb_post_tl()),
                     key_place(web_post_bl(), 1, cornerrow),
-                    self.tl_place(web_post_tl()),
+                    self.tl_place(self.thumb_post_tl()),
                     key_place(web_post_br(), 1, cornerrow),
-                    self.tl_place(web_post_tr()),
-                    key_place(web_post_tl(), 2, lastrow),
+                    self.tl_place(self.thumb_post_tr()),
                     key_place(web_post_bl(), 2, lastrow),
-                    self.tl_place(web_post_tr()),
+                    self.tl_place(self.thumb_post_tr()),
                     key_place(web_post_bl(), 2, lastrow),
-                    self.mr_place(web_post_tl()),
+                    self.mr_place(self.thumb_post_tl()),
                     key_place(web_post_br(), 2, lastrow),
                     key_place(web_post_bl(), 3, lastrow),
-                    self.mr_place(web_post_tr()),
-                    self.mr_place(web_post_tl()),
+                    self.mr_place(self.thumb_post_tr()),
+                    self.mr_place(self.thumb_post_tl()),
                     key_place(web_post_br(), 2, lastrow),
 
-                    key_place(web_post_bl(), 3, lastrow),
-                    key_place(web_post_tr(), 2, lastrow),
-                    key_place(web_post_tl(), 3, lastrow),
-                    key_place(web_post_bl(), 3, cornerrow),
-                    key_place(web_post_tr(), 3, lastrow),
-                    key_place(web_post_br(), 3, cornerrow),
-                    key_place(web_post_bl(), 4, cornerrow),
                 ]
             )
         )
@@ -411,3 +416,7 @@ class TrackballOrbyl(DefaultCluster):
     #     position[2] = 0
     #
     #     return position
+
+
+    def thumb_pcb_plate_cutouts(self, side="right"):
+        return self.thumb_1x_layout(plate_pcb_cutout(side=side))
