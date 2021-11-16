@@ -32,6 +32,30 @@ class CarbonfetCluster(DefaultCluster):
         for item in parent_locals:
             globals()[item] = parent_locals[item]
 
+    def thumb_post_tr(self):
+        debugprint('thumb_post_tr()')
+        return translate(web_post(),
+                         [(mount_width / 2) - post_adj, ((mount_height / 2) + double_plate_height) - post_adj, 0]
+                         )
+
+    def thumb_post_tl(self):
+        debugprint('thumb_post_tl()')
+        return translate(web_post(),
+                         [-(mount_width / 2) + post_adj, ((mount_height / 2) + double_plate_height) - post_adj, 0]
+                         )
+
+    def thumb_post_bl(self):
+        debugprint('thumb_post_bl()')
+        return translate(web_post(),
+                         [-(mount_width / 2) + post_adj, -((mount_height / 2) + double_plate_height) + post_adj, 0]
+                         )
+
+    def thumb_post_br(self):
+        debugprint('thumb_post_br()')
+        return translate(web_post(),
+                         [(mount_width / 2) - post_adj, -((mount_height / 2) + double_plate_height) + post_adj, 0]
+                         )
+
     def tl_place(self, shape):
         shape = rotate(shape, [10, -24, 10])
         shape = translate(shape, self.thumborigin())
@@ -275,7 +299,7 @@ class CarbonfetCluster(DefaultCluster):
 
         return union(hulls)
 
-    def walls(self, side="right"):
+    def walls(self, side="right", skeleton=False):
         print('thumb_walls()')
         # thumb, walls
         shape = union([wall_brace(self.mr_place, 0, -1, web_post_br(), self.tr_place, 0, -1, web_post_br())])
@@ -298,7 +322,7 @@ class CarbonfetCluster(DefaultCluster):
                                   web_post_bl())])
         return shape
 
-    def connection(self, side='right'):
+    def connection(self, side='right', skeleton=False):
         print('thumb_connection()')
         # clunky bit on the top left thumb connection  (normal connectors don't work well)
         # clunky bit on the top left thumb connection  (normal connectors don't work well)
@@ -334,7 +358,7 @@ class CarbonfetCluster(DefaultCluster):
                                               low_corner=True, side=side),
                                left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1,
                                               low_corner=True, side=side),
-                               self.ml_place(thumb_post_tl()),
+                               self.ml_place(self.thumb_post_tl()),
                            ]
                        )])
 
@@ -345,18 +369,18 @@ class CarbonfetCluster(DefaultCluster):
                                left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1,
                                               low_corner=True, side=side),
                                key_place(web_post_bl(), 0, cornerrow),
-                               self.ml_place(thumb_post_tl()),
+                               self.ml_place(self.thumb_post_tl()),
                            ]
                        )])
 
         shape = union([shape,
                        hull_from_shapes(
                            [
-                               self.bl_place(thumb_post_tr()),
+                               self.bl_place(self.thumb_post_tr()),
                                self.bl_place(translate(self.thumb_post_tr(), wall_locate1(-0.3, 1))),
                                self.bl_place(translate(self.thumb_post_tr(), wall_locate2(-0.3, 1))),
                                self.bl_place(translate(self.thumb_post_tr(), wall_locate3(-0.3, 1))),
-                               self.ml_place(thumb_post_tl()),
+                               self.ml_place(self.thumb_post_tl()),
                            ]
                        )])
 

@@ -1,7 +1,8 @@
 import numpy as np
 from numpy import pi
 import os.path as path
-import getopt, sys
+import getopt
+import sys
 import json
 import os
 import copy
@@ -52,6 +53,9 @@ def make_dactyl():
     symmetry = None
     column_style = None
 
+    save_name = None
+    override_name = None
+
     def cluster(side="right"):
         return right_cluster if side == "right" else left_cluster
 
@@ -72,6 +76,9 @@ def make_dactyl():
                 with open(os.path.join(r"..", "configs", arg + '.json'), mode='r') as fid:
                     data = json.load(fid)
 
+    if "overrides" not in data:
+        data['overrides']=None
+
     if data["overrides"] not in [None, ""]:
         with open(os.path.join(data["overrides"]), mode='r') as fid:
             override_data = json.load(fid)
@@ -83,6 +90,7 @@ def make_dactyl():
 
     if save_name is not None:
         config_name = save_name
+
     elif overrides is not None:
         config_name = override_name + "_" + str(nrows) + "x" + str(ncols) + "_" + thumb_style
 
@@ -132,6 +140,8 @@ def make_dactyl():
     ####################################################
     # END HELPER FUNCTIONS
     ####################################################
+
+    full_last_rows = not reduced_outer_keys
 
     if oled_mount_type is not None and oled_mount_type != "NONE":
         for item in oled_configurations[oled_mount_type]:
@@ -529,7 +539,8 @@ def make_dactyl():
 
 
     def valid_key(column, row):
-        if (full_last_rows):
+        if not reduced_outer_keys:
+        # if (full_last_rows):
             return (not (column in [0, 1])) or (not row == lastrow)
 
         return (column in [2, 3]) or (not row == lastrow)
@@ -1145,19 +1156,19 @@ def make_dactyl():
         return shape
 
 
-def case_walls(side='right', skeleton=False):
-    print('case_walls()')
-    return (
-        union([
-            back_wall(skeleton=skeleton),
-            left_wall(side=side, skeleton=skeleton),
-            right_wall(skeleton=skeleton),
-            front_wall(skeleton=skeleton),
-            # MOVED TO SEPARABLE THUMB SECTION
-            # cluster(side=side).walls(side=side),
-            # cluster(side=side).connection(side=side),
-        ])
-    )
+    def case_walls(side='right', skeleton=False):
+        print('case_walls()')
+        return (
+            union([
+                back_wall(skeleton=skeleton),
+                left_wall(side=side, skeleton=skeleton),
+                right_wall(skeleton=skeleton),
+                front_wall(skeleton=skeleton),
+                # MOVED TO SEPARABLE THUMB SECTION
+                # cluster(side=side).walls(side=side),
+                # cluster(side=side).connection(side=side),
+            ])
+        )
 
 
 
@@ -1850,10 +1861,10 @@ def case_walls(side='right', skeleton=False):
     def screw_insert_shape(bottom_radius, top_radius, height):
         debugprint('screw_insert_shape()')
         if bottom_radius == top_radius:
-            # base = cylinder(radius=bottom_radius, height=height)
-            base = translate(cylinder(radius=bottom_radius, height=height),
-                             (0, 0, -height / 2)
-                             )
+            base = cylinder(radius=bottom_radius, height=height)
+            # base = translate(cylinder(radius=bottom_radius, height=height),
+            #                  (0, 0, -height / 2)
+            #                  )
         else:
             base = translate(cone(r1=bottom_radius, r2=top_radius, height=height), (0, 0, -height / 2))
 
@@ -2016,6 +2027,8 @@ def case_walls(side='right', skeleton=False):
             translate(screw_insert(lastcol, cornerrow, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
             # translate(screw_insert_thumb(bottom_radius, top_radius, height), (0, 0, offset)),
         )
+
+        return shape
 
     def screw_insert_holes(side='right'):
         return screw_insert_all_shapes(
@@ -2235,16 +2248,19 @@ def case_walls(side='right', skeleton=False):
 
         #BUILD THUMB
 
-        thumb_shape = thumb(side=side)
+        # thumb_shape = thumb(side=side)
+        thumb_shape = cluster(side=side).thumb(side=side),
+
         if debug_exports:
             export_file(shape=thumb_shape, fname=path.join(r"..", "things", r"debug_thumb_shape"))
-        thumb_connector_shape = thumb_connectors(side=side)
+        thumb_connector_shape = cluster(side=side).thumb_connectors(side=side)
         if debug_exports:
             export_file(shape=thumb_connector_shape, fname=path.join(r"..", "things", r"debug_thumb_connector_shape"))
 
-        thumb_wall_shape = thumb_walls(side=side, skeleton=skeletal)
-        thumb_wall_shape = union([thumb_wall_shape, *thumb_screw_insert_outers(side=side)])
-        thumb_connection_shape = thumb_connection(side=side, skeleton=skeletal)
+        thumb_wall_shape = cluster(side=side).walls(side=side, skeleton=skeletal)
+        #TODO: FIX THUMB INSERTS
+        # thumb_wall_shape = union([thumb_wall_shape, *cluster(side=side).thumb_screw_insert_outers(side=side)])
+        thumb_connection_shape = cluster(side=side).connection(side=side, skeleton=skeletal)
 
 
         if debug_exports:
@@ -2252,12 +2268,14 @@ def case_walls(side='right', skeleton=False):
             export_file(shape=thumb_test, fname=path.join(r"..", "things", r"debug_thumb_test_{}_shape".format(side)))
 
         thumb_section = union([thumb_shape, thumb_connector_shape, thumb_wall_shape, thumb_connection_shape])
-        thumb_section = difference(thumb_section, [union(thumb_screw_insert_holes(side=side))])
+
+        # TODO: FIX THUMB INSERTS
+        # thumb_section = difference(thumb_section, [union(cluster(side=side).thumb_screw_insert_holes(side=side))])
 
         has_trackball = False
         if ('TRACKBALL' in thumb_style) and (side == ball_side or ball_side == 'both'):
             print("Has Trackball")
-            tbprecut, tb, tbcutout, sensor, ball = generate_trackball_in_cluster()
+            tbprecut, tb, tbcutout, sensor, ball = cluster(side=side).generate_trackball_in_cluster()
             has_trackball = True
             thumb_section = difference(thumb_section, [tbprecut])
             if debug_exports:
@@ -2273,7 +2291,7 @@ def case_walls(side='right', skeleton=False):
                 export_file(shape=thumb_section, fname=path.join(r"..", "things", r"debug_thumb_test_4_shape".format(side)))
 
         if plate_pcb_clear:
-            thumb_section = difference(thumb_section, [thumb_pcb_plate_cutouts(side=side)])
+            thumb_section = difference(thumb_section, [cluster(side=side).thumb_pcb_plate_cutouts(side=side)])
 
         block = box(350, 350, 40)
         block = translate(block, (0, 0, -20))
@@ -2285,7 +2303,7 @@ def case_walls(side='right', skeleton=False):
         if separable_thumb:
             thumb_section = difference(thumb_section, [main_shape])
             if show_caps:
-                thumb_section = add([thumb_section, thumbcaps(side=side)])
+                thumb_section = add([thumb_section, cluster(side=side).thumbcaps(side=side)])
                 if has_trackball:
                     thumb_section = add([thumb_section, ball])
         else:
@@ -2293,7 +2311,7 @@ def case_walls(side='right', skeleton=False):
             if debug_exports:
                 export_file(shape=main_shape, fname=path.join(r"..", "things", r"debug_thumb_test_6_shape".format(side)))
             if show_caps:
-                main_shape = add([main_shape, thumbcaps(side=side)])
+                main_shape = add([main_shape, cluster(side=side).thumbcaps(side=side)])
                 if has_trackball:
                     main_shape = add([main_shape, ball])
 
@@ -2418,13 +2436,15 @@ def case_walls(side='right', skeleton=False):
             # shape = mod_r
 
 
-            thumb_shape = thumb(side=side)
-            thumb_wall_shape = thumb_walls(side=side, skeleton=skeletal)
-            thumb_wall_shape = union([thumb_wall_shape, *thumb_screw_insert_outers(side=side)])
-            thumb_connector_shape = thumb_connectors(side=side)
-            thumb_connection_shape = thumb_connection(side=side, skeleton=skeletal)
+            thumb_shape = cluster(side=side).thumb(side=side)
+            thumb_wall_shape = cluster(side=side).walls(side=side, skeleton=skeletal)
+            ## TODO: FIX INSERTS
+            # thumb_wall_shape = union([thumb_wall_shape, *thumb_screw_insert_outers(side=side)])
+            thumb_connector_shape = cluster(side=side).connectors(side=side)
+            thumb_connection_shape = cluster(side=side).connection(side=side, skeleton=skeletal)
             thumb_section = union([thumb_shape, thumb_connector_shape, thumb_wall_shape, thumb_connection_shape])
-            thumb_section = difference(thumb_section, [union(thumb_screw_insert_holes(side=side))])
+            ## TODO: FIX INSERTS
+            # thumb_section = difference(thumb_section, [union(cluster(side=side).thumb_screw_insert_holes(side=side))])
 
             shape = union([
                 case_walls(side=side),
@@ -2503,9 +2523,10 @@ def case_walls(side='right', skeleton=False):
         else:
             shape = union([
                 case_walls(side=side),
-                *screw_insert_outers(side=side),
-                thumb_walls(side=side),
-                *thumb_screw_insert_outers(side=side),
+                cluster(side=side).walls(side=side),
+                ## TODO: FIX INSERTS
+                # *screw_insert_outers(side=side),
+                # *thumb_screw_insert_outers(side=side),
             ])
             tool = translate(union(screw_insert_screw_holes(side=side)), [0, 0, -10])
             base = box(1000, 1000, .01)
@@ -2518,40 +2539,41 @@ def case_walls(side='right', skeleton=False):
 
 
     def run():
-        # mod_r, tmb_r = model_side(side="right")
-        # export_file(shape=mod_r, fname=path.join(save_path, config_name + r"_right"))
-        # export_file(shape=tmb_r, fname=path.join(save_path, config_name + r"_thumb_right"))
-
-        # #base = baseplate(mod_r, tmb_r, side='right')
-        # base = baseplate(side='right')
-        # export_file(shape=base, fname=path.join(save_path, config_name + r"_right_plate"))
-        # export_dxf(shape=base, fname=path.join(save_path, config_name + r"_right_plate"))
-
-        # if symmetry == "asymmetric":
-        #     mod_l, tmb_l = model_side(side="left")
-        #     export_file(shape=mod_l, fname=path.join(save_path, config_name + r"_left"))
-        #     export_file(shape=tmb_l, fname=path.join(save_path, config_name + r"_thumb_left"))
-
-        #     #base_l = mirror(baseplate(mod_l, tmb_l, side='left'), 'YZ')
-        #     base_l = mirror(baseplate(side='left'), 'YZ')
-        #     export_file(shape=base_l, fname=path.join(save_path, config_name + r"_left_plate"))
-        #     export_dxf(shape=base_l, fname=path.join(save_path, config_name + r"_left_plate"))
-
-        mod_r = model_side(side="right")
+        config_name="FIX_IT"
+        mod_r, tmb_r = model_side(side="right")
         export_file(shape=mod_r, fname=path.join(save_path, config_name + r"_right"))
+        export_file(shape=tmb_r, fname=path.join(save_path, config_name + r"_thumb_right"))
 
+        #base = baseplate(mod_r, tmb_r, side='right')
         base = baseplate(side='right')
         export_file(shape=base, fname=path.join(save_path, config_name + r"_right_plate"))
         export_dxf(shape=base, fname=path.join(save_path, config_name + r"_right_plate"))
 
         if symmetry == "asymmetric":
-
-            mod_l = model_side(side="left")
+            mod_l, tmb_l = model_side(side="left")
             export_file(shape=mod_l, fname=path.join(save_path, config_name + r"_left"))
+            export_file(shape=tmb_l, fname=path.join(save_path, config_name + r"_thumb_left"))
 
+            #base_l = mirror(baseplate(mod_l, tmb_l, side='left'), 'YZ')
             base_l = mirror(baseplate(side='left'), 'YZ')
             export_file(shape=base_l, fname=path.join(save_path, config_name + r"_left_plate"))
             export_dxf(shape=base_l, fname=path.join(save_path, config_name + r"_left_plate"))
+
+        # mod_r = model_side(side="right")
+        # export_file(shape=mod_r, fname=path.join(save_path, config_name + r"_right"))
+        #
+        # base = baseplate(side='right')
+        # export_file(shape=base, fname=path.join(save_path, config_name + r"_right_plate"))
+        # export_dxf(shape=base, fname=path.join(save_path, config_name + r"_right_plate"))
+        #
+        # if symmetry == "asymmetric":
+        #
+        #     mod_l = model_side(side="left")
+        #     export_file(shape=mod_l, fname=path.join(save_path, config_name + r"_left"))
+        #
+        #     base_l = mirror(baseplate(side='left'), 'YZ')
+        #     export_file(shape=base_l, fname=path.join(save_path, config_name + r"_left_plate"))
+        #     export_dxf(shape=base_l, fname=path.join(save_path, config_name + r"_left_plate"))
 
         else:
             export_file(shape=mirror(mod_r, 'YZ'), fname=path.join(save_path, config_name + r"_left"))

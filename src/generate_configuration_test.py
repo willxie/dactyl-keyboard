@@ -91,7 +91,7 @@ shape_config = {
     'thumb_plate_bl_rotation': 0.0,  # Bottom right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
     ##############################
     # EXPERIMENTAL
-    'separable_thumb': False,  #creates a separable thumb section with additional screws to hold it down.  Only attached at base.
+    'separable_thumb': True,  #creates a separable thumb section with additional screws to hold it down.  Only attached at base.
     ##############################
 
     ###################################
@@ -500,4 +500,4 @@ if __name__ == '__main__':
 
     ## HERE FOR QUICK TESTING, SHOULD BE COMMENTED ON COMMIT
     from dactyl_manuform import *
-    run()
+    make_dactyl()
