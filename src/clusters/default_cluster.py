@@ -2,6 +2,8 @@ import json
 import os
 import numpy as np
 
+debugprint = print
+
 class DefaultCluster(object):
     num_keys = 6
     is_tb = False
@@ -16,6 +18,12 @@ class DefaultCluster(object):
     thumb_plate_ml_rotation = 0
     thumb_plate_br_rotation = 0
     thumb_plate_bl_rotation = 0
+
+    def __init__(self, parent):
+        self.g = parent.g
+        self.p = parent.p
+        self.parent = parent
+        self.sh = parent.sh
 
     @staticmethod
     def name():
@@ -32,161 +40,162 @@ class DefaultCluster(object):
             setattr(self, str(item), data[item])
         return data
 
-    def __init__(self, parent_locals):
-        for item in parent_locals:
-            globals()[item] = parent_locals[item]
-        self.get_config()
-        print(self.name(), " built")
+    # def __init__(self, parent_locals):
+    #     for item in parent_locals:
+    #         globals()[item] = parent_locals[item]
+    #     self.get_config()
+    #     print(self.name(), " built")
 
     def thumborigin(self):
         # debugprint('thumborigin()')
-        origin = key_position([mount_width / 2, -(mount_height / 2), 0], 1, cornerrow)
+        origin = self.parent.key_position([self.p.mount_width / 2, -(self.p.mount_height / 2), 0], 1, self.p.cornerrow)
 
         for i in range(len(origin)):
             origin[i] = origin[i] + self.thumb_offsets[i]
-
-        if thumb_style == 'MINIDOX':
-            origin[1] = origin[1] - .4 * (minidox_Usize - 1) * sa_length
 
         return origin
 
     def tl_place(self, shape):
         debugprint('tl_place()')
-        shape = rotate(shape, [7.5, -18, 10])
-        shape = translate(shape, self.thumborigin())
-        shape = translate(shape, [-32.5, -14.5, -2.5])
+        shape = self.g.rotate(shape, [7.5, -18, 10])
+        shape = self.g.translate(shape, self.thumborigin())
+        shape = self.g.translate(shape, [-32.5, -14.5, -2.5])
         return shape
 
     def tr_place(self, shape):
         debugprint('tr_place()')
-        shape = rotate(shape, [10, -15, 10])
-        shape = translate(shape, self.thumborigin())
-        shape = translate(shape, [-12, -16, 3])
+        shape = self.g.rotate(shape, [10, -15, 10])
+        shape = self.g.translate(shape, self.thumborigin())
+        shape = self.g.translate(shape, [-12, -16, 3])
         return shape
 
     def mr_place(self, shape):
         debugprint('mr_place()')
-        shape = rotate(shape, [-6, -34, 48])
-        shape = translate(shape, self.thumborigin())
-        shape = translate(shape, [-29, -40, -13])
+        shape = self.g.rotate(shape, [-6, -34, 48])
+        shape = self.g.translate(shape, self.thumborigin())
+        shape = self.g.translate(shape, [-29, -40, -13])
         return shape
 
     def ml_place(self, shape):
         debugprint('ml_place()')
-        shape = rotate(shape, [6, -34, 40])
-        shape = translate(shape, self.thumborigin())
-        shape = translate(shape, [-51, -25, -12])
+        shape = self.g.rotate(shape, [6, -34, 40])
+        shape = self.g.translate(shape, self.thumborigin())
+        shape = self.g.translate(shape, [-51, -25, -12])
         return shape
 
     def br_place(self, shape):
         debugprint('br_place()')
-        shape = rotate(shape, [-16, -33, 54])
-        shape = translate(shape, self.thumborigin())
-        shape = translate(shape, [-37.8, -55.3, -25.3])
+        shape = self.g.rotate(shape, [-16, -33, 54])
+        shape = self.g.translate(shape, self.thumborigin())
+        shape = self.g.translate(shape, [-37.8, -55.3, -25.3])
         return shape
 
     def bl_place(self, shape):
         debugprint('bl_place()')
-        shape = rotate(shape, [-4, -35, 52])
-        shape = translate(shape, self.thumborigin())
-        shape = translate(shape, [-56.3, -43.3, -23.5])
+        shape = self.g.rotate(shape, [-4, -35, 52])
+        shape = self.g.translate(shape, self.thumborigin())
+        shape = self.g.translate(shape, [-56.3, -43.3, -23.5])
         return shape
 
     def thumb_1x_layout(self, shape, cap=False):
         debugprint('thumb_1x_layout()')
         if cap:
             shape_list = [
-                self.mr_place(rotate(shape, [0, 0, self.thumb_plate_mr_rotation])),
-                self.ml_place(rotate(shape, [0, 0, self.thumb_plate_ml_rotation])),
-                self.br_place(rotate(shape, [0, 0, self.thumb_plate_br_rotation])),
-                self.bl_place(rotate(shape, [0, 0, self.thumb_plate_bl_rotation])),
+                self.mr_place(self.g.rotate(shape, [0, 0, self.thumb_plate_mr_rotation])),
+                self.ml_place(self.g.rotate(shape, [0, 0, self.thumb_plate_ml_rotation])),
+                self.br_place(self.g.rotate(shape, [0, 0, self.thumb_plate_br_rotation])),
+                self.bl_place(self.g.rotate(shape, [0, 0, self.thumb_plate_bl_rotation])),
             ]
 
-            if default_1U_cluster:
-                shape_list.append(self.tr_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, self.thumb_plate_tr_rotation])))
-                shape_list.append(self.tr_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, self.thumb_plate_tr_rotation])))
-                shape_list.append(self.tl_place(rotate(shape, [0, 0, self.thumb_plate_tl_rotation])))
-            shapes = add(shape_list)
+            if self.p.default_1U_cluster:
+                shape_list.append(self.tr_place(
+                    self.g.rotate(self.g.rotate(shape, (0, 0, 90)), [0, 0, self.thumb_plate_tr_rotation]))
+                )
+                shape_list.append(self.tr_place(
+                    self.g.rotate(self.g.rotate(shape, (0, 0, 90)), [0, 0, self.thumb_plate_tr_rotation]))
+                )
+                shape_list.append(self.tl_place(
+                    self.g.rotate(shape, [0, 0, self.thumb_plate_tl_rotation]))
+                )
+            shapes = self.g.add(shape_list)
 
         else:
             shape_list = [
-                self.mr_place(rotate(shape, [0, 0, self.thumb_plate_mr_rotation])),
-                self.ml_place(rotate(shape, [0, 0, self.thumb_plate_ml_rotation])),
-                self.br_place(rotate(shape, [0, 0, self.thumb_plate_br_rotation])),
-                self.bl_place(rotate(shape, [0, 0, self.thumb_plate_bl_rotation])),
+                self.mr_place(self.g.rotate(shape, [0, 0, self.thumb_plate_mr_rotation])),
+                self.ml_place(self.g.rotate(shape, [0, 0, self.thumb_plate_ml_rotation])),
+                self.br_place(self.g.rotate(shape, [0, 0, self.thumb_plate_br_rotation])),
+                self.bl_place(self.g.rotate(shape, [0, 0, self.thumb_plate_bl_rotation])),
             ]
-            if default_1U_cluster:
-                shape_list.append(self.tr_place(rotate(rotate(shape, (0, 0, 90)), [0, 0, self.thumb_plate_tr_rotation])))
-            shapes = union(shape_list)
+            if self.p.default_1U_cluster:
+                shape_list.append(self.tr_place(self.g.rotate(self.g.rotate(shape, (0, 0, 90)), [0, 0, self.thumb_plate_tr_rotation])))
+            shapes = self.g.union(shape_list)
         return shapes
 
     def thumb_15x_layout(self, shape, cap=False, plate=True):
         debugprint('thumb_15x_layout()')
         if plate:
             if cap:
-                shape = rotate(shape, (0, 0, 90))
-                cap_list = [self.tl_place(rotate(shape, [0, 0, self.thumb_plate_tl_rotation]))]
-                cap_list.append(self.tr_place(rotate(shape, [0, 0, self.thumb_plate_tr_rotation])))
-                return add(cap_list)
+                shape = self.g.rotate(shape, (0, 0, 90))
+                cap_list = [self.tl_place(self.g.rotate(shape, [0, 0, self.thumb_plate_tl_rotation]))]
+                cap_list.append(self.tr_place(self.g.rotate(shape, [0, 0, self.thumb_plate_tr_rotation])))
+                return self.g.add(cap_list)
             else:
-                shape_list = [self.tl_place(rotate(shape, [0, 0, self.thumb_plate_tl_rotation]))]
-                if not default_1U_cluster:
-                    shape_list.append(self.tr_place(rotate(shape, [0, 0, self.thumb_plate_tr_rotation])))
-                return union(shape_list)
+                shape_list = [self.tl_place(self.g.rotate(shape, [0, 0, self.thumb_plate_tl_rotation]))]
+                if not self.p.default_1U_cluster:
+                    shape_list.append(self.tr_place(self.g.rotate(shape, [0, 0, self.thumb_plate_tr_rotation])))
+                return self.g.union(shape_list)
         else:
             if cap:
-                shape = rotate(shape, (0, 0, 90))
-                shape_list = [
-                    self.tl_place(shape),
-                ]
+                shape = self.g.rotate(shape, (0, 0, 90))
+                shape_list = [self.tl_place(shape)]
                 shape_list.append(self.tr_place(shape))
 
-                return add(shape_list)
+                return self.g.add(shape_list)
             else:
                 shape_list = [
                     self.tl_place(shape),
                 ]
-                if not default_1U_cluster:
-                    shape_list.append(tr_place(shape))
+                if not self.p.default_1U_cluster:
+                    shape_list.append(self.tr_place(shape))
 
-                return union(shape_list)
+                return self.g.union(shape_list)
 
     def thumbcaps(self, side='right'):
-        t1 = self.thumb_1x_layout(sa_cap(1), cap=True)
-        if not default_1U_cluster:
-            t1.add(self.thumb_15x_layout(sa_cap(1.5), cap=True))
+        t1 = self.thumb_1x_layout(self.sh.sa_cap(1), cap=True)
+        if not self.p.default_1U_cluster:
+            t1.add(self.thumb_15x_layout(self.sh.sa_cap(1.5), cap=True))
         return t1
 
     def thumb(self, side="right"):
         print('thumb()')
-        shape = self.thumb_1x_layout(rotate(single_plate(side=side), (0, 0, -90)))
-        shape = union([shape, self.thumb_15x_layout(rotate(single_plate(side=side), (0, 0, -90)))])
-        shape = union([shape, self.thumb_15x_layout(double_plate(), plate=False)])
+        shape = self.thumb_1x_layout(self.g.rotate(self.sh.single_plate(side=side), (0, 0, -90)))
+        shape = self.g.union([shape, self.thumb_15x_layout(self.g.rotate(self.sh.single_plate(side=side), (0, 0, -90)))])
+        shape = self.g.union([shape, self.thumb_15x_layout(self.sh.double_plate(), plate=False)])
 
         return shape
 
     def thumb_post_tr(self):
         debugprint('thumb_post_tr()')
-        return translate(web_post(),
-                         [(mount_width / 2) - post_adj, ((mount_height / 2) + double_plate_height) - post_adj, 0]
+        return self.g.translate(self.sh.web_post(),
+                         [(self.p.mount_width / 2) - self.p.post_adj, ((self.p.mount_height / 2) + self.p.double_plate_height) - self.p.post_adj, 0]
                          )
 
     def thumb_post_tl(self):
         debugprint('thumb_post_tl()')
-        return translate(web_post(),
-                         [-(mount_width / 2) + post_adj, ((mount_height / 2) + double_plate_height) - post_adj, 0]
+        return self.g.translate(self.sh.web_post(),
+                         [-(self.p.mount_width / 2) + self.p.post_adj, ((self.p.mount_height / 2) + self.p.double_plate_height) - self.p.post_adj, 0]
                          )
 
     def thumb_post_bl(self):
         debugprint('thumb_post_bl()')
-        return translate(web_post(),
-                         [-(mount_width / 2) + post_adj, -((mount_height / 2) + double_plate_height) + post_adj, 0]
+        return self.g.translate(self.sh.web_post(),
+                         [-(self.p.mount_width / 2) + self.p.post_adj, -((self.p.mount_height / 2) + self.p.double_plate_height) + self.p.post_adj, 0]
                          )
 
     def thumb_post_br(self):
         debugprint('thumb_post_br()')
-        return translate(web_post(),
-                         [(mount_width / 2) - post_adj, -((mount_height / 2) + double_plate_height) + post_adj, 0]
+        return self.g.translate(self.sh.web_post(),
+                         [(self.p.mount_width / 2) - self.p.post_adj, -((self.p.mount_height / 2) + self.p.double_plate_height) + self.p.post_adj, 0]
                          )
 
     def thumb_connectors(self, side="right"):
@@ -194,20 +203,20 @@ class DefaultCluster(object):
         hulls = []
 
         # Top two
-        if default_1U_cluster:
+        if self.p.default_1U_cluster:
             hulls.append(
-                triangle_hulls(
+                self.g.triangle_hulls(
                     [
                         self.tl_place(self.thumb_post_tr()),
                         self.tl_place(self.thumb_post_br()),
-                        self.tr_place(web_post_tl()),
-                        self.tr_place(web_post_bl()),
+                        self.tr_place(self.sh.web_post_tl()),
+                        self.tr_place(self.sh.web_post_bl()),
                     ]
                 )
             )
         else:
             hulls.append(
-                triangle_hulls(
+                self.g.triangle_hulls(
                     [
                         self.tl_place(self.thumb_post_tr()),
                         self.tl_place(self.thumb_post_br()),
@@ -219,163 +228,177 @@ class DefaultCluster(object):
 
         # bottom two on the right
         hulls.append(
-            triangle_hulls(
+            self.g.triangle_hulls(
                 [
-                    self.br_place(web_post_tr()),
-                    self.br_place(web_post_br()),
-                    self.mr_place(web_post_tl()),
-                    self.mr_place(web_post_bl()),
+                    self.br_place(self.sh.web_post_tr()),
+                    self.br_place(self.sh.web_post_br()),
+                    self.mr_place(self.sh.web_post_tl()),
+                    self.mr_place(self.sh.web_post_bl()),
                 ]
             )
         )
 
         # bottom two on the left
         hulls.append(
-            triangle_hulls(
+            self.g.triangle_hulls(
                 [
-                    self.br_place(web_post_tr()),
-                    self.br_place(web_post_br()),
-                    self.mr_place(web_post_tl()),
-                    self.mr_place(web_post_bl()),
+                    self.br_place(self.sh.web_post_tr()),
+                    self.br_place(self.sh.web_post_br()),
+                    self.mr_place(self.sh.web_post_tl()),
+                    self.mr_place(self.sh.web_post_bl()),
                 ]
             )
         )
         # centers of the bottom four
         hulls.append(
-            triangle_hulls(
+            self.g.triangle_hulls(
                 [
-                    self.bl_place(web_post_tr()),
-                    self.bl_place(web_post_br()),
-                    self.ml_place(web_post_tl()),
-                    self.ml_place(web_post_bl()),
+                    self.bl_place(self.sh.web_post_tr()),
+                    self.bl_place(self.sh.web_post_br()),
+                    self.ml_place(self.sh.web_post_tl()),
+                    self.ml_place(self.sh.web_post_bl()),
                 ]
             )
         )
 
         # top two to the middle two, starting on the left
         hulls.append(
-            triangle_hulls(
+            self.g.triangle_hulls(
                 [
-                    self.br_place(web_post_tl()),
-                    self.bl_place(web_post_bl()),
-                    self.br_place(web_post_tr()),
-                    self.bl_place(web_post_br()),
-                    self.mr_place(web_post_tl()),
-                    self.ml_place(web_post_bl()),
-                    self.mr_place(web_post_tr()),
-                    self.ml_place(web_post_br()),
+                    self.br_place(self.sh.web_post_tl()),
+                    self.bl_place(self.sh.web_post_bl()),
+                    self.br_place(self.sh.web_post_tr()),
+                    self.bl_place(self.sh.web_post_br()),
+                    self.mr_place(self.sh.web_post_tl()),
+                    self.ml_place(self.sh.web_post_bl()),
+                    self.mr_place(self.sh.web_post_tr()),
+                    self.ml_place(self.sh.web_post_br()),
                 ]
             )
         )
 
-        if default_1U_cluster:
+        if self.p.default_1U_cluster:
             hulls.append(
-                triangle_hulls(
+                self.g.triangle_hulls(
                     [
                         self.tl_place(self.thumb_post_tl()),
-                        self.ml_place(web_post_tr()),
+                        self.ml_place(self.sh.web_post_tr()),
                         self.tl_place(self.thumb_post_bl()),
-                        self.ml_place(web_post_br()),
+                        self.ml_place(self.sh.web_post_br()),
                         self.tl_place(self.thumb_post_br()),
-                        self.mr_place(web_post_tr()),
-                        self.tr_place(web_post_bl()),
-                        self.mr_place(web_post_br()),
-                        self.tr_place(web_post_br()),
+                        self.mr_place(self.sh.web_post_tr()),
+                        self.tr_place(self.sh.web_post_bl()),
+                        self.mr_place(self.sh.web_post_br()),
+                        self.tr_place(self.sh.web_post_br()),
                     ]
                 )
             )
         else:
             # top two to the main keyboard, starting on the left
             hulls.append(
-                triangle_hulls(
+                self.g.triangle_hulls(
                     [
                         self.tl_place(self.thumb_post_tl()),
-                        self.ml_place(web_post_tr()),
+                        self.ml_place(self.sh.web_post_tr()),
                         self.tl_place(self.thumb_post_bl()),
-                        self.ml_place(web_post_br()),
+                        self.ml_place(self.sh.web_post_br()),
                         self.tl_place(self.thumb_post_br()),
-                        self.mr_place(web_post_tr()),
+                        self.mr_place(self.sh.web_post_tr()),
                         self.tr_place(self.thumb_post_bl()),
-                        self.mr_place(web_post_br()),
+                        self.mr_place(self.sh.web_post_br()),
                         self.tr_place(self.thumb_post_br()),
                     ]
                 )
             )
 
-        if default_1U_cluster:
+        if self.p.default_1U_cluster:
             hulls.append(
-                triangle_hulls(
+                self.g.triangle_hulls(
                     [
                         self.tl_place(self.thumb_post_tl()),
-                        key_place(web_post_bl(), 0, cornerrow),
+                        self.parent.key_place(self.sh.web_post_bl(), 0, self.p.cornerrow),
                         self.tl_place(self.thumb_post_tr()),
-                        key_place(web_post_br(), 0, cornerrow),
-                        self.tr_place(web_post_tl()),
-                        key_place(web_post_bl(), 1, cornerrow),
-                        self.tr_place(web_post_tr()),
-                        key_place(web_post_br(), 1, cornerrow),
-                        key_place(web_post_bl(), 2, lastrow),
-                        self.tr_place(web_post_tr()),
-                        key_place(web_post_bl(), 2, lastrow),
-                        self.tr_place(web_post_br()),
-                        key_place(web_post_br(), 2, lastrow),
-                        key_place(web_post_bl(), 3, lastrow),
+                        self.parent.key_place(self.sh.web_post_br(), 0, self.p.cornerrow),
+                        self.tr_place(self.sh.web_post_tl()),
+                        self.parent.key_place(self.sh.web_post_bl(), 1, self.p.cornerrow),
+                        self.tr_place(self.sh.web_post_tr()),
+                        self.parent.key_place(self.sh.web_post_br(), 1, self.p.cornerrow),
+                        self.parent.key_place(self.sh.web_post_bl(), 2, self.p.lastrow),
+                        self.tr_place(self.sh.web_post_tr()),
+                        self.parent.key_place(self.sh.web_post_bl(), 2, self.p.lastrow),
+                        self.tr_place(self.sh.web_post_br()),
+                        self.parent.key_place(self.sh.web_post_br(), 2, self.p.lastrow),
+                        self.parent.key_place(self.sh.web_post_bl(), 3, self.p.lastrow),
                     ]
                 )
             )
         else:
             hulls.append(
-                triangle_hulls(
+                self.g.triangle_hulls(
                     [
                         self.tl_place(self.thumb_post_tl()),
-                        key_place(web_post_bl(), 0, cornerrow),
+                        self.parent.key_place(self.sh.web_post_bl(), 0, self.p.cornerrow),
                         self.tl_place(self.thumb_post_tr()),
-                        key_place(web_post_br(), 0, cornerrow),
+                        self.parent.key_place(self.sh.web_post_br(), 0, self.p.cornerrow),
                         self.tr_place(self.thumb_post_tl()),
-                        key_place(web_post_bl(), 1, cornerrow),
+                        self.parent.key_place(self.sh.web_post_bl(), 1, self.p.cornerrow),
                         self.tr_place(self.thumb_post_tr()),
-                        key_place(web_post_br(), 1, cornerrow),
-                        key_place(web_post_tl(), 2, lastrow),
-                        key_place(web_post_bl(), 2, lastrow),
+                        self.parent.key_place(self.sh.web_post_br(), 1, self.p.cornerrow),
+                        self.parent.key_place(self.sh.web_post_tl(), 2, self.p.lastrow),
+                        self.parent.key_place(self.sh.web_post_bl(), 2, self.p.lastrow),
                         self.tr_place(self.thumb_post_tr()),
-                        key_place(web_post_bl(), 2, lastrow),
+                        self.parent.key_place(self.sh.web_post_bl(), 2, self.p.lastrow),
                         self.tr_place(self.thumb_post_br()),
-                        key_place(web_post_br(), 2, lastrow),
+                        self.parent.key_place(self.sh.web_post_br(), 2, self.p.lastrow),
                     ]
                 )
             )
 
         # return add(hulls)
-        return union(hulls)
+        return self.g.union(hulls)
 
 
     def walls(self, side="right", skeleton=False):
         print('thumb_walls()')
         # thumb, walls
-        if default_1U_cluster:
-            shape = union([wall_brace(self.mr_place, 0, -1, web_post_br(), self.tr_place, 0, -1, web_post_br())])
+        if self.p.default_1U_cluster:
+            shape = self.g.union([self.parent.wall_brace(self.mr_place, 0, -1, self.sh.web_post_br(),
+                                             self.tr_place, 0, -1, self.sh.web_post_br())])
         else:
-            shape = union([wall_brace(self.mr_place, 0, -1, web_post_br(), self.tr_place, 0, -1, self.thumb_post_br())])
-        shape = union([shape, wall_brace(self.mr_place, 0, -1, web_post_br(), self.mr_place, 0, -1, web_post_bl())])
-        shape = union([shape, wall_brace(self.br_place, 0, -1, web_post_br(), self.br_place, 0, -1, web_post_bl())])
-        shape = union([shape, wall_brace(self.ml_place, -0.3, 1, web_post_tr(), self.ml_place, 0, 1, web_post_tl())])
-        shape = union([shape, wall_brace(self.bl_place, 0, 1, web_post_tr(), self.bl_place, 0, 1, web_post_tl())])
-        shape = union([shape, wall_brace(self.br_place, -1, 0, web_post_tl(), self.br_place, -1, 0, web_post_bl())])
-        shape = union([shape, wall_brace(self.bl_place, -1, 0, web_post_tl(), self.bl_place, -1, 0, web_post_bl())])
+            shape = self.g.union([self.parent.wall_brace(self.mr_place, 0, -1, self.sh.web_post_br(),
+                                             self.tr_place, 0, -1, self.thumb_post_br())])
+        shape = self.g.union([shape, self.parent.wall_brace(self.mr_place, 0, -1, self.sh.web_post_br(),
+                                                self.mr_place, 0, -1, self.sh.web_post_bl())])
+        shape = self.g.union([shape, self.parent.wall_brace(self.br_place, 0, -1, self.sh.web_post_br(),
+                                                self.br_place, 0, -1, self.sh.web_post_bl())])
+        shape = self.g.union([shape, self.parent.wall_brace(self.ml_place, -0.3, 1, self.sh.web_post_tr(),
+                                                self.ml_place, 0, 1, self.sh.web_post_tl())])
+        shape = self.g.union([shape, self.parent.wall_brace(self.bl_place, 0, 1, self.sh.web_post_tr(),
+                                                self.bl_place, 0, 1, self.sh.web_post_tl())])
+        shape = self.g.union([shape, self.parent.wall_brace(self.br_place, -1, 0, self.sh.web_post_tl(),
+                                                self.br_place, -1, 0, self.sh.web_post_bl())])
+        shape = self.g.union([shape, self.parent.wall_brace(self.bl_place, -1, 0, self.sh.web_post_tl(),
+                                                self.bl_place, -1, 0, self.sh.web_post_bl())])
         # thumb, corners
-        shape = union([shape, wall_brace(self.br_place, -1, 0, web_post_bl(), self.br_place, 0, -1, web_post_bl())])
-        shape = union([shape, wall_brace(self.bl_place, -1, 0, web_post_tl(), self.bl_place, 0, 1, web_post_tl())])
+        shape = self.g.union([shape, self.parent.wall_brace(self.br_place, -1, 0, self.sh.web_post_bl(),
+                                                self.br_place, 0, -1, self.sh.web_post_bl())])
+        shape = self.g.union([shape, self.parent.wall_brace(self.bl_place, -1, 0, self.sh.web_post_tl(),
+                                                self.bl_place, 0, 1, self.sh.web_post_tl())])
         # thumb, tweeners
-        shape = union([shape, wall_brace(self.mr_place, 0, -1, web_post_bl(), self.br_place, 0, -1, web_post_br())])
-        shape = union([shape, wall_brace(self.ml_place, 0, 1, web_post_tl(), self.bl_place, 0, 1, web_post_tr())])
-        shape = union([shape, wall_brace(self.bl_place, -1, 0, web_post_bl(), self.br_place, -1, 0, web_post_tl())])
-        if default_1U_cluster:
-            shape = union([shape,
-                           wall_brace(self.tr_place, 0, -1, web_post_br(), (lambda sh: key_place(sh, 3, lastrow)), 0,
-                                      -1, web_post_bl())])
+        shape = self.g.union([shape, self.parent.wall_brace(self.mr_place, 0, -1, self.sh.web_post_bl(),
+                                                self.br_place, 0, -1, self.sh.web_post_br())])
+        shape = self.g.union([shape, self.parent.wall_brace(self.ml_place, 0, 1, self.sh.web_post_tl(),
+                                                self.bl_place, 0, 1, self.sh.web_post_tr())])
+        shape = self.g.union([shape, self.parent.wall_brace(self.bl_place, -1, 0, self.sh.web_post_bl(),
+                                                self.br_place, -1, 0, self.sh.web_post_tl())])
+        if self.p.default_1U_cluster:
+            shape = self.g.union([shape,
+                           self.parent.wall_brace(self.tr_place, 0, -1, self.sh.web_post_br(),
+                                      (lambda sh: self.parent.key_place(sh, 3, self.p.lastrow)), 0,
+                                      -1, self.sh.web_post_bl())])
         else:
-            shape = union([shape, wall_brace(self.tr_place, 0, -1, self.thumb_post_br(),
-                                             (lambda sh: key_place(sh, 3, lastrow)), 0, -1, web_post_bl())])
+            shape = self.g.union([shape, self.parent.wall_brace(self.tr_place, 0, -1, self.thumb_post_br(),
+                                             (lambda sh: self.parent.key_place(sh, 3, self.p.lastrow)), 0, -1, self.sh.web_post_bl())])
 
         return shape
 
@@ -383,53 +406,53 @@ class DefaultCluster(object):
         print('thumb_connection()')
         # clunky bit on the top left thumb connection  (normal connectors don't work well)
         shape = None
-        shape = union([shape, bottom_hull(
+        shape = self.g.union([shape, self.g.bottom_hull(
             [
-                left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True, side=side),
-                left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True, side=side),
-                self.ml_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
-                self.ml_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
+                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1, low_corner=True, side=side),
+                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1, low_corner=True, side=side),
+                self.ml_place(self.g.translate(self.sh.web_post_tr(), self.parent.wall_locate2(-0.3, 1))),
+                self.ml_place(self.g.translate(self.sh.web_post_tr(), self.parent.wall_locate3(-0.3, 1))),
             ]
         )])
 
-        shape = union([shape,
-                       hull_from_shapes(
+        shape = self.g.union([shape,
+                       self.g.hull_from_shapes(
                            [
-                               left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1,
+                               self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1,
                                               low_corner=True, side=side),
-                               left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1,
+                               self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1,
                                               low_corner=True, side=side),
-                               self.ml_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
-                               self.ml_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
+                               self.ml_place(self.g.translate(self.sh.web_post_tr(), self.parent.wall_locate2(-0.3, 1))),
+                               self.ml_place(self.g.translate(self.sh.web_post_tr(), self.parent.wall_locate3(-0.3, 1))),
                                self.tl_place(self.thumb_post_tl()),
                            ]
                        )
                        ])  # )
 
-        shape = union([shape, hull_from_shapes(
+        shape = self.g.union([shape, self.g.hull_from_shapes(
             [
-                left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True, side=side),
-                left_key_place(translate(web_post(), wall_locate2(-1, 0)), cornerrow, -1, low_corner=True, side=side),
-                left_key_place(translate(web_post(), wall_locate3(-1, 0)), cornerrow, -1, low_corner=True, side=side),
+                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1, low_corner=True, side=side),
+                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1, low_corner=True, side=side),
+                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1, low_corner=True, side=side),
                 self.tl_place(self.thumb_post_tl()),
             ]
         )])
 
-        shape = union([shape, hull_from_shapes(
+        shape = self.g.union([shape, self.g.hull_from_shapes(
             [
-                left_key_place(web_post(), cornerrow, -1, low_corner=True, side=side),
-                left_key_place(translate(web_post(), wall_locate1(-1, 0)), cornerrow, -1, low_corner=True, side=side),
-                key_place(web_post_bl(), 0, cornerrow),
+                self.parent.left_key_place(self.sh.web_post(), self.p.cornerrow, -1, low_corner=True, side=side),
+                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1, low_corner=True, side=side),
+                self.parent.key_place(self.sh.web_post_bl(), 0, self.p.cornerrow),
                 self.tl_place(self.thumb_post_tl()),
             ]
         )])
 
-        shape = union([shape, hull_from_shapes(
+        shape = self.g.union([shape, self.g.hull_from_shapes(
             [
-                self.ml_place(web_post_tr()),
-                self.ml_place(translate(web_post_tr(), wall_locate1(-0.3, 1))),
-                self.ml_place(translate(web_post_tr(), wall_locate2(-0.3, 1))),
-                self.ml_place(translate(web_post_tr(), wall_locate3(-0.3, 1))),
+                self.ml_place(self.sh.web_post_tr()),
+                self.ml_place(self.g.translate(self.sh.web_post_tr(), self.parent.wall_locate1(-0.3, 1))),
+                self.ml_place(self.g.translate(self.sh.web_post_tr(), self.parent.wall_locate2(-0.3, 1))),
+                self.ml_place(self.g.translate(self.sh.web_post_tr(), self.parent.wall_locate3(-0.3, 1))),
                 self.tl_place(self.thumb_post_tl()),
             ]
         )])
@@ -447,6 +470,6 @@ class DefaultCluster(object):
         return shape
 
     def thumb_pcb_plate_cutouts(self, side="right"):
-        shape = self.thumb_1x_layout(plate_pcb_cutout(side=side))
-        shape = union([shape, self.thumb_15x_layout(plate_pcb_cutout(side=side))])
+        shape = self.thumb_1x_layout(self.sh.plate_pcb_cutout(side=side))
+        shape = self.g.union([shape, self.thumb_15x_layout(self.sh.plate_pcb_cutout(side=side))])
         return shape

@@ -60,7 +60,7 @@ shape_config = {
     # THUMB PARAMETERS
     ##############################
 
-    # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key, 'TRACKBALL_ORBYL', 'TRACKBALL_CJ'
+    # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key, 'TRACKBALL_ORBYL', 'TRACKBALL_CJ', 'TRACKBALL_WILD'
     'thumb_style': 'TRACKBALL_ORBYL',
     'default_1U_cluster': True, # only used with default, makes top right thumb cluster key 1U
     # Thumb key size.  May need slight oversizing, check w/ caps.  Additional spacing will be automatically added for larger keys.
@@ -500,4 +500,4 @@ if __name__ == '__main__':
 
     ## HERE FOR QUICK TESTING, SHOULD BE COMMENTED ON COMMIT
     from dactyl_manuform import *
-    make_dactyl()
+    DactylBase()

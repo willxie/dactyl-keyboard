@@ -8,14 +8,36 @@ import os
 import copy
 import shutil
 import importlib
-from clusters.default_cluster import DefaultCluster
-from clusters.carbonfet import CarbonfetCluster
-from clusters.mini import MiniCluster
-from clusters.minidox import MinidoxCluster
-from clusters.trackball_orbyl import TrackballOrbyl
-from clusters.trackball_wilder import TrackballWild
-from clusters.trackball_cj import TrackballCJ
-from clusters.custom_cluster import CustomCluster
+import helpers_abc
+import default_configuration as cfg
+
+# from clusters.default_cluster import DefaultCluster
+# from clusters.carbonfet import CarbonfetCluster
+# from clusters.mini import MiniCluster
+# from clusters.minidox import MinidoxCluster
+# from clusters.trackball_orbyl import TrackballOrbyl
+# from clusters.trackball_wilder import TrackballWild
+# from clusters.trackball_cj import TrackballCJ
+# from clusters.custom_cluster import CustomCluster
+
+CLUSTER_LOOKUP = {
+    'DEFAULT': {'package': 'default_cluster', 'class': 'DefaultCluster'},
+    'CARBONFET': {'package': 'carbonfet', 'class': 'CarbonfetCluster'},
+    'MINI': {'package': 'mini', 'class': 'MiniCluster'},
+    'MINIDOX': {'package': 'minidox', 'class': 'MinidoxCluster'},
+    'TRACKBALL_ORBYL': {'package': 'trackball_orbyl', 'class': 'TrackballOrbyl'},
+    'TRACKBALL_WILD': {'package': 'trackball_wilder', 'class': 'TrackballWild'},
+    'TRACKBALL_CJ': {'package': 'trackball_cj', 'class': 'TrackballCJ'},
+    'TRACKBALL_CUSTOM': {'package': 'custom_cluster', 'class': 'CustomCluster'},
+}
+
+ENGINE_LOOKUP = {
+    'solid': 'helpers_solid',
+    'cadquery': 'helpers_cadquery',
+}
+
+debug_exports = False
+debug_trace = False
 
 
 def deg2rad(degrees: float) -> float:
@@ -26,13 +48,15 @@ def rad2deg(rad: float) -> float:
     return rad * 180 / pi
 
 
-debug_exports = False
-debug_trace = False
+def usize_dimention(Usize=1.5):
+    sa_length = 18.5
+    return Usize * sa_length
 
 
 def debugprint(info):
     if debug_trace:
         print(info)
+
 
 ###############################################
 # EXTREMELY UGLY BUT FUNCTIONAL BOOTSTRAP
@@ -40,427 +64,679 @@ def debugprint(info):
 
 ## IMPORT DEFAULT CONFIG IN CASE NEW PARAMETERS EXIST
 
+class ShapeFunctions:
+    def __init__(self, parent):
+        self._parent = parent
+        self.p = parent.p
+        self.g = parent.g
 
-def make_dactyl():
-    right_cluster = None
-    left_cluster = None
-
-    left_wall_x_offset = 8
-    left_wall_z_offset = 3
-    left_wall_lower_y_offset = 0
-    left_wall_lower_z_offset = 0
-
-    symmetry = None
-    column_style = None
-
-    save_name = None
-    override_name = None
-
-    def cluster(side="right"):
-        return right_cluster if side == "right" else left_cluster
-
-    import generate_configuration as cfg
-    for item in cfg.shape_config:
-        globals()[item] = cfg.shape_config[item]
-
-    if True:
-        print("NO CONFIGURATION SPECIFIED, USING run_config.json")
-        with open(os.path.join(r".", 'run_config.json'), mode='r') as fid:
-            data = json.load(fid)
-
-    else:
-        ## CHECK FOR CONFIG FILE AND WRITE TO ANY VARIABLES IN FILE.
-        opts, args = getopt.getopt(sys.argv[1:], "", ["config="])
-        for opt, arg in opts:
-            if opt in ('--config'):
-                with open(os.path.join(r"..", "configs", arg + '.json'), mode='r') as fid:
-                    data = json.load(fid)
-
-    if "overrides" not in data:
-        data['overrides']=None
-
-    if data["overrides"] not in [None, ""]:
-        with open(os.path.join(data["overrides"]), mode='r') as fid:
-            override_data = json.load(fid)
-        for item in override_data:
-            data[item] = override_data[item]
-
-    for item in data:
-        globals()[item] = data[item]
-
-    if save_name is not None:
-        config_name = save_name
-
-    elif overrides is not None:
-        config_name = override_name + "_" + str(nrows) + "x" + str(ncols) + "_" + thumb_style
-
-    ENGINE = data["ENGINE"]
-    # Really rough setup.  Check for ENGINE, set it not present from configuration.
-    try:
-        print('Found Current Engine in Config = {}'.format(ENGINE))
-    except Exception:
-        print('Engine Not Found in Config')
-        ENGINE = 'solid'
-        # ENGINE = 'cadquery'
-        print('Setting Current Engine = {}'.format(ENGINE))
-
-    parts_path = os.path.abspath(path.join(r".", "parts"))
-
-    if override_name in ['', None, '.']:
-        if save_dir in ['', None, '.']:
-            save_path = path.join(r"..", "things")
-            # parts_path = path.join(r"..", "src", "parts")
+    def single_plate(self,
+                     # plate_style=None, mount_width=None, mount_height=None,
+                     # keyswitch_width=None, keyswitch_height=None, plate_thickness=None, mount_thickness=None,
+                     # clip_undercut=None,
+                     cylinder_segments=100, side="right",
+                     ):
+        if self.p.plate_style in ['NUB', 'HS_NUB']:
+            plate = self.nub_plate(
+                # mount_width=mount_width, mount_height=mount_height,
+                # keyswitch_width=keyswitch_width, keyswitch_height=keyswitch_height,
+                # plate_thickness=plate_thickness, mount_thickness=mount_thickness
+            )
         else:
-            save_path = path.join(r"..", "things", save_dir)
-            # parts_path = path.join(r"..", r"..", "src", "parts")
-        # parts_path = path.join(r"..", r"..", "src", "parts")
-    else:
-        save_path = path.join(save_dir, override_name)
-        # parts_path = path.jo
+            plate = self.plate_square_hole(
+                # mount_width=mount_width, mount_height=mount_height,
+                # keyswitch_width=keyswitch_width, keyswitch_height=keyswitch_height,
+                # plate_thickness=plate_thickness, mount_thickness=mount_thickness
+            )
 
-    dir_exists = os.path.isdir(save_path)
-    if not dir_exists:
-        os.makedirs(save_path, exist_ok=True)
-
-    if overrides not in [None, ""]:
-        shutil.copy(overrides, save_path)
-    ###############################################
-    # END EXTREMELY UGLY BOOTSTRAP
-    ###############################################
-
-    ####################################################
-    # HELPER FUNCTIONS TO MERGE CADQUERY AND OPENSCAD
-    ####################################################
-
-    if ENGINE == 'cadquery':
-        globals().update(importlib.import_module("helpers_cadquery").__dict__)
-    else:
-        globals().update(importlib.import_module("helpers_solid").__dict__)
-
-    ####################################################
-    # END HELPER FUNCTIONS
-    ####################################################
-
-    full_last_rows = not reduced_outer_keys
-
-    if oled_mount_type is not None and oled_mount_type != "NONE":
-        for item in oled_configurations[oled_mount_type]:
-            globals()[item] = oled_configurations[oled_mount_type][item]
-
-    if nrows > 5:
-        column_style = column_style_gt5
-
-    lastrow = nrows - 1
-    if reduced_outer_keys:
-        cornerrow = lastrow - 1
-    else:
-        cornerrow = lastrow
-    lastcol = ncols - 1
-
-    centerrow = nrows - centerrow_offset
-
-
-    plate_file = None
-
-    # Derived values
-    if plate_style in ['NUB', 'HS_NUB']:
-        keyswitch_height = nub_keyswitch_height
-        keyswitch_width = nub_keyswitch_width
-    elif plate_style in ['UNDERCUT', 'HS_UNDERCUT', 'NOTCH', 'HS_NOTCH']:
-        keyswitch_height = undercut_keyswitch_height
-        keyswitch_width = undercut_keyswitch_width
-    else:
-        keyswitch_height = hole_keyswitch_height
-        keyswitch_width = hole_keyswitch_width
-
-    if 'HS_' in plate_style:
-        symmetry = "asymmetric"
-        pname = r"hot_swap_plate"
-        if plate_file_name is not None:
-            pname = plate_file_name
-        plate_file = path.join(parts_path, pname)
-        # plate_offset = 0.0 # this overwrote the config variable
-
-    if (trackball_in_wall or ('TRACKBALL' in thumb_style)) and not ball_side == 'both':
-        symmetry = "asymmetric"
-
-    mount_width = keyswitch_width + 2 * plate_rim
-    mount_height = keyswitch_height + 2 * plate_rim
-    mount_thickness = plate_thickness
-
-    if default_1U_cluster and thumb_style == 'DEFAULT':
-        double_plate_height = (.7 * sa_double_length - mount_height) / 3
-    elif thumb_style == 'DEFAULT':
-        double_plate_height = (.95 * sa_double_length - mount_height) / 3
-    else:
-        double_plate_height = (sa_double_length - mount_height) / 3
-
-    if oled_mount_type is not None and oled_mount_type != "NONE":
-        left_wall_x_offset = oled_left_wall_x_offset_override
-        left_wall_z_offset = oled_left_wall_z_offset_override
-        left_wall_lower_y_offset = oled_left_wall_lower_y_offset
-        left_wall_lower_z_offset = oled_left_wall_lower_z_offset
-
-    cap_top_height = plate_thickness + sa_profile_key_height
-    row_radius = ((mount_height + extra_height) / 2) / (np.sin(alpha / 2)) + cap_top_height
-    column_radius = (
-                            ((mount_width + extra_width) / 2) / (np.sin(beta / 2))
-                    ) + cap_top_height
-    column_x_delta = -1 - column_radius * np.sin(beta)
-    column_base_angle = beta * (centercol - 2)
-
-    teensy_width = 20
-    teensy_height = 12
-    teensy_length = 33
-    teensy2_length = 53
-    teensy_pcb_thickness = 2
-    teensy_offset_height = 5
-    teensy_holder_top_length = 18
-    teensy_holder_width = 7 + teensy_pcb_thickness
-    teensy_holder_height = 6 + teensy_width
-
-    # save_path = path.join("..", "things", save_dir)
-    if not path.isdir(save_path):
-        os.mkdir(save_path)
-
-
-    def column_offset(column: int) -> list:
-        result = column_offsets[column]
-        # if (pinky_1_5U and column == lastcol):
-        #     result[0] = result[0] + 1
-        return result
-
-
-    # column_style='fixed'
-
-
-    def single_plate(cylinder_segments=100, side="right"):
-        if plate_style in ['NUB', 'HS_NUB']:
-            tb_border = (mount_height - keyswitch_height) / 2
-            top_wall = box(mount_width, tb_border, plate_thickness)
-            top_wall = translate(top_wall, (0, (tb_border / 2) + (keyswitch_height / 2), plate_thickness / 2))
-
-            lr_border = (mount_width - keyswitch_width) / 2
-            left_wall = box(lr_border, mount_height, plate_thickness)
-            left_wall = translate(left_wall, ((lr_border / 2) + (keyswitch_width / 2), 0, plate_thickness / 2))
-
-            side_nub = cylinder(radius=1, height=2.75)
-            side_nub = rotate(side_nub, (90, 0, 0))
-            side_nub = translate(side_nub, (keyswitch_width / 2, 0, 1))
-
-            nub_cube = box(1.5, 2.75, plate_thickness)
-            nub_cube = translate(nub_cube, ((1.5 / 2) + (keyswitch_width / 2), 0, plate_thickness / 2))
-
-            side_nub2 = tess_hull(shapes=(side_nub, nub_cube))
-            side_nub2 = union([side_nub2, side_nub, nub_cube])
-
-            plate_half1 = union([top_wall, left_wall, side_nub2])
-            plate_half2 = plate_half1
-            plate_half2 = mirror(plate_half2, 'XZ')
-            plate_half2 = mirror(plate_half2, 'YZ')
-
-            plate = union([plate_half1, plate_half2])
-
-        else:  # 'HOLE' or default, square cutout for non-nub designs.
-            plate = box(mount_width, mount_height, mount_thickness)
-            plate = translate(plate, (0.0, 0.0, mount_thickness / 2.0))
-
-            shape_cut = box(keyswitch_width, keyswitch_height, mount_thickness * 2 + .02)
-            shape_cut = translate(shape_cut, (0.0, 0.0, mount_thickness - .01))
-
-            plate = difference(plate, [shape_cut])
-
-        if plate_style in ['UNDERCUT', 'HS_UNDERCUT', 'NOTCH', 'HS_NOTCH']:
-            if plate_style in ['UNDERCUT', 'HS_UNDERCUT']:
-                undercut = box(
-                    keyswitch_width + 2 * clip_undercut,
-                    keyswitch_height + 2 * clip_undercut,
-                    mount_thickness
+        if self.p.plate_style in ['UNDERCUT', 'HS_UNDERCUT', 'NOTCH', 'HS_NOTCH']:
+            if self.p.plate_style in ['UNDERCUT', 'HS_UNDERCUT']:
+                undercut = self.plate_undercut(
+                    keyswitch_width=self.p.keyswitch_width, keyswitch_height=self.p.keyswitch_height,
+                    mount_thickness=self.p.mount_thickness,
+                    clip_undercut=self.p.clip_undercut, undercut_transition=self.p.undercut_transition,
+                )
+            if self.p.plate_style in ['NOTCH', 'HS_NOTCH']:
+                undercut = self.plate_notch(
+                    keyswitch_width=self.p.keyswitch_width, keyswitch_height=self.p.keyswitch_height,
+                    mount_thickness=self.p.mount_thickness,
+                    notch_width=self.p.notch_width, clip_undercut=self.p.clip_undercut,
+                    undercut_transition=self.p.undercut_transition,
                 )
 
-            if plate_style in ['NOTCH', 'HS_NOTCH']:
-                undercut = box(
-                    notch_width,
-                    keyswitch_height + 2 * clip_undercut,
-                    mount_thickness
-                )
-                undercut = union([undercut,
-                                  box(
-                                      keyswitch_width + 2 * clip_undercut,
-                                      notch_width,
-                                      mount_thickness
-                                  )
-                                  ])
+            plate = self.g.difference(plate, [undercut])
 
-            undercut = translate(undercut, (0.0, 0.0, -clip_thickness + mount_thickness / 2.0))
+        if self.p.plate_file is not None:
+            socket = self.g.import_file(self.p.plate_file)
+            socket = self.g.translate(socket, [0, 0, self.p.plate_thickness + self.p.plate_offset])
+            plate = self.g.union([plate, socket])
 
-            if ENGINE == 'cadquery' and undercut_transition > 0:
-                undercut = undercut.faces("+Z").chamfer(undercut_transition, clip_undercut)
-
-            plate = difference(plate, [undercut])
-
-        if plate_file is not None:
-            socket = import_file(plate_file)
-            socket = translate(socket, [0, 0, plate_thickness + plate_offset])
-            plate = union([plate, socket])
-
-        if plate_holes:
-            half_width = plate_holes_width / 2.
-            half_height = plate_holes_height / 2.
-            x_off = plate_holes_xy_offset[0]
-            y_off = plate_holes_xy_offset[1]
-            holes = [
-                translate(
-                    cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth + .01),
-                    (x_off + half_width, y_off + half_height, plate_holes_depth / 2 - .01)
-                ),
-                translate(
-                    cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth + .01),
-                    (x_off - half_width, y_off + half_height, plate_holes_depth / 2 - .01)
-                ),
-                translate(
-                    cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth + .01),
-                    (x_off - half_width, y_off - half_height, plate_holes_depth / 2 - .01)
-                ),
-                translate(
-                    cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth + .01),
-                    (x_off + half_width, y_off - half_height, plate_holes_depth / 2 - .01)
-                ),
-            ]
-            plate = difference(plate, holes)
+        if self.p.plate_holes:
+            plate = self.plate_screw_holes(
+                plate, side=side,
+                plate_holes_width=self.p.plate_holes_width, plate_holes_height=self.p.plate_holes_height,
+                plate_holes_xy_offset=self.p.plate_holes_xy_offset,
+                plate_holes_diameter=self.p.plate_holes_diameter, plate_holes_depth=self.p.plate_holes_depth
+            )
 
         if side == "left":
-            plate = mirror(plate, 'YZ')
+            plate = self.g.mirror(plate, 'YZ')
 
         return plate
 
+    def nub_plate(
+            self, mount_width=None, mount_height=None,
+            keyswitch_width=None, keyswitch_height=None, plate_thickness=None, mount_thickness=None,
+    ):
+        tb_border = (mount_height - keyswitch_height) / 2
+        top_wall = self.g.box(mount_width, tb_border, plate_thickness)
+        top_wall = self.g.translate(top_wall, (0, (tb_border / 2) + (keyswitch_height / 2), plate_thickness / 2))
 
+        lr_border = (mount_width - keyswitch_width) / 2
+        left_wall = self.g.box(lr_border, mount_height, plate_thickness)
+        left_wall = self.g.translate(left_wall, ((lr_border / 2) + (keyswitch_width / 2), 0, plate_thickness / 2))
 
-    def plate_pcb_cutout(side="right"):
-        shape = box(*plate_pcb_size)
-        shape = translate(shape, (0, 0, -plate_pcb_size[2]/2))
-        shape = translate(shape, plate_pcb_offset)
+        side_nub = self.g.cylinder(radius=1, height=2.75)
+        side_nub = self.g.rotate(side_nub, (90, 0, 0))
+        side_nub = self.g.translate(side_nub, (keyswitch_width / 2, 0, 1))
+
+        nub_cube = self.g.box(1.5, 2.75, plate_thickness)
+        nub_cube = self.g.translate(nub_cube, ((1.5 / 2) + (keyswitch_width / 2), 0, plate_thickness / 2))
+
+        side_nub2 = self.g.tess_hull(shapes=(side_nub, nub_cube))
+        side_nub2 = self.g.union([side_nub2, side_nub, nub_cube])
+
+        plate_half1 = self.g.union([top_wall, left_wall, side_nub2])
+        plate_half2 = plate_half1
+        plate_half2 = self.g.mirror(plate_half2, 'XZ')
+        plate_half2 = self.g.mirror(plate_half2, 'YZ')
+
+        plate = self.g.union([plate_half1, plate_half2])
+
+        return plate
+
+    def plate_square_hole(
+            self, mount_width=None, mount_height=None,
+            keyswitch_width=None, keyswitch_height=None, plate_thickness=None, mount_thickness=None
+    ):
+        plate = self.g.box(self.p.mount_width, self.p.mount_height, self.p.mount_thickness)
+        plate = self.g.translate(plate, (0.0, 0.0, self.p.mount_thickness / 2.0))
+
+        shape_cut = self.g.box(self.p.keyswitch_width, self.p.keyswitch_height, self.p.mount_thickness * 2 + .02)
+        shape_cut = self.g.translate(shape_cut, (0.0, 0.0, self.p.mount_thickness - .01))
+
+        plate = self.g.difference(plate, [shape_cut])
+
+        return plate
+
+    def plate_undercut(
+            self, keyswitch_width=None, keyswitch_height=None, mount_thickness=None,
+            clip_undercut=None, undercut_transition=None,
+    ):
+        undercut = self.g.box(
+            self.p.keyswitch_width + 2 * self.p.clip_undercut,
+            self.p.keyswitch_height + 2 * self.p.clip_undercut,
+            self.p.mount_thickness
+        )
+        if self.p.ENGINE == 'cadquery' and self.p.undercut_transition > 0:
+            undercut = undercut.faces("+Z").chamfer(self.p.undercut_transition, self.p.clip_undercut)
+
+        return undercut
+
+    def plate_notch(
+            self, keyswitch_width=None, keyswitch_height=None, mount_thickness=None,
+            notch_width=None, clip_undercut=None, undercut_transition=None
+    ):
+        undercut = self.g.box(
+            self.p.notch_width,
+            self.p.keyswitch_height + 2 * self.p.clip_undercut,
+            self.p.mount_thickness
+        )
+        undercut = self.g.union([
+            undercut,
+            self.g.box(
+                self.p.keyswitch_width + 2 * self.p.clip_undercut,
+                self.p.notch_width,
+                self.p.mount_thickness
+            )
+        ])
+
+        undercut = self.g.translate(undercut, (0.0, 0.0, -self.p.clip_thickness + self.p.mount_thickness / 2.0))
+
+        if self.p.ENGINE == 'cadquery' and self.p.undercut_transition > 0:
+            undercut = undercut.faces("+Z").chamfer(self.p.undercut_transition, self.p.clip_undercut)
+
+        return undercut
+
+    def plate_screw_holes(
+            self, plate, side='right',
+            plate_holes_width=None, plate_holes_height=None, plate_holes_xy_offset=None,
+            plate_holes_diameter=None, plate_holes_depth=None
+    ):
+        half_width = plate_holes_width / 2.
+        half_height = plate_holes_height / 2.
+
+        if side == 'right':
+            x_off = plate_holes_xy_offset[0]
+        else:
+            x_off = -plate_holes_xy_offset[0]
+
+        y_off = plate_holes_xy_offset[1]
+        holes = [
+            self.g.translate(
+                self.g.cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth + .01),
+                (x_off + half_width, y_off + half_height, plate_holes_depth / 2 - .01)
+            ),
+            self.g.translate(
+                self.g.cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth + .01),
+                (x_off - half_width, y_off + half_height, plate_holes_depth / 2 - .01)
+            ),
+            self.g.translate(
+                self.g.cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth + .01),
+                (x_off - half_width, y_off - half_height, plate_holes_depth / 2 - .01)
+            ),
+            self.g.translate(
+                self.g.cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth + .01),
+                (x_off + half_width, y_off - half_height, plate_holes_depth / 2 - .01)
+            ),
+        ]
+
+        plate = self.g.difference(plate, holes)
+
+        return plate
+
+    def plate_pcb_cutout(self, side="right"):
+        shape = self.g.box(*self.p.plate_pcb_size)
+        shape = self.g.translate(shape, (0, 0, -self.p.plate_pcb_size[2] / 2))
+        shape = self.g.translate(shape, self.p.plate_pcb_offset)
 
         if side == "left":
-            shape = mirror(shape, 'YZ')
+            shape = self.g.mirror(shape, 'YZ')
 
         return shape
 
-    def trackball_cutout(segments=100, side="right"):
-        if trackball_modular:
-            hole_diameter = ball_diameter + 2 * (ball_gap + ball_wall_thickness + trackball_modular_clearance+trackball_modular_lip_width)-.1
-            shape = cylinder(hole_diameter / 2, trackball_hole_height)
+    def trackball_cutout(self, segments=100, side="right"):
+        if self.p.trackball_modular:
+            hole_diameter = self.p.ball_diameter + 2 * (
+                        self.p.ball_gap + self.p.ball_wall_thickness + self.p.trackball_modular_clearance + self.p.trackball_modular_lip_width) - .1
+            shape = self.g.cylinder(self.p.hole_diameter / 2, self.p.trackball_hole_height)
         else:
-            shape = cylinder(trackball_hole_diameter / 2, trackball_hole_height)
+            shape = self.g.cylinder(self.p.trackball_hole_diameter / 2, self.p.trackball_hole_height)
         return shape
 
+    def trackball_socket(self, segments=100, side="right"):
+        if self.p.trackball_modular:
+            hole_diameter = self.p.ball_diameter + 2 * (
+                        self.p.ball_gap + self.p.ball_wall_thickness + self.p.trackball_modular_clearance)
+            ring_diameter = self.p.hole_diameter + 2 * self.p.trackball_modular_lip_width
+            ring_height = self.p.trackball_modular_ring_height
+            ring_z_offset = self.p.mount_thickness - self.p.trackball_modular_ball_height
+            shape = self.g.cylinder(ring_diameter / 2, ring_height)
+            shape = self.g.translate(shape, (0, 0, -ring_height / 2 + ring_z_offset))
 
-    def trackball_socket(segments=100, side="right"):
-        if trackball_modular:
-            hole_diameter = ball_diameter + 2 * (ball_gap + ball_wall_thickness + trackball_modular_clearance)
-            ring_diameter = hole_diameter + 2 * trackball_modular_lip_width
-            ring_height = trackball_modular_ring_height
-            ring_z_offset = mount_thickness - trackball_modular_ball_height
-            shape = cylinder(ring_diameter / 2, ring_height)
-            shape = translate(shape, (0, 0, -ring_height / 2 + ring_z_offset))
-
-            cutter = cylinder(hole_diameter / 2, ring_height + .2)
-            cutter = translate(cutter, (0, 0, -ring_height / 2 + ring_z_offset))
+            cutter = self.g.cylinder(hole_diameter / 2, ring_height + .2)
+            cutter = self.g.translate(cutter, (0, 0, -ring_height / 2 + ring_z_offset))
 
             sensor = None
 
         else:
-            tb_file = path.join(parts_path, r"trackball_socket_body_34mm")
-            tbcut_file = path.join(parts_path, r"trackball_socket_cutter_34mm")
-            sens_file = path.join(parts_path, r"trackball_sensor_mount")
-            senscut_file = path.join(parts_path, r"trackball_sensor_cutter")
+            tb_file = path.join(self.p.parts_path, r"trackball_socket_body_34mm")
+            tbcut_file = path.join(self.p.parts_path, r"trackball_socket_cutter_34mm")
+            sens_file = path.join(self.p.parts_path, r"trackball_sensor_mount")
+            senscut_file = path.join(self.p.parts_path, r"trackball_sensor_cutter")
 
-            shape = import_file(tb_file)
-            sensor = import_file(sens_file)
-            cutter = import_file(tbcut_file)
-            cutter = union([cutter, import_file(senscut_file)])
+            shape = self.g.import_file(tb_file)
+            sensor = self.g.import_file(sens_file)
+            cutter = self.g.import_file(tbcut_file)
+            cutter = self.g.union([cutter, self.g.import_file(senscut_file)])
 
         # return shape, cutter
         return shape, cutter, sensor
 
-
-    def trackball_ball(segments=100, side="right"):
-        shape = sphere(ball_diameter / 2)
+    def trackball_ball(self, segments=100, side="right"):
+        shape = self.g.sphere(self.p.ball_diameter / 2)
         return shape
-
 
     ################
     ## SA Keycaps ##
     ################
 
-    def sa_cap(Usize=1):
+    def sa_cap(self, Usize=1):
         # MODIFIED TO NOT HAVE THE ROTATION.  NEEDS ROTATION DURING ASSEMBLY
         # sa_length = 18.25
 
         if Usize == 1:
-            bl2 = 18.5/2
-            bw2 = 18.5/2
+            bl2 = 18.5 / 2
+            bw2 = 18.5 / 2
             m = 17 / 2
             pl2 = 6
             pw2 = 6
 
         elif Usize == 2:
-            bl2 = sa_length
-            bw2 = sa_length / 2
+            bl2 = self.p.sa_length
+            bw2 = self.p.sa_length / 2
             m = 0
             pl2 = 16
             pw2 = 6
 
         elif Usize == 1.5:
-            bl2 = sa_length / 2
+            bl2 = self.p.sa_length / 2
             bw2 = 27.94 / 2
             m = 0
             pl2 = 6
             pw2 = 11
 
-        k1 = polyline([(bw2, bl2), (bw2, -bl2), (-bw2, -bl2), (-bw2, bl2), (bw2, bl2)])
-        k1 = extrude_poly(outer_poly=k1, height=0.1)
-        k1 = translate(k1, (0, 0, 0.05))
-        k2 = polyline([(pw2, pl2), (pw2, -pl2), (-pw2, -pl2), (-pw2, pl2), (pw2, pl2)])
-        k2 = extrude_poly(outer_poly=k2, height=0.1)
-        k2 = translate(k2, (0, 0, 12.0))
+        k1 = self.g.polyline([(bw2, bl2), (bw2, -bl2), (-bw2, -bl2), (-bw2, bl2), (bw2, bl2)])
+        k1 = self.g.extrude_poly(outer_poly=k1, height=0.1)
+        k1 = self.g.translate(k1, (0, 0, 0.05))
+        k2 = self.g.polyline([(pw2, pl2), (pw2, -pl2), (-pw2, -pl2), (-pw2, pl2), (pw2, pl2)])
+        k2 = self.g.extrude_poly(outer_poly=k2, height=0.1)
+        k2 = self.g.translate(k2, (0, 0, 12.0))
         if m > 0:
-            m1 = polyline([(m, m), (m, -m), (-m, -m), (-m, m), (m, m)])
-            m1 = extrude_poly(outer_poly=m1, height=0.1)
-            m1 = translate(m1, (0, 0, 6.0))
-            key_cap = hull_from_shapes((k1, k2, m1))
+            m1 = self.g.polyline([(m, m), (m, -m), (-m, -m), (-m, m), (m, m)])
+            m1 = self.g.extrude_poly(outer_poly=m1, height=0.1)
+            m1 = self.g.translate(m1, (0, 0, 6.0))
+            key_cap = self.g.hull_from_shapes((k1, k2, m1))
         else:
-            key_cap = hull_from_shapes((k1, k2))
+            key_cap = self.g.hull_from_shapes((k1, k2))
 
-        key_cap = translate(key_cap, (0, 0, 5 + plate_thickness))
+        key_cap = self.g.translate(key_cap, (0, 0, 5 + self.p.plate_thickness))
 
-        if show_pcbs:
-            key_cap = add([key_cap, key_pcb()])
+        if self.p.show_pcbs:
+            key_cap = self.g.add([key_cap, self.key_pcb()])
 
         return key_cap
 
-    def key_pcb():
-        shape = box(pcb_width, pcb_height, pcb_thickness)
-        shape = translate(shape, (0, 0, -pcb_thickness/2))
-        hole = cylinder(pcb_hole_diameter/2, pcb_thickness+.2)
-        hole = translate(hole, (0, 0, -(pcb_thickness+.1)/2))
+    def key_pcb(self):
+        shape = self.g.box(self.p.pcb_width, self.p.pcb_height, self.p.pcb_thickness)
+        shape = self.g.translate(shape, (0, 0, -self.p.pcb_thickness / 2))
+        hole = self.g.cylinder(self.p.pcb_hole_diameter / 2, self.p.pcb_thickness + .2)
+        hole = self.g.translate(hole, (0, 0, -(self.p.pcb_thickness + .1) / 2))
         holes = [
-            translate(hole, (pcb_hole_pattern_width/2, pcb_hole_pattern_height/2, 0)),
-            translate(hole, (-pcb_hole_pattern_width / 2, pcb_hole_pattern_height / 2, 0)),
-            translate(hole, (-pcb_hole_pattern_width / 2, -pcb_hole_pattern_height / 2, 0)),
-            translate(hole, (pcb_hole_pattern_width / 2, -pcb_hole_pattern_height / 2, 0)),
+            self.g.translate(hole, (self.p.pcb_hole_pattern_width / 2, self.p.pcb_hole_pattern_height / 2, 0)),
+            self.g.translate(hole, (-self.p.pcb_hole_pattern_width / 2, self.p.pcb_hole_pattern_height / 2, 0)),
+            self.g.translate(hole, (-self.p.pcb_hole_pattern_width / 2, -self.p.pcb_hole_pattern_height / 2, 0)),
+            self.g.translate(hole, (self.p.pcb_hole_pattern_width / 2, -self.p.pcb_hole_pattern_height / 2, 0)),
         ]
-        shape = difference(shape, holes)
+        shape = self.g.difference(shape, holes)
 
         return shape
 
+    ####################
+    ## Web Connectors ##
+    ####################
+
+    def web_post(self):
+        debugprint('web_post()')
+        post = self.g.box(self.p.post_size, self.p.post_size, self.p.web_thickness)
+        post = self.g.translate(post, (0, 0, self.p.plate_thickness - (self.p.web_thickness / 2)))
+        return post
+
+    def web_post_tr(self, wide=False):
+        mount_width = self.p.mount_width
+        mount_height = self.p.mount_height
+        post_adj = self.p.post_adj
+
+        if wide:
+            w_divide = 1.2
+        else:
+            w_divide = 2.0
+
+        return self.g.translate(self.web_post(),
+                                ((mount_width / w_divide) - post_adj, (mount_height / 2) - post_adj, 0))
+
+    def web_post_br(self, wide=False):
+        mount_width = self.p.mount_width
+        mount_height = self.p.mount_height
+        post_adj = self.p.post_adj
+        if wide:
+            w_divide = 1.2
+        else:
+            w_divide = 2.0
+        return self.g.translate(self.web_post(), ((mount_width / w_divide) - post_adj, -(mount_height / 2) + post_adj, 0))
+
+    def web_post_tl(self, wide=False):
+        mount_width = self.p.mount_width
+        mount_height = self.p.mount_height
+        post_adj = self.p.post_adj
+        if wide:
+            w_divide = 1.2
+        else:
+            w_divide = 2.0
+        return self.g.translate(self.web_post(), (-(mount_width / w_divide) + post_adj, (mount_height / 2) - post_adj, 0))
+
+    def web_post_bl(self, wide=False):
+        mount_width = self.p.mount_width
+        mount_height = self.p.mount_height
+        post_adj = self.p.post_adj
+        if wide:
+            w_divide = 1.2
+        else:
+            w_divide = 2.0
+        return self.g.translate(self.web_post(), (-(mount_width / w_divide) + post_adj, -(mount_height / 2) + post_adj, 0))
+
+    def adjustable_square_plate(self, Uwidth=1.5, Uheight=1.5):
+        width = usize_dimention(Usize=Uwidth)
+        height = usize_dimention(Usize=Uheight)
+        print("width: {}, height: {}, thickness:{}".format(width, height, self.p.web_thickness))
+        shape = self.g.box(width, height, self.p.web_thickness)
+        shape = self.g.difference(shape, [self.g.box(self.p.mount_width - .01, self.p.mount_height - .01, 2 * self.p.web_thickness)])
+        # shape = self.g.translate(shape, (0, 0, web_thickness / 2))
+        shape = self.g.translate(shape, (0, 0, self.p.plate_thickness - (self.p.web_thickness / 2)))
+
+        return shape
+
+    def adjustable_plate_size(self, Usize=1.5):
+        return (Usize * self.p.sa_length - self.p.mount_height) / 2
+
+    def adjustable_plate_half(self, Usize=1.5):
+        debugprint('double_plate()')
+        adjustable_plate_height = self.adjustable_plate_size(Usize)
+        top_plate = self.g.box(self.p.mount_width, self.p.adjustable_plate_height, self.p.web_thickness)
+        top_plate = self.g.translate(self.p.top_plate,
+                                     [0, (self.p.adjustable_plate_height + self.p.mount_height) / 2,
+                                      self.p.plate_thickness - (self.p.web_thickness / 2)]
+                                     )
+        return top_plate
+
+    def adjustable_plate(self, Usize=1.5):
+        debugprint('double_plate()')
+        top_plate = self.adjustable_plate_half(Usize)
+        return self.g.union((top_plate, self.g.mirror(top_plate, 'XZ')))
+
+    def double_plate_half(self):
+        debugprint('double_plate()')
+
+        top_plate = self.g.box(self.p.mount_width, self.p.double_plate_height, self.p.web_thickness)
+        top_plate = self.g.translate(top_plate,
+                                     [0, (self.p.double_plate_height + self.p.mount_height) / 2,
+                                      self.p.plate_thickness - (self.p.web_thickness / 2)]
+                                     )
+        return top_plate
+
+    def double_plate(self):
+        debugprint('double_plate()')
+        top_plate = self.double_plate_half()
+        return self.g.union((top_plate, self.g.mirror(top_plate, 'XZ')))
+
+
+class DactylBase:
+    def __init__(self, parameters):
+
+        self.p = parameters
+        self.g = helpers_abc
+        self.g = importlib.import_module(ENGINE_LOOKUP[self.p.ENGINE])
+
+        self.right_cluster = None
+        self.left_cluster = None
+
+        self.p.left_wall_x_offset = 8
+        self.p.left_wall_z_offset = 3
+        self.p.left_wall_lower_y_offset = 0
+        self.p.left_wall_lower_z_offset = 0
+
+        self.p.symmetry = None
+        self.p.column_style = None
+
+        self.p.save_name = None
+        self.p.override_name = None
+
+        self.p.full_last_rows = not self.p.reduced_outer_keys
+
+        # if self.p.oled_mount_type is not None and self.p.oled_mount_type != "NONE":
+        #     for item in self.p.oled_configurations[oled_mount_type]:
+        #         globals()[item] = oled_configurations[oled_mount_type][item]
+
+        if self.p.nrows > 5:
+            self.p.column_style = 'column_style_gt5'
+
+        self.p.lastrow = self.p.nrows - 1
+        if self.p.reduced_outer_keys:
+            self.p.cornerrow = self.p.lastrow - 1
+        else:
+            self.p.cornerrow = self.p.lastrow
+        self.p.lastcol = self.p.ncols - 1
+
+        self.p.centerrow = self.p.nrows - self.p.centerrow_offset
+
+        self.p.plate_file = None
+
+        # Derived values
+        if self.p.plate_style in ['NUB', 'HS_NUB']:
+            self.p.keyswitch_height = self.p.nub_keyswitch_height
+            self.p.keyswitch_width = self.p.nub_keyswitch_width
+        elif self.p.plate_style in ['UNDERCUT', 'HS_UNDERCUT', 'NOTCH', 'HS_NOTCH']:
+            self.p.keyswitch_height = self.p.undercut_keyswitch_height
+            self.p.keyswitch_width = self.p.undercut_keyswitch_width
+        else:
+            self.p.keyswitch_height = self.p.hole_keyswitch_height
+            self.p.keyswitch_width = self.p.hole_keyswitch_width
+
+        if 'HS_' in self.p.plate_style:
+            self.p.symmetry = "asymmetric"
+            pname = r"hot_swap_plate"
+            if self.p.plate_file_name is not None:
+                self.p.pname = self.p.plate_file_name
+            self.p.plate_file = path.join(self.p.parts_path, self.p.pname)
+            # plate_offset = 0.0 # this overwrote the config variable
+
+        if (self.p.trackball_in_wall or ('TRACKBALL' in self.p.thumb_style)) and not self.p.ball_side == 'both':
+            self.p.symmetry = "asymmetric"
+
+        self.p.mount_width = self.p.keyswitch_width + 2 * self.p.plate_rim
+        self.p.mount_height = self.p.keyswitch_height + 2 * self.p.plate_rim
+        self.p.mount_thickness = self.p.plate_thickness
+
+        if self.p.default_1U_cluster and self.p.thumb_style == 'DEFAULT':
+            self.p.double_plate_height = (.7 * self.p.sa_double_length - self.p.mount_height) / 3
+        elif self.p.thumb_style == 'DEFAULT':
+            self.p.double_plate_height = (.95 * self.p.sa_double_length - self.p.mount_height) / 3
+        else:
+            self.p.double_plate_height = (self.p.sa_double_length - self.p.mount_height) / 3
+
+        if self.p.oled_mount_type is not None and self.p.oled_mount_type != "NONE":
+            self.p.left_wall_x_offset = self.p.oled_config.oled_left_wall_x_offset_override
+            self.p.left_wall_z_offset = self.p.oled_config.oled_left_wall_z_offset_override
+            self.p.left_wall_lower_y_offset = self.p.oled_config.oled_left_wall_lower_y_offset
+            self.p.left_wall_lower_z_offset = self.p.oled_config.oled_left_wall_lower_z_offset
+
+        self.p.cap_top_height = self.p.plate_thickness + self.p.sa_profile_key_height
+        self.p.row_radius = ((self.p.mount_height + self.p.extra_height) / 2) / (
+            np.sin(self.p.alpha / 2)) + self.p.cap_top_height
+        self.p.column_radius = (
+                                       ((self.p.mount_width + self.p.extra_width) / 2) / (np.sin(self.p.beta / 2))
+                               ) + self.p.cap_top_height
+        self.p.column_x_delta = -1 - self.p.column_radius * np.sin(self.p.beta)
+        self.p.column_base_angle = self.p.beta * (self.p.centercol - 2)
+
+        self.p.teensy_width = 20
+        self.p.teensy_height = 12
+        self.p.teensy_length = 33
+        self.p.teensy2_length = 53
+        self.p.teensy_pcb_thickness = 2
+        self.p.teensy_offset_height = 5
+        self.p.teensy_holder_top_length = 18
+        self.p.teensy_holder_width = 7 + self.p.teensy_pcb_thickness
+        self.p.teensy_holder_height = 6 + self.p.teensy_width
+
+        self.p.save_path = path.join("..", "things", self.p.save_dir)
+        if not path.isdir(self.p.save_path):
+            os.mkdir(self.p.save_path)
+
+        #
+        # import generate_configuration as cfg
+        # for item in cfg.shape_config:
+        #     globals()[item] = cfg.shape_config[item]
+        #
+        # if True:
+        #     print("NO CONFIGURATION SPECIFIED, USING run_config.json")
+        #     with open(os.path.join(r".", 'run_config.json'), mode='r') as fid:
+        #         data = json.load(fid)
+        #
+        # else:
+        #     ## CHECK FOR CONFIG FILE AND WRITE TO ANY VARIABLES IN FILE.
+        #     opts, args = getopt.getopt(sys.argv[1:], "", ["config="])
+        #     for opt, arg in opts:
+        #         if opt in ('--config'):
+        #             with open(os.path.join(r"..", "configs", arg + '.json'), mode='r') as fid:
+        #                 data = json.load(fid)
+        #
+        # if "overrides" not in data:
+        #     data['overrides']=None
+        #
+        # if data["overrides"] not in [None, ""]:
+        #     with open(os.path.join(data["overrides"]), mode='r') as fid:
+        #         override_data = json.load(fid)
+        #     for item in override_data:
+        #         data[item] = override_data[item]
+        #
+        # for item in data:
+        #     globals()[item] = data[item]
+        #
+        # if self.p.save_name is not None:
+        #     self.p.config_name = self.p.save_name
+        #
+        # elif self.p.overrides is not None:
+        #     self.p.config_name = self.p.override_name + "_" + str(self.p.nrows) + "x" + str(self.p.ncols) + "_" + self.p.thumb_style
+        #
+        # # ENGINE = data["ENGINE"]
+        # # Really rough setup.  Check for ENGINE, set it not present from configuration.
+        # try:
+        #     print('Found Current Engine in Config = {}'.format(ENGINE))
+        # except Exception:
+        #     print('Engine Not Found in Config')
+        #     ENGINE = 'solid'
+        #     # ENGINE = 'cadquery'
+        #     print('Setting Current Engine = {}'.format(ENGINE))
+
+        parts_path = os.path.abspath(path.join(r".", "parts"))
+
+        if self.p.override_name in ['', None, '.']:
+            if self.p.save_dir in ['', None, '.']:
+                self.p.save_path = path.join(r"..", "things")
+                # parts_path = path.join(r"..", "src", "parts")
+            else:
+                self.p.save_path = path.join(r"..", "things", self.p.save_dir)
+                # parts_path = path.join(r"..", r"..", "src", "parts")
+            # parts_path = path.join(r"..", r"..", "src", "parts")
+        else:
+            self.p.save_path = path.join(self.p.save_dir, self.p.override_name)
+            # parts_path = path.jo
+
+        dir_exists = os.path.isdir(self.p.save_path)
+        if not dir_exists:
+            os.makedirs(self.p.save_path, exist_ok=True)
+
+        # if overrides not in [None, ""]:
+        #     shutil.copy(overrides, save_path)
+        ###############################################
+        # END EXTREMELY UGLY BOOTSTRAP
+        ###############################################
+        #
+        # ####################################################
+        # # HELPER FUNCTIONS TO MERGE CADQUERY AND OPENSCAD
+        # ####################################################
+        #
+        # if ENGINE == 'cadquery':
+        #     globals().update(importlib.import_module("helpers_cadquery").__dict__)
+        # else:
+        #     globals().update(importlib.import_module("helpers_solid").__dict__)
+        #
+        # ####################################################
+        # # END HELPER FUNCTIONS
+        # ####################################################
+
+        self.sh = ShapeFunctions(self)
+
+        ## TODO: RELOCATE ITEMS BELOW, TEMPORARILY MOVED TO INIT
+
+        self.p.rj9_start = list(
+            np.array([0, -3, 0])
+            + np.array(
+                self.key_position(
+                    list(np.array(self.wall_locate3(0, 1)) + np.array([0, (self.p.mount_height / 2), 0])),
+                    0,
+                    0,
+                )
+            )
+        )
+
+        self.p.rj9_position = (self.p.rj9_start[0], self.p.rj9_start[1], 11)
+
+        self.p.usb_holder_position = self.key_position(
+            list(np.array(self.wall_locate2(0, 1)) + np.array([0, (self.p.mount_height / 2), 0])), 1, 0
+        )
+        self.p.usb_holder_size = [6.5, 10.0, 13.6]
+        self.p.usb_holder_thickness = 4
+
+        self.p.external_start = list(
+            # np.array([0, -3, 0])
+            np.array([self.p.external_holder_width / 2, 0, 0])
+            + np.array(
+                self.key_position(
+                    list(np.array(self.wall_locate3(0, 1)) + np.array([0, (self.p.mount_height / 2), 0])),
+                    0,
+                    0,
+                )
+            )
+        )
+
+        self.p.pcb_mount_ref_position = self.key_position(
+            # TRRS POSITION IS REFERENCE BY CONVENIENCE
+            list(np.array(self.wall_locate3(0, 1)) + np.array([0, (self.p.mount_height / 2), 0])), 0, 0
+        )
+
+        self.p.pcb_mount_ref_position[0] = self.p.pcb_mount_ref_position[0] + self.p.pcb_mount_ref_offset[0]
+        self.p.pcb_mount_ref_position[1] = self.p.pcb_mount_ref_position[1] + self.p.pcb_mount_ref_offset[1]
+        self.p.pcb_mount_ref_position[2] = 0.0 + self.p.pcb_mount_ref_offset[2]
+
+        self.p.pcb_holder_position = copy.deepcopy(self.p.pcb_mount_ref_position)
+        self.p.pcb_holder_position[0] = self.p.pcb_holder_position[0] + self.p.pcb_holder_offset[0]
+        self.p.pcb_holder_position[1] = self.p.pcb_holder_position[1] + self.p.pcb_holder_offset[1]
+        self.p.pcb_holder_position[2] = self.p.pcb_holder_position[2] + self.p.pcb_holder_offset[2]
+        self.p.pcb_holder_thickness = self.p.pcb_holder_size[2]
+
+        self.p.pcb_screw_position = copy.deepcopy(self.p.pcb_mount_ref_position)
+        self.p.pcb_screw_position[1] = self.p.pcb_screw_position[1] + self.p.pcb_screw_y_offset
+
+        if self.p.oled_center_row is not None:
+            base_pt1 = self.key_position(
+                list(np.array([-self.p.mount_width / 2, 0, 0]) + np.array([0, (self.p.mount_height / 2), 0])), 0,
+                self.p.oled_center_row - 1
+            )
+            base_pt2 = self.key_position(
+                list(np.array([-self.p.mount_width / 2, 0, 0]) + np.array([0, (self.p.mount_height / 2), 0])), 0,
+                self.p.oled_center_row + 1
+            )
+            base_pt0 = self.key_position(
+                list(np.array([-self.p.mount_width / 2, 0, 0]) + np.array([0, (self.p.mount_height / 2), 0])), 0,
+                self.p.oled_center_row
+            )
+
+            self.p.oled_mount_location_xyz = (np.array(base_pt1) + np.array(base_pt2)) / 2. + np.array(
+                ((-self.p.left_wall_x_offset / 2), 0, 0)) + np.array(self.p.oled_translation_offset)
+            self.p.oled_mount_location_xyz[2] = (self.p.oled_mount_location_xyz[2] + base_pt0[2]) / 2
+
+            angle_x = np.arctan2(base_pt1[2] - base_pt2[2], base_pt1[1] - base_pt2[1])
+            angle_z = np.arctan2(base_pt1[0] - base_pt2[0], base_pt1[1] - base_pt2[1])
+
+            self.p.oled_mount_rotation_xyz = (rad2deg(angle_x), 0, -rad2deg(angle_z)) + np.array(
+                self.p.oled_rotation_offset)
+
+    def column_offset(self, column: int) -> list:
+        result = self.p.column_offsets[column]
+        # if (pinky_1_5U and column == lastcol):
+        #     result[0] = result[0] + 1
+        return result
+
+    def cluster(self, side="right"):
+        return self.right_cluster if side == "right" else self.left_cluster
 
     #########################
     ## Placement Functions ##
     #########################
 
-
-    def rotate_around_x(position, angle):
+    def rotate_around_x(self, position, angle):
         # debugprint('rotate_around_x()')
         t_matrix = np.array(
             [
@@ -471,8 +747,7 @@ def make_dactyl():
         )
         return np.matmul(t_matrix, position)
 
-
-    def rotate_around_y(position, angle):
+    def rotate_around_y(self, position, angle):
         # debugprint('rotate_around_y()')
         t_matrix = np.array(
             [
@@ -483,481 +758,342 @@ def make_dactyl():
         )
         return np.matmul(t_matrix, position)
 
-
     def apply_key_geometry(
+            self,
             shape,
             translate_fn,
             rotate_x_fn,
             rotate_y_fn,
             column,
             row,
-            column_style=column_style,
+            column_style=None,
     ):
+        if column_style is None:
+            column_style = self.p.column_style
         debugprint('apply_key_geometry()')
 
-        column_angle = beta * (centercol - column)
+        column_angle = self.p.beta * (self.p.centercol - column)
 
-        column_x_delta_actual = column_x_delta
-        if (pinky_1_5U and column == lastcol):
-            if row >= first_1_5U_row and row <= last_1_5U_row:
-                column_x_delta_actual = column_x_delta - 1.5
-                column_angle = beta * (centercol - column - 0.27)
+        column_x_delta_actual = self.p.column_x_delta
+        if (self.p.pinky_1_5U and column == self.p.lastcol):
+            if row >= self.p.first_1_5U_row and row <= self.p.last_1_5U_row:
+                column_x_delta_actual = self.p.column_x_delta - 1.5
+                column_angle = self.p.beta * (self.p.centercol - column - 0.27)
 
         if column_style == "orthographic":
-            column_z_delta = column_radius * (1 - np.cos(column_angle))
-            shape = translate_fn(shape, [0, 0, -row_radius])
-            shape = rotate_x_fn(shape, alpha * (centerrow - row))
-            shape = translate_fn(shape, [0, 0, row_radius])
+            column_z_delta = self.p.column_radius * (1 - np.cos(column_angle))
+            shape = translate_fn(shape, [0, 0, -self.p.row_radius])
+            shape = rotate_x_fn(shape, self.p.alpha * (self.p.centerrow - row))
+            shape = translate_fn(shape, [0, 0, self.p.row_radius])
             shape = rotate_y_fn(shape, column_angle)
             shape = translate_fn(
-                shape, [-(column - centercol) * column_x_delta_actual, 0, column_z_delta]
+                shape, [-(column - self.p.centercol) * column_x_delta_actual, 0, column_z_delta]
             )
-            shape = translate_fn(shape, column_offset(column))
+            shape = translate_fn(shape, self.p.column_offset(column))
 
         elif column_style == "fixed":
-            shape = rotate_y_fn(shape, fixed_angles[column])
-            shape = translate_fn(shape, [fixed_x[column], 0, fixed_z[column]])
-            shape = translate_fn(shape, [0, 0, -(row_radius + fixed_z[column])])
-            shape = rotate_x_fn(shape, alpha * (centerrow - row))
-            shape = translate_fn(shape, [0, 0, row_radius + fixed_z[column]])
-            shape = rotate_y_fn(shape, fixed_tenting)
-            shape = translate_fn(shape, [0, column_offset(column)[1], 0])
+            shape = rotate_y_fn(shape, self.p.fixed_angles[column])
+            shape = translate_fn(shape, [self.p.fixed_x[column], 0, self.p.fixed_z[column]])
+            shape = translate_fn(shape, [0, 0, -(self.p.row_radius + self.p.fixed_z[column])])
+            shape = rotate_x_fn(shape, self.p.alpha * (self.p.centerrow - row))
+            shape = translate_fn(shape, [0, 0, self.p.row_radius + self.p.fixed_z[column]])
+            shape = rotate_y_fn(shape, self.p.fixed_tenting)
+            shape = translate_fn(shape, [0, self.p.column_offset(column)[1], 0])
 
         else:
-            shape = translate_fn(shape, [0, 0, -row_radius])
-            shape = rotate_x_fn(shape, alpha * (centerrow - row))
-            shape = translate_fn(shape, [0, 0, row_radius])
-            shape = translate_fn(shape, [0, 0, -column_radius])
+            shape = translate_fn(shape, [0, 0, -self.p.row_radius])
+            shape = rotate_x_fn(shape, self.p.alpha * (self.p.centerrow - row))
+            shape = translate_fn(shape, [0, 0, self.p.row_radius])
+            shape = translate_fn(shape, [0, 0, -self.p.column_radius])
             shape = rotate_y_fn(shape, column_angle)
-            shape = translate_fn(shape, [0, 0, column_radius])
-            shape = translate_fn(shape, column_offset(column))
+            shape = translate_fn(shape, [0, 0, self.p.column_radius])
+            shape = translate_fn(shape, self.column_offset(column))
 
-        shape = rotate_y_fn(shape, tenting_angle)
-        shape = translate_fn(shape, [0, 0, keyboard_z_offset])
+        shape = rotate_y_fn(shape, self.p.tenting_angle)
+        shape = translate_fn(shape, [0, 0, self.p.keyboard_z_offset])
 
         return shape
 
+    def valid_key(self, column, row):
+        if not self.p.reduced_outer_keys:
+            # if (full_last_rows):
+            return (not (column in [0, 1])) or (not row == self.p.lastrow)
 
-    def valid_key(column, row):
-        if not reduced_outer_keys:
-        # if (full_last_rows):
-            return (not (column in [0, 1])) or (not row == lastrow)
+        return (column in [2, 3]) or (not row == self.p.lastrow)
 
-        return (column in [2, 3]) or (not row == lastrow)
-
-
-    def x_rot(shape, angle):
+    def x_rot(self, shape, angle):
         # debugprint('x_rot()')
-        return rotate(shape, [rad2deg(angle), 0, 0])
+        return self.g.rotate(shape, [rad2deg(angle), 0, 0])
 
-
-    def y_rot(shape, angle):
+    def y_rot(self, shape, angle):
         # debugprint('y_rot()')
-        return rotate(shape, [0, rad2deg(angle), 0])
+        return self.g.rotate(shape, [0, rad2deg(angle), 0])
 
-
-    def key_place(shape, column, row):
+    def key_place(self, shape, column, row):
         debugprint('key_place()')
-        return apply_key_geometry(shape, translate, x_rot, y_rot, column, row)
+        return self.apply_key_geometry(shape, self.g.translate, self.x_rot, self.y_rot, column, row)
 
-
-    def add_translate(shape, xyz):
+    def add_translate(self, shape, xyz):
         debugprint('add_translate()')
         vals = []
         for i in range(len(shape)):
             vals.append(shape[i] + xyz[i])
         return vals
 
-
-    def plate_pcb_cutouts(side="right"):
+    def plate_pcb_cutouts(self, side="right"):
         debugprint('plate_pcb_cutouts()')
         # hole = single_plate()
         cutouts = []
-        for column in range(ncols):
-            for row in range(nrows):
-                if (column in [2, 3]) or (not row == lastrow):
-                    cutouts.append(key_place(plate_pcb_cutout(side=side), column, row))
+        for column in range(self.p.ncols):
+            for row in range(self.p.nrows):
+                if (column in [2, 3]) or (not row == self.p.lastrow):
+                    cutouts.append(self.key_place(self.sh.plate_pcb_cutout(side=side), column, row))
 
-        # cutouts = union(cutouts)
+        # cutouts = self.g.union(cutouts)
 
         return cutouts
 
-    def key_position(position, column, row):
+    def key_position(self, position, column, row):
         debugprint('key_position()')
-        return apply_key_geometry(
-            position, add_translate, rotate_around_x, rotate_around_y, column, row
+        return self.apply_key_geometry(
+            position, self.add_translate, self.rotate_around_x, self.rotate_around_y, column, row
         )
 
-
-    def key_holes(side="right"):
+    def key_holes(self, side="right"):
         debugprint('key_holes()')
-        # hole = single_plate()
         holes = []
-        for column in range(ncols):
-            for row in range(nrows):
-                if valid_key(column, row):
-                    holes.append(key_place(single_plate(side=side), column, row))
+        for column in range(self.p.ncols):
+            for row in range(self.p.nrows):
+                if self.valid_key(column, row):
+                    holes.append(self.key_place(self.sh.single_plate(side=side), column, row))
 
-        shape = union(holes)
+        shape = self.g.union(holes)
 
         return shape
 
-
-    def caps():
+    def caps(self):
         caps = None
-        for column in range(ncols):
+        for column in range(self.p.ncols):
             size = 1
-            if pinky_1_5U and column == lastcol:
-                if row >= first_1_5U_row and row <= last_1_5U_row:
+            if self.p.pinky_1_5U and column == self.p.lastcol:
+                if row >= self.p.first_1_5U_row and row <= self.p.last_1_5U_row:
                     size = 1.5
-            for row in range(nrows):
-                if valid_key(column, row):
+            for row in range(self.p.nrows):
+                if self.valid_key(column, row):
                     if caps is None:
-                        caps = key_place(sa_cap(size), column, row)
+                        caps = self.key_place(self.sh.sa_cap(size), column, row)
                     else:
-                        caps = add([caps, key_place(sa_cap(size), column, row)])
+                        caps = self.g.add([caps, self.key_place(self.sh.sa_cap(size), column, row)])
 
         return caps
 
-
-    ####################
-    ## Web Connectors ##
-    ####################
-
-
-    def web_post():
-        debugprint('web_post()')
-        post = box(post_size, post_size, web_thickness)
-        post = translate(post, (0, 0, plate_thickness - (web_thickness / 2)))
-        return post
-
-
-    def web_post_tr(wide=False):
-        if wide:
-            w_divide = 1.2
-        else:
-            w_divide = 2.0
-
-        return translate(web_post(), ((mount_width / w_divide) - post_adj, (mount_height / 2) - post_adj, 0))
-
-    def web_post_br(wide=False):
-        if wide:
-            w_divide = 1.2
-        else:
-            w_divide = 2.0
-        return translate(web_post(), ((mount_width / w_divide) - post_adj, -(mount_height / 2) + post_adj, 0))
-
-    def web_post_tl(wide=False):
-        if wide:
-            w_divide = 1.2
-        else:
-            w_divide = 2.0
-        return translate(web_post(), (-(mount_width / w_divide) + post_adj, (mount_height / 2) - post_adj, 0))
-
-
-    def web_post_bl(wide=False):
-        if wide:
-            w_divide = 1.2
-        else:
-            w_divide = 2.0
-        return translate(web_post(), (-(mount_width / w_divide) + post_adj, -(mount_height / 2) + post_adj, 0))
-
-
-    def get_torow(column):
-        torow = lastrow
-        if full_last_rows:
-            torow = lastrow + 1
+    def get_torow(self, column):
+        torow = self.p.lastrow
+        if self.p.full_last_rows:
+            torow = self.p.lastrow + 1
         if column in [0, 1]:
-            torow = lastrow
+            torow = self.p.lastrow
         return torow
 
-
-
-    def connectors():
+    def connectors(self):
         debugprint('connectors()')
         hulls = []
-        for column in range(ncols - 1):
-            if (column in [2]) or (not reduced_outer_keys):
-                iterrows = lastrow+1
+        for column in range(self.p.ncols - 1):
+            if (column in [2]) or (not self.p.reduced_outer_keys):
+                iterrows = self.p.lastrow + 1
             else:
-                iterrows = lastrow
+                iterrows = self.p.lastrow
             for row in range(iterrows):  # need to consider last_row?
                 # for row in range(nrows):  # need to consider last_row?
                 places = []
-                places.append(key_place(web_post_tl(), column + 1, row))
-                places.append(key_place(web_post_tr(), column, row))
-                places.append(key_place(web_post_bl(), column + 1, row))
-                places.append(key_place(web_post_br(), column, row))
-                hulls.append(triangle_hulls(places))
+                places.append(self.key_place(self.sh.web_post_tl(), column + 1, row))
+                places.append(self.key_place(self.sh.web_post_tr(), column, row))
+                places.append(self.key_place(self.sh.web_post_bl(), column + 1, row))
+                places.append(self.key_place(self.sh.web_post_br(), column, row))
+                hulls.append(self.g.triangle_hulls(places))
 
-        for column in range(ncols):
-            if (column in [2, 3]) or (not reduced_outer_keys):
-                iterrows = lastrow
+        for column in range(self.p.ncols):
+            if (column in [2, 3]) or (not self.p.reduced_outer_keys):
+                iterrows = self.p.lastrow
             else:
-                iterrows = cornerrow
+                iterrows = self.p.cornerrow
             for row in range(iterrows):
                 places = []
-                places.append(key_place(web_post_bl(), column, row))
-                places.append(key_place(web_post_br(), column, row))
-                places.append(key_place(web_post_tl(), column, row + 1))
-                places.append(key_place(web_post_tr(), column, row + 1))
-                hulls.append(triangle_hulls(places))
+                places.append(self.key_place(self.sh.web_post_bl(), column, row))
+                places.append(self.key_place(self.sh.web_post_br(), column, row))
+                places.append(self.key_place(self.sh.web_post_tl(), column, row + 1))
+                places.append(self.key_place(self.sh.web_post_tr(), column, row + 1))
+                hulls.append(self.g.triangle_hulls(places))
 
-        for column in range(ncols - 1):
-            if (column in [2]) or (not reduced_outer_keys):
-                iterrows = lastrow
+        for column in range(self.p.ncols - 1):
+            if (column in [2]) or (not self.p.reduced_outer_keys):
+                iterrows = self.p.lastrow
             else:
-                iterrows = cornerrow
+                iterrows = self.p.cornerrow
             for row in range(iterrows):
                 places = []
-                places.append(key_place(web_post_br(), column, row))
-                places.append(key_place(web_post_tr(), column, row + 1))
-                places.append(key_place(web_post_bl(), column + 1, row))
-                places.append(key_place(web_post_tl(), column + 1, row + 1))
-                hulls.append(triangle_hulls(places))
+                places.append(self.key_place(self.sh.web_post_br(), column, row))
+                places.append(self.key_place(self.sh.web_post_tr(), column, row + 1))
+                places.append(self.key_place(self.sh.web_post_bl(), column + 1, row))
+                places.append(self.key_place(self.sh.web_post_tl(), column + 1, row + 1))
+                hulls.append(self.g.triangle_hulls(places))
 
-            if reduced_outer_keys:
+            if self.p.reduced_outer_keys:
                 if column == 1:
                     places = []
-                    places.append(key_place(web_post_bl(), column + 1, iterrows))
-                    places.append(key_place(web_post_br(), column, iterrows))
-                    places.append(key_place(web_post_tl(), column + 1, iterrows + 1))
-                    places.append(key_place(web_post_bl(), column + 1, iterrows + 1))
-                    hulls.append(triangle_hulls(places))
+                    places.append(self.key_place(self.sh.web_post_bl(), column + 1, iterrows))
+                    places.append(self.key_place(self.sh.web_post_br(), column, iterrows))
+                    places.append(self.key_place(self.sh.web_post_tl(), column + 1, iterrows + 1))
+                    places.append(self.key_place(self.sh.web_post_bl(), column + 1, iterrows + 1))
+                    hulls.append(self.g.triangle_hulls(places))
                 if column == 3:
                     places = []
-                    places.append(key_place(web_post_br(), column, iterrows))
-                    places.append(key_place(web_post_bl(), column + 1, iterrows))
-                    places.append(key_place(web_post_tr(), column, iterrows + 1))
-                    places.append(key_place(web_post_br(), column, iterrows + 1))
-                    hulls.append(triangle_hulls(places))
+                    places.append(self.key_place(self.sh.web_post_br(), column, iterrows))
+                    places.append(self.key_place(self.sh.web_post_bl(), column + 1, iterrows))
+                    places.append(self.key_place(self.sh.web_post_tr(), column, iterrows + 1))
+                    places.append(self.key_place(self.sh.web_post_br(), column, iterrows + 1))
+                    hulls.append(self.g.triangle_hulls(places))
 
+        return self.g.union(hulls)
 
-        return union(hulls)
-
-
-    def usize_dimention(Usize=1.5):
-        return Usize * sa_length
-
-
-    def adjustable_square_plate(Uwidth=1.5, Uheight=1.5):
-        width = usize_dimention(Usize=Uwidth)
-        height = usize_dimention(Usize=Uheight)
-        print("width: {}, height: {}, thickness:{}".format(width, height, web_thickness))
-        shape = box(width, height, web_thickness)
-        shape = difference(shape, [box(mount_width-.01, mount_height-.01, 2*web_thickness)])
-        # shape = translate(shape, (0, 0, web_thickness / 2))
-        shape = translate(shape, (0, 0, plate_thickness - (web_thickness / 2)))
-
-
-        return shape
-
-
-    def adjustable_plate_size(Usize=1.5):
-        return (Usize * sa_length - mount_height) / 2
-
-
-    def adjustable_plate_half(Usize=1.5):
-        debugprint('double_plate()')
-        adjustable_plate_height = adjustable_plate_size(Usize)
-        top_plate = box(mount_width, adjustable_plate_height, web_thickness)
-        top_plate = translate(top_plate,
-                              [0, (adjustable_plate_height + mount_height) / 2, plate_thickness - (web_thickness / 2)]
-                              )
-        return top_plate
-
-
-    def adjustable_plate(Usize=1.5):
-        debugprint('double_plate()')
-        top_plate = adjustable_plate_half(Usize)
-        return union((top_plate, mirror(top_plate, 'XZ')))
-
-
-    def double_plate_half():
-        debugprint('double_plate()')
-        top_plate = box(mount_width, double_plate_height, web_thickness)
-        top_plate = translate(top_plate,
-                              [0, (double_plate_height + mount_height) / 2, plate_thickness - (web_thickness / 2)]
-                              )
-        return top_plate
-
-
-    def double_plate():
-        debugprint('double_plate()')
-        top_plate = double_plate_half()
-        return union((top_plate, mirror(top_plate, 'XZ')))
-
-
-    def thumb_pcb_plate_cutouts(side='right', style_override=None):
-        if style_override is None:
-            _thumb_style = thumb_style
-        else:
-            _thumb_style = style_override
-
-        if _thumb_style == "MINI":
-            return mini_thumb_pcb_plate_cutouts(side)
-        elif _thumb_style == "MINIDOX":
-            return minidox_thumb_pcb_plate_cutouts(side)
-        elif _thumb_style == "CARBONFET":
-            return carbonfet_thumb_pcb_plate_cutouts(side)
-
-        elif "TRACKBALL" in _thumb_style:
-            if (side == ball_side or ball_side == 'both'):
-                if _thumb_style == "TRACKBALL_ORBYL":
-                    return tbjs_thumb_pcb_plate_cutouts(side)
-                elif _thumb_style == "TRACKBALL_CJ":
-                    return tbcj_thumb_pcb_plate_cutouts(side)
-            else:
-                return thumb_pcb_plate_cutouts(side, style_override=other_thumb)
-
-        else:
-            return default_thumb_pcb_plate_cutouts(side)
-
-
-    ############################
-    # MINI THUMB CLUSTER
-    ############################
-
-
-    ############################
-    # MINIDOX (3-key) THUMB CLUSTER
-    ############################
-
-
-    ############################
-    # Carbonfet THUMB CLUSTER
-    ############################
-
-
-    ############################
-    # Wilder Trackball (Ball + 4-key) THUMB CLUSTER
-    ############################
-
-
-    ############################
-    # CJ TRACKBALL THUMB CLUSTER
-    ############################
-
-    # single_plate = the switch shape
+    # def thumb_pcb_plate_cutouts(self, side='right', style_override=None):
+    #     if style_override is None:
+    #         _thumb_style = thumb_style
+    #     else:
+    #         _thumb_style = style_override
+    #
+    #     if _thumb_style == "MINI":
+    #         return mini_thumb_pcb_plate_cutouts(side)
+    #     elif _thumb_style == "MINIDOX":
+    #         return minidox_thumb_pcb_plate_cutouts(side)
+    #     elif _thumb_style == "CARBONFET":
+    #         return carbonfet_thumb_pcb_plate_cutouts(side)
+    #
+    #     elif "TRACKBALL" in _thumb_style:
+    #         if (side == ball_side or ball_side == 'both'):
+    #             if _thumb_style == "TRACKBALL_ORBYL":
+    #                 return tbjs_thumb_pcb_plate_cutouts(side)
+    #             elif _thumb_style == "TRACKBALL_CJ":
+    #                 return tbcj_thumb_pcb_plate_cutouts(side)
+    #         else:
+    #             return thumb_pcb_plate_cutouts(side, style_override=other_thumb)
+    #
+    #     else:
+    #         return default_thumb_pcb_plate_cutouts(side)
 
     ##########
     ## Case ##
     ##########
 
-    def left_key_position(row, direction, low_corner=False, side='right'):
+    def left_key_position(self, row, direction, low_corner=False, side='right'):
         debugprint("left_key_position()")
         pos = np.array(
-            key_position([-mount_width * 0.5, direction * mount_height * 0.5, 0], 0, row)
+            self.key_position([-self.p.mount_width * 0.5, direction * self.p.mount_height * 0.5, 0], 0, row)
         )
-        if trackball_in_wall and (side == ball_side or ball_side == 'both'):
+        if self.p.trackball_in_wall and (side == self.p.ball_side or self.p.ball_side == 'both'):
 
             if low_corner:
-                x_offset = tbiw_left_wall_lower_x_offset
-                y_offset = tbiw_left_wall_lower_y_offset
-                z_offset = tbiw_left_wall_lower_z_offset
+                x_offset = self.p.tbiw_left_wall_lower_x_offset
+                y_offset = self.p.tbiw_left_wall_lower_y_offset
+                z_offset = self.p.tbiw_left_wall_lower_z_offset
             else:
                 x_offset = 0.0
                 y_offset = 0.0
                 z_offset = 0.0
 
-
             return list(pos - np.array([
-                tbiw_left_wall_x_offset_override - x_offset,
+                self.p.tbiw_left_wall_x_offset_override - x_offset,
                 -y_offset,
-                tbiw_left_wall_z_offset_override + z_offset
+                self.p.tbiw_left_wall_z_offset_override + z_offset
             ]))
 
         if low_corner:
-            x_offset = left_wall_lower_x_offset
-            y_offset = left_wall_lower_y_offset
-            z_offset = left_wall_lower_z_offset
+            x_offset = self.p.left_wall_lower_x_offset
+            y_offset = self.p.left_wall_lower_y_offset
+            z_offset = self.p.left_wall_lower_z_offset
         else:
             x_offset = 0.0
             y_offset = 0.0
             z_offset = 0.0
 
-        return list(pos - np.array([left_wall_x_offset - x_offset, -y_offset, left_wall_z_offset + z_offset]))
+        return list(pos - np.array([self.p.left_wall_x_offset - x_offset, -y_offset, self.p.left_wall_z_offset + z_offset]))
 
-
-    def left_key_place(shape, row, direction, low_corner=False, side='right'):
+    def left_key_place(self, shape, row, direction, low_corner=False, side='right'):
         debugprint("left_key_place()")
-        pos = left_key_position(row, direction, low_corner=low_corner, side=side)
-        return translate(shape, pos)
+        pos = self.left_key_position(row, direction, low_corner=low_corner, side=side)
+        return self.g.translate(shape, pos)
 
-
-    def wall_locate1(dx, dy):
+    def wall_locate1(self, dx, dy):
         debugprint("wall_locate1()")
-        return [dx * wall_thickness, dy * wall_thickness, -1]
+        return [dx * self.p.wall_thickness, dy * self.p.wall_thickness, -1]
 
-
-    def wall_locate2(dx, dy):
+    def wall_locate2(self, dx, dy):
         debugprint("wall_locate2()")
-        return [dx * wall_x_offset, dy * wall_y_offset, -wall_z_offset]
+        return [dx * self.p.wall_x_offset, dy * self.p.wall_y_offset, -self.p.wall_z_offset]
 
-
-    def wall_locate3(dx, dy, back=False):
+    def wall_locate3(self, dx, dy, back=False):
         debugprint("wall_locate3()")
         if back:
             return [
-                dx * (wall_x_offset + wall_base_x_thickness),
-                dy * (wall_y_offset + wall_base_back_thickness),
-                -wall_z_offset,
+                dx * (self.p.wall_x_offset + self.p.wall_base_x_thickness),
+                dy * (self.p.wall_y_offset + self.p.wall_base_back_thickness),
+                -self.p.wall_z_offset,
             ]
         else:
             return [
-                dx * (wall_x_offset + wall_base_x_thickness),
-                dy * (wall_y_offset + wall_base_y_thickness),
-                -wall_z_offset,
+                dx * (self.p.wall_x_offset + self.p.wall_base_x_thickness),
+                dy * (self.p.wall_y_offset + self.p.wall_base_y_thickness),
+                -self.p.wall_z_offset,
             ]
 
-
-    def wall_brace(place1, dx1, dy1, post1, place2, dx2, dy2, post2, back=False, skeleton=False, skel_bottom=False):
+    def wall_brace(self, place1, dx1, dy1, post1, place2, dx2, dy2, post2, back=False, skeleton=False,
+                   skel_bottom=False):
         debugprint("wall_brace()")
         hulls = []
 
         hulls.append(place1(post1))
         if not skeleton:
-            hulls.append(place1(translate(post1, wall_locate1(dx1, dy1))))
-            hulls.append(place1(translate(post1, wall_locate2(dx1, dy1))))
+            hulls.append(place1(self.g.translate(post1, self.wall_locate1(dx1, dy1))))
+            hulls.append(place1(self.g.translate(post1, self.wall_locate2(dx1, dy1))))
         if not skeleton or skel_bottom:
-            hulls.append(place1(translate(post1, wall_locate3(dx1, dy1, back))))
+            hulls.append(place1(self.g.translate(post1, self.wall_locate3(dx1, dy1, back))))
 
         hulls.append(place2(post2))
         if not skeleton:
-            hulls.append(place2(translate(post2, wall_locate1(dx2, dy2))))
-            hulls.append(place2(translate(post2, wall_locate2(dx2, dy2))))
+            hulls.append(place2(self.g.translate(post2, self.wall_locate1(dx2, dy2))))
+            hulls.append(place2(self.g.translate(post2, self.wall_locate2(dx2, dy2))))
 
         if not skeleton or skel_bottom:
-            hulls.append(place2(translate(post2, wall_locate3(dx2, dy2, back))))
+            hulls.append(place2(self.g.translate(post2, self.wall_locate3(dx2, dy2, back))))
 
-        shape1 = hull_from_shapes(hulls)
+        shape1 = self.g.hull_from_shapes(hulls)
 
         hulls = []
         if not skeleton:
-            hulls.append(place1(translate(post1, wall_locate2(dx1, dy1))))
+            hulls.append(place1(self.g.translate(post1, self.wall_locate2(dx1, dy1))))
         if not skeleton or skel_bottom:
-            hulls.append(place1(translate(post1, wall_locate3(dx1, dy1, back))))
+            hulls.append(place1(self.g.translate(post1, self.wall_locate3(dx1, dy1, back))))
         if not skeleton:
-            hulls.append(place2(translate(post2, wall_locate2(dx2, dy2))))
+            hulls.append(place2(self.g.translate(post2, self.wall_locate2(dx2, dy2))))
         if not skeleton or skel_bottom:
-            hulls.append(place2(translate(post2, wall_locate3(dx2, dy2, back))))
+            hulls.append(place2(self.g.translate(post2, self.wall_locate3(dx2, dy2, back))))
 
-        if len(hulls)>0:
-            shape2 = bottom_hull(hulls)
-            shape1 = union([shape1, shape2])
-            #shape1 = add([shape1, shape2])
+        if len(hulls) > 0:
+            shape2 = self.g.bottom_hull(hulls)
+            shape1 = self.g.union([shape1, shape2])
+            # shape1 = add([shape1, shape2])
 
         return shape1
 
-
-    def key_wall_brace(x1, y1, dx1, dy1, post1, x2, y2, dx2, dy2, post2, back=False, skeleton=False, skel_bottom=False):
+    def key_wall_brace(self, x1, y1, dx1, dy1, post1, x2, y2, dx2, dy2, post2, back=False, skeleton=False,
+                       skel_bottom=False):
         debugprint("key_wall_brace()")
-        return wall_brace(
-            (lambda shape: key_place(shape, x1, y1)),
+        return self.wall_brace(
+            (lambda shape: self.key_place(shape, x1, y1)),
             dx1,
             dy1,
             post1,
-            (lambda shape: key_place(shape, x2, y2)),
+            (lambda shape: self.key_place(shape, x2, y2)),
             dx2,
             dy2,
             post2,
@@ -966,546 +1102,422 @@ def make_dactyl():
             skel_bottom=False,
         )
 
-    def back_wall(skeleton=False):
+    def back_wall(self, skeleton=False):
         print("back_wall()")
         x = 0
         shape = None
-        shape = union([shape, key_wall_brace(
-            x, 0, 0, 1, web_post_tl(), x, 0, 0, 1, web_post_tr(), back=True,
+        shape = self.g.union([shape, self.key_wall_brace(
+            x, 0, 0, 1, self.sh.web_post_tl(), x, 0, 0, 1, self.sh.web_post_tr(), back=True,
         )])
-        for i in range(ncols - 1):
+        for i in range(self.p.ncols - 1):
             x = i + 1
-            shape = union([shape, key_wall_brace(
-                x, 0, 0, 1, web_post_tl(), x, 0, 0, 1, web_post_tr(), back=True,
+            shape = self.g.union([shape, self.key_wall_brace(
+                x, 0, 0, 1, self.sh.web_post_tl(), x, 0, 0, 1, self.sh.web_post_tr(), back=True,
             )])
 
-            skelly = skeleton and not x==1
-            shape = union([shape, key_wall_brace(
-                x, 0, 0, 1, web_post_tl(), x - 1, 0, 0, 1, web_post_tr(), back=True,
+            skelly = skeleton and not x == 1
+            shape = self.g.union([shape, self.key_wall_brace(
+                x, 0, 0, 1, self.sh.web_post_tl(), x - 1, 0, 0, 1, self.sh.web_post_tr(), back=True,
                 skeleton=skelly, skel_bottom=True,
             )])
 
-        shape = union([shape, key_wall_brace(
-            lastcol, 0, 0, 1, web_post_tr(), lastcol, 0, 1, 0, web_post_tr(), back=True,
+        shape = self.g.union([shape, self.key_wall_brace(
+            self.p.lastcol, 0, 0, 1, self.sh.web_post_tr(), self.p.lastcol, 0, 1, 0, self.sh.web_post_tr(), back=True,
             skeleton=skeleton, skel_bottom=True,
         )])
         if not skeleton:
-            shape = union([shape,
-                key_wall_brace(
-                    lastcol, 0, 0, 1, web_post_tr(), lastcol, 0, 1, 0, web_post_tr()
-                )
-            ])
+            shape = self.g.union([shape,
+                           self.key_wall_brace(
+                               self.p.lastcol, 0, 0, 1, self.sh.web_post_tr(), self.p.lastcol, 0, 1, 0, self.sh.web_post_tr()
+                           )
+                           ])
         return shape
 
-
-    def right_wall(skeleton=False):
+    def right_wall(self, skeleton=False):
         print("right_wall()")
         y = 0
 
         shape = None
 
-        shape = union([shape, key_wall_brace(
-            lastcol, y, 1, 0, web_post_tr(), lastcol, y, 1, 0, web_post_br(),
+        shape = self.g.union([shape, self.key_wall_brace(
+            self.p.lastcol, y, 1, 0, self.sh.web_post_tr(), self.p.lastcol, y, 1, 0, self.sh.web_post_br(),
             skeleton=skeleton,
         )])
 
-        for i in range(cornerrow):
+        for i in range(self.p.cornerrow):
             y = i + 1
-            shape = union([shape, key_wall_brace(
-                lastcol, y - 1, 1, 0, web_post_br(), lastcol, y, 1, 0, web_post_tr(),
+            shape = self.g.union([shape, self.key_wall_brace(
+                self.p.lastcol, y - 1, 1, 0, self.sh.web_post_br(), self.p.lastcol, y, 1, 0, self.sh.web_post_tr(),
                 skeleton=skeleton,
             )])
 
-            shape = union([shape, key_wall_brace(
-                lastcol, y, 1, 0, web_post_tr(), lastcol, y, 1, 0, web_post_br(),
+            shape = self.g.union([shape, self.key_wall_brace(
+                self.p.lastcol, y, 1, 0, self.sh.web_post_tr(), self.p.lastcol, y, 1, 0, self.sh.web_post_br(),
                 skeleton=skeleton,
             )])
-            #STRANGE PARTIAL OFFSET
+            # STRANGE PARTIAL OFFSET
 
-        shape = union([
+        shape = self.g.union([
             shape,
-            key_wall_brace(
-                lastcol, cornerrow, 0, -1, web_post_br(), lastcol, cornerrow, 1, 0, web_post_br(),
+            self.key_wall_brace(
+                self.p.lastcol, self.p.cornerrow, 0, -1, self.sh.web_post_br(),
+                self.p.lastcol, self.p.cornerrow, 1, 0, self.sh.web_post_br(),
                 skeleton=skeleton
             ),
         ])
 
         return shape
 
-
-    def left_wall(side='right', skeleton=False):
+    def left_wall(self, side='right', skeleton=False):
         print('left_wall()')
-        shape = union([wall_brace(
-            (lambda sh: key_place(sh, 0, 0)), 0, 1, web_post_tl(),
-            (lambda sh: left_key_place(sh, 0, 1, side=side)), 0, 1, web_post(),
+        shape = self.g.union([self.wall_brace(
+            (lambda sh: self.key_place(sh, 0, 0)), 0, 1, self.sh.web_post_tl(),
+            (lambda sh: self.left_key_place(sh, 0, 1, side=side)), 0, 1, self.sh.web_post(),
         )])
 
-        shape = union([shape, wall_brace(
-            (lambda sh: left_key_place(sh, 0, 1, side=side)), 0, 1, web_post(),
-            (lambda sh: left_key_place(sh, 0, 1, side=side)), -1, 0, web_post(),
+        shape = self.g.union([shape, self.wall_brace(
+            (lambda sh: self.left_key_place(sh, 0, 1, side=side)), 0, 1, self.sh.web_post(),
+            (lambda sh: self.left_key_place(sh, 0, 1, side=side)), -1, 0, self.sh.web_post(),
             skeleton=skeleton,
         )])
 
         # for i in range(lastrow):
-        for i in range(cornerrow+1):
+        for i in range(self.p.cornerrow + 1):
             y = i
-            low = (y == (cornerrow))
-            temp_shape1 = wall_brace(
-                (lambda sh: left_key_place(sh, y, 1, side=side)), -1, 0, web_post(),
-                (lambda sh: left_key_place(sh, y, -1, low_corner=low, side=side)), -1, 0, web_post(),
-            skeleton=skeleton and (y < (cornerrow)),
+            low = (y == (self.p.cornerrow))
+            temp_shape1 = self.wall_brace(
+                (lambda sh: self.left_key_place(sh, y, 1, side=side)), -1, 0, self.sh.web_post(),
+                (lambda sh: self.left_key_place(sh, y, -1, low_corner=low, side=side)), -1, 0, self.sh.web_post(),
+                skeleton=skeleton and (y < (self.p.cornerrow)),
             )
-            shape = union([shape, temp_shape1])
+            shape = self.g.union([shape, temp_shape1])
 
-            temp_shape2 = hull_from_shapes((
-                key_place(web_post_tl(), 0, y),
-                key_place(web_post_bl(), 0, y),
-                left_key_place(web_post(), y, 1, side=side),
-                left_key_place(web_post(), y, -1, low_corner=low, side=side),
+            temp_shape2 = self.g.hull_from_shapes((
+                self.key_place(self.sh.web_post_tl(), 0, y),
+                self.key_place(self.sh.web_post_bl(), 0, y),
+                self.left_key_place(self.sh.web_post(), y, 1, side=side),
+                self.left_key_place(self.sh.web_post(), y, -1, low_corner=low, side=side),
             ))
 
-            shape = union([shape, temp_shape2])
+            shape = self.g.union([shape, temp_shape2])
 
-        for i in range(cornerrow):
+        for i in range(self.p.cornerrow):
             y = i + 1
-            low = (y == (cornerrow))
-            temp_shape1 = wall_brace(
-                (lambda sh: left_key_place(sh, y - 1, -1, side=side)), -1, 0, web_post(),
-                (lambda sh: left_key_place(sh, y, 1, side=side)), -1, 0, web_post(),
-                skeleton=skeleton and (y < (cornerrow)),
+            low = (y == (self.p.cornerrow))
+            temp_shape1 = self.wall_brace(
+                (lambda sh: self.left_key_place(sh, y - 1, -1, side=side)), -1, 0, self.sh.web_post(),
+                (lambda sh: self.left_key_place(sh, y, 1, side=side)), -1, 0, self.sh.web_post(),
+                skeleton=skeleton and (y < (self.p.cornerrow)),
             )
-            shape = union([shape, temp_shape1])
+            shape = self.g.union([shape, temp_shape1])
 
-            temp_shape2 = hull_from_shapes((
-                key_place(web_post_tl(), 0, y),
-                key_place(web_post_bl(), 0, y - 1),
-                left_key_place(web_post(), y, 1, side=side),
-                left_key_place(web_post(), y - 1, -1, side=side),
+            temp_shape2 = self.g.hull_from_shapes((
+                self.key_place(self.sh.web_post_tl(), 0, y),
+                self.key_place(self.sh.web_post_bl(), 0, y - 1),
+                self.left_key_place(self.sh.web_post(), y, 1, side=side),
+                self.left_key_place(self.sh.web_post(), y - 1, -1, side=side),
             ))
 
-            shape = union([shape, temp_shape2])
+            shape = self.g.union([shape, temp_shape2])
 
         return shape
 
-    def front_wall(skeleton=False):
+    def front_wall(self, skeleton=False):
         print('front_wall()')
         shape = None
 
-        shape = union([shape,key_wall_brace(
-            3, lastrow, 0, -1, web_post_bl(), 3, lastrow, 0.5, -1, web_post_br()
+        shape = self.g.union([shape, self.key_wall_brace(
+            3, self.p.lastrow, 0, -1, self.sh.web_post_bl(),
+            3, self.p.lastrow, 0.5, -1, self.sh.web_post_br()
         )])
-        shape = union([shape,key_wall_brace(
-            3, lastrow, 0.5, -1, web_post_br(), 4, cornerrow, .5, -1, web_post_bl()
+        shape = self.g.union([shape, self.key_wall_brace(
+            3, self.p.lastrow, 0.5, -1, self.sh.web_post_br(), 
+            4, self.p.cornerrow, .5, -1, self.sh.web_post_bl()
         )])
-        shape = union([shape,key_wall_brace(
-            4, cornerrow, .5, -1, web_post_bl(), 4, cornerrow, 0, -1, web_post_br()
+        shape = self.g.union([shape, self.key_wall_brace(
+            4, self.p.cornerrow, .5, -1, self.sh.web_post_bl(),
+            4, self.p.cornerrow, 0, -1, self.sh.web_post_br()
         )])
 
-        for i in range(ncols - 5):
+        for i in range(self.p.ncols - 5):
             x = i + 5
 
-            shape = union([shape,key_wall_brace(
-                x, cornerrow, 0, -1, web_post_bl(), x, cornerrow, 0, -1, web_post_br()
+            shape = self.g.union([shape, self.key_wall_brace(
+                x, self.p.cornerrow, 0, -1, self.sh.web_post_bl(), 
+                x, self.p.cornerrow, 0, -1, self.sh.web_post_br()
             )])
 
-            shape = union([shape, key_wall_brace(
-                x, cornerrow, 0, -1, web_post_bl(), x - 1, cornerrow, 0, -1, web_post_br()
+            shape = self.g.union([shape, self.key_wall_brace(
+                x, self.p.cornerrow, 0, -1, self.sh.web_post_bl(), 
+                x - 1, self.p.cornerrow, 0, -1, self.sh.web_post_br()
             )])
 
         return shape
 
-
-    def case_walls(side='right', skeleton=False):
+    def case_walls(self, side='right', skeleton=False):
         print('case_walls()')
         return (
-            union([
-                back_wall(skeleton=skeleton),
-                left_wall(side=side, skeleton=skeleton),
-                right_wall(skeleton=skeleton),
-                front_wall(skeleton=skeleton),
+            self.g.union([
+                self.back_wall(skeleton=skeleton),
+                self.left_wall(side=side, skeleton=skeleton),
+                self.right_wall(skeleton=skeleton),
+                self.front_wall(skeleton=skeleton),
                 # MOVED TO SEPARABLE THUMB SECTION
                 # cluster(side=side).walls(side=side),
                 # cluster(side=side).connection(side=side),
             ])
         )
 
-
-
-
-    rj9_start = list(
-        np.array([0, -3, 0])
-        + np.array(
-            key_position(
-                list(np.array(wall_locate3(0, 1)) + np.array([0, (mount_height / 2), 0])),
-                0,
-                0,
-            )
-        )
-    )
-
-    rj9_position = (rj9_start[0], rj9_start[1], 11)
-
-
-    def rj9_cube():
+    def rj9_cube(self):
         debugprint('rj9_cube()')
-        shape = box(14.78, 13, 22.38)
+        shape = self.g.box(14.78, 13, 22.38)
 
         return shape
 
-
-    def rj9_space():
+    def rj9_space(self):
         debugprint('rj9_space()')
-        return translate(rj9_cube(), rj9_position)
+        return self.g.translate(self.rj9_cube(), self.rj9_position)
 
-
-    def rj9_holder():
+    def rj9_holder(self):
         print('rj9_holder()')
-        shape = union([translate(box(10.78, 9, 18.38), (0, 2, 0)), translate(box(10.78, 13, 5), (0, 0, 5))])
-        shape = difference(rj9_cube(), [shape])
-        shape = translate(shape, rj9_position)
+        shape = self.g.union([
+            self.g.translate(self.g.box(10.78, 9, 18.38), (0, 2, 0)),
+            self.g.translate(self.g.box(10.78, 13, 5), (0, 0, 5))
+        ])
+        shape = self.g.difference(self.rj9_cube(), [shape])
+        shape = self.g.translate(shape, self.self.p.rj9_position)
 
         return shape
 
-
-    usb_holder_position = key_position(
-        list(np.array(wall_locate2(0, 1)) + np.array([0, (mount_height / 2), 0])), 1, 0
-    )
-    usb_holder_size = [6.5, 10.0, 13.6]
-    usb_holder_thickness = 4
-
-
-    def usb_holder():
+    def usb_holder(self):
         print('usb_holder()')
-        shape = box(
-            usb_holder_size[0] + usb_holder_thickness,
-            usb_holder_size[1],
-            usb_holder_size[2] + usb_holder_thickness,
+        shape = self.g.box(
+            self.p.usb_holder_size[0] + self.p.usb_holder_thickness,
+            self.p.usb_holder_size[1],
+            self.p.usb_holder_size[2] + self.p.usb_holder_thickness,
         )
-        shape = translate(shape,
+        shape = self.g.translate(shape,
                           (
-                              usb_holder_position[0],
-                              usb_holder_position[1],
-                              (usb_holder_size[2] + usb_holder_thickness) / 2,
+                              self.p.usb_holder_position[0],
+                              self.p.usb_holder_position[1],
+                              (self.p.usb_holder_size[2] + self.p.usb_holder_thickness) / 2,
                           )
                           )
         return shape
 
-
-    def usb_holder_hole():
+    def usb_holder_hole(self):
         debugprint('usb_holder_hole()')
-        shape = box(*usb_holder_size)
-        shape = translate(shape,
+        shape = self.g.box(*self.p.usb_holder_size)
+        shape = self.g.translate(shape,
                           (
-                              usb_holder_position[0],
-                              usb_holder_position[1],
-                              (usb_holder_size[2] + usb_holder_thickness) / 2,
+                              self.p.usb_holder_position[0],
+                              self.p.usb_holder_position[1],
+                              (self.p.usb_holder_size[2] + self.p.usb_holder_thickness) / 2,
                           )
                           )
         return shape
 
-
-    external_start = list(
-        # np.array([0, -3, 0])
-        np.array([external_holder_width / 2, 0, 0])
-        + np.array(
-            key_position(
-                list(np.array(wall_locate3(0, 1)) + np.array([0, (mount_height / 2), 0])),
-                0,
-                0,
-            )
-        )
-    )
-
-
-    def external_mount_hole():
+    def external_mount_hole(self):
         print('external_mount_hole()')
-        shape = box(external_holder_width, 20.0, external_holder_height + .1)
-        undercut = box(external_holder_width + 8, 10.0, external_holder_height + 8 + .1)
-        shape = union([shape, translate(undercut, (0, -5, 0))])
+        shape = self.g.box(self.p.external_holder_width, 20.0, self.p.external_holder_height + .1)
+        undercut = self.g.box(self.p.external_holder_width + 8, 10.0, self.p.external_holder_height + 8 + .1)
+        shape = self.g.union([shape, self.g.translate(undercut, (0, -5, 0))])
 
-        shape = translate(shape,
+        shape = self.g.translate(shape,
+                                 (
+                                     self.p.external_start[0] + self.p.external_holder_xoffset,
+                                     self.p.external_start[1] + self.p.external_holder_yoffset,
+                                     self.p.external_holder_height / 2 - .05,
+                                 )
+                                 )
+        return shape
+
+    def pcb_usb_hole(self):
+        debugprint('pcb_holder()')
+        pcb_usb_position = copy.deepcopy(self.p.pcb_mount_ref_position)
+        pcb_usb_position[0] = pcb_usb_position[0] + self.p.pcb_usb_hole_offset[0]
+        pcb_usb_position[1] = pcb_usb_position[1] + self.p.pcb_usb_hole_offset[1]
+        pcb_usb_position[2] = pcb_usb_position[2] + self.p.pcb_usb_hole_offset[2]
+
+        shape = self.g.box(*self.p.pcb_usb_hole_size)
+        shape = self.g.translate(shape,
                           (
-                              external_start[0] + external_holder_xoffset,
-                              external_start[1] + external_holder_yoffset,
-                              external_holder_height / 2 - .05,
+                              pcb_usb_position[0],
+                              pcb_usb_position[1],
+                              self.p.pcb_usb_hole_size[2] / 2 + self.p.usb_holder_thickness,
                           )
                           )
         return shape
 
-
-
-    pcb_mount_ref_position = key_position(
-        #TRRS POSITION IS REFERENCE BY CONVENIENCE
-        list(np.array(wall_locate3(0, 1)) + np.array([0, (mount_height / 2), 0])), 0, 0
-    )
-
-    pcb_mount_ref_position[0] = pcb_mount_ref_position[0] + pcb_mount_ref_offset[0]
-    pcb_mount_ref_position[1] = pcb_mount_ref_position[1] + pcb_mount_ref_offset[1]
-    pcb_mount_ref_position[2] = 0.0 + pcb_mount_ref_offset[2]
-
-    def pcb_usb_hole():
+    def pcb_holder(self):
         debugprint('pcb_holder()')
-        pcb_usb_position = copy.deepcopy(pcb_mount_ref_position)
-        pcb_usb_position[0] = pcb_usb_position[0] + pcb_usb_hole_offset[0]
-        pcb_usb_position[1] = pcb_usb_position[1] + pcb_usb_hole_offset[1]
-        pcb_usb_position[2] = pcb_usb_position[2] + pcb_usb_hole_offset[2]
-
-        shape = box(*pcb_usb_hole_size)
-        shape = translate(shape,
-            (
-                pcb_usb_position[0],
-                pcb_usb_position[1],
-                pcb_usb_hole_size[2] / 2 + usb_holder_thickness,
-            )
-        )
+        shape = self.g.box(*self.p.pcb_holder_size)
+        shape = self.g.translate(shape,
+                          (
+                              self.p.pcb_holder_position[0],
+                              self.p.pcb_holder_position[1] - self.p.pcb_holder_size[1] / 2,
+                              self.p.pcb_holder_thickness / 2,
+                          )
+                          )
         return shape
 
-
-
-    pcb_holder_position = copy.deepcopy(pcb_mount_ref_position)
-    pcb_holder_position[0] = pcb_holder_position[0] + pcb_holder_offset[0]
-    pcb_holder_position[1] = pcb_holder_position[1] + pcb_holder_offset[1]
-    pcb_holder_position[2] = pcb_holder_position[2] + pcb_holder_offset[2]
-    pcb_holder_thickness = pcb_holder_size[2]
-
-    def pcb_holder():
-        debugprint('pcb_holder()')
-        shape = box(*pcb_holder_size)
-        shape = translate(shape,
-            (
-                pcb_holder_position[0],
-                pcb_holder_position[1] - pcb_holder_size[1] / 2,
-                pcb_holder_thickness / 2,
-            )
-        )
-        return shape
-
-
-    def wall_thinner():
+    def wall_thinner(self):
         debugprint('wall_thinner()')
-        shape = box(*wall_thinner_size)
-        shape = translate(shape,
-            (
-                pcb_holder_position[0],
-                pcb_holder_position[1] - wall_thinner_size[1]/2,
-                wall_thinner_size[2]/2 + pcb_holder_thickness,
-            )
-        )
+        shape = self.g.box(*self.p.wall_thinner_size)
+        shape = self.g.translate(shape,
+                          (
+                              self.p.pcb_holder_position[0],
+                              self.p.pcb_holder_position[1] - self.p.wall_thinner_size[1] / 2,
+                              self.p.wall_thinner_size[2] / 2 + self.p.pcb_holder_thickness,
+                          )
+                          )
         return shape
 
-    def trrs_hole():
+    def trrs_hole(self):
         debugprint('trrs_hole()')
-        trrs_position = copy.deepcopy(pcb_mount_ref_position)
-        trrs_position[0] = trrs_position[0] + trrs_offset[0]
-        trrs_position[1] = trrs_position[1] + trrs_offset[1]
-        trrs_position[2] = trrs_position[2] + trrs_offset[2]
+        trrs_position = copy.deepcopy(self.p.pcb_mount_ref_position)
+        trrs_position[0] = trrs_position[0] + self.p.trrs_offset[0]
+        trrs_position[1] = trrs_position[1] + self.p.trrs_offset[1]
+        trrs_position[2] = trrs_position[2] + self.p.trrs_offset[2]
 
         trrs_hole_size = [3, 20]
 
-
-        shape = cylinder(*trrs_hole_size)
-        shape = rotate(shape, [0, 90, 90])
-        shape = translate(shape,
-            (
-                trrs_position[0],
-                trrs_position[1],
-                trrs_hole_size[0] + pcb_holder_thickness,
-            )
-        )
+        shape = self.g.cylinder(*trrs_hole_size)
+        shape = self.g.rotate(shape, [0, 90, 90])
+        shape = self.g.translate(shape,
+                          (
+                              trrs_position[0],
+                              trrs_position[1],
+                              trrs_hole_size[0] + self.p.pcb_holder_thickness,
+                          )
+                          )
         return shape
 
-    pcb_screw_position = copy.deepcopy(pcb_mount_ref_position)
-    pcb_screw_position[1] = pcb_screw_position[1] + pcb_screw_y_offset
-
-    def pcb_screw_hole():
+    def pcb_screw_hole(self):
         debugprint('pcb_screw_hole()')
         holes = []
-        hole = cylinder(*pcb_screw_hole_size)
-        hole = translate(hole, pcb_screw_position)
-        hole = translate(hole, (0, 0, pcb_screw_hole_size[1]/2-.1))
-        for offset in pcb_screw_x_offsets:
-            holes.append(translate(hole, (offset, 0, 0)))
+        hole = self.g.cylinder(*self.p.pcb_screw_hole_size)
+        hole = self.g.translate(hole, self.p.pcb_screw_position)
+        hole = self.g.translate(hole, (0, 0, self.p.pcb_screw_hole_size[1] / 2 - .1))
+        for offset in self.p.pcb_screw_x_offsets:
+            holes.append(self.g.translate(hole, (offset, 0, 0)))
 
         return holes
 
+    def generate_trackball(self, pos, rot):
+        precut = self.trackball_cutout()
+        precut = self.g.rotate(precut, self.p.tb_socket_rotation_offset)
+        precut = self.g.translate(precut, self.p.tb_socket_translation_offset)
+        precut = self.g.rotate(precut, rot)
+        precut = self.g.translate(precut, pos)
 
-    if oled_center_row is not None:
-        base_pt1 = key_position(
-            list(np.array([-mount_width/2, 0, 0]) + np.array([0, (mount_height / 2), 0])), 0, oled_center_row-1
-        )
-        base_pt2 = key_position(
-            list(np.array([-mount_width/2, 0, 0]) + np.array([0, (mount_height / 2), 0])), 0, oled_center_row+1
-        )
-        base_pt0 = key_position(
-            list(np.array([-mount_width / 2, 0, 0]) + np.array([0, (mount_height / 2), 0])), 0, oled_center_row
-        )
+        shape, cutout, sensor = self.trackball_socket()
 
-        oled_mount_location_xyz = (np.array(base_pt1)+np.array(base_pt2))/2. + np.array(((-left_wall_x_offset/2), 0, 0)) + np.array(oled_translation_offset)
-        oled_mount_location_xyz[2] = (oled_mount_location_xyz[2] + base_pt0[2])/2
+        shape = self.g.rotate(shape, self.p.tb_socket_rotation_offset)
+        shape = self.g.translate(shape, self.p.tb_socket_translation_offset)
+        shape = self.g.rotate(shape, rot)
+        shape = self.g.translate(shape, pos)
 
-        angle_x = np.arctan2(base_pt1[2] - base_pt2[2], base_pt1[1] - base_pt2[1])
-        angle_z = np.arctan2(base_pt1[0] - base_pt2[0], base_pt1[1] - base_pt2[1])
-
-        oled_mount_rotation_xyz = (rad2deg(angle_x), 0, -rad2deg(angle_z)) + np.array(oled_rotation_offset)
-
-    # ORIGINAL, SAVED TO CHECK
-    # def generate_trackball(pos, rot):
-    #     precut = trackball_cutout()
-    #     precut = rotate(precut, tb_socket_rotation_offset)
-    #     precut = translate(precut, tb_socket_translation_offset)
-    #     precut = rotate(precut, rot)
-    #     precut = translate(precut, pos)
-
-    #     shape, cutout, sensor = trackball_socket()
-
-    #     shape = rotate(shape, tb_socket_rotation_offset)
-    #     shape = translate(shape, tb_socket_translation_offset)
-    #     shape = rotate(shape, rot)
-    #     shape = translate(shape, pos)
-
-    #     cutout = rotate(cutout, tb_socket_rotation_offset)
-    #     cutout = translate(cutout, tb_socket_translation_offset)
-    #     # cutout = rotate(cutout, tb_sensor_translation_offset)
-    #     # cutout = translate(cutout, tb_sensor_rotation_offset)
-    #     cutout = rotate(cutout, rot)
-    #     cutout = translate(cutout, pos)
-
-    #     # Small adjustment due to line to line surface / minute numerical error issues
-    #     # Creates small overlap to assist engines in union function later
-    #     sensor = rotate(sensor, tb_socket_rotation_offset)
-    #     sensor = translate(sensor, tb_socket_translation_offset)
-    #     # sensor = rotate(sensor, tb_sensor_translation_offset)
-    #     # sensor = translate(sensor, tb_sensor_rotation_offset)
-    #     sensor = translate(sensor, (0, 0, .001))
-    #     sensor = rotate(sensor, rot)
-    #     sensor = translate(sensor, pos)
-
-    #     ball = trackball_ball()
-    #     ball = rotate(ball, tb_socket_rotation_offset)
-    #     ball = translate(ball, tb_socket_translation_offset)
-    #     ball = rotate(ball, rot)
-    #     ball = translate(ball, pos)
-
-    #     # return precut, shape, cutout, ball
-    #     return precut, shape, cutout, sensor, ball
-
-
-    def generate_trackball(pos, rot):
-        precut = trackball_cutout()
-        precut = rotate(precut, tb_socket_rotation_offset)
-        precut = translate(precut, tb_socket_translation_offset)
-        precut = rotate(precut, rot)
-        precut = translate(precut, pos)
-
-        shape, cutout, sensor = trackball_socket()
-
-        shape = rotate(shape, tb_socket_rotation_offset)
-        shape = translate(shape, tb_socket_translation_offset)
-        shape = rotate(shape, rot)
-        shape = translate(shape, pos)
-
-        cutout = rotate(cutout, tb_socket_rotation_offset)
-        cutout = translate(cutout, tb_socket_translation_offset)
-        # cutout = rotate(cutout, tb_sensor_translation_offset)
-        # cutout = translate(cutout, tb_sensor_rotation_offset)
-        cutout = rotate(cutout, rot)
-        cutout = translate(cutout, pos)
+        cutout = self.g.rotate(cutout, self.p.tb_socket_rotation_offset)
+        cutout = self.g.translate(cutout, self.p.tb_socket_translation_offset)
+        # cutout = self.g.rotate(cutout, tb_sensor_translation_offset)
+        # cutout = self.g.translate(cutout, tb_sensor_rotation_offset)
+        cutout = self.g.rotate(cutout, rot)
+        cutout = self.g.translate(cutout, pos)
 
         # Small adjustment due to line to line surface / minute numerical error issues
         # Creates small overlap to assist engines in union function later
-        sensor = rotate(sensor, tb_socket_rotation_offset)
-        sensor = translate(sensor, tb_socket_translation_offset)
-        # sensor = rotate(sensor, tb_sensor_translation_offset)
-        # sensor = translate(sensor, tb_sensor_rotation_offset)
-        sensor = translate(sensor, (0, 0, .005))
-        sensor = rotate(sensor, rot)
-        sensor = translate(sensor, pos)
+        sensor = self.g.rotate(sensor, self.p.tb_socket_rotation_offset)
+        sensor = self.g.translate(sensor, self.p.tb_socket_translation_offset)
+        # sensor = self.g.rotate(sensor, tb_sensor_translation_offset)
+        # sensor = self.g.translate(sensor, tb_sensor_rotation_offset)
+        sensor = self.g.translate(sensor, (0, 0, .005))
+        sensor = self.g.rotate(sensor, rot)
+        sensor = self.g.translate(sensor, pos)
 
-        ball = trackball_ball()
-        ball = rotate(ball, tb_socket_rotation_offset)
-        ball = translate(ball, tb_socket_translation_offset)
-        ball = rotate(ball, rot)
-        ball = translate(ball, pos)
+        ball = self.trackball_ball()
+        ball = self.g.rotate(ball, self.p.tb_socket_rotation_offset)
+        ball = self.g.translate(ball, self.p.tb_socket_translation_offset)
+        ball = self.g.rotate(ball, rot)
+        ball = self.g.translate(ball, pos)
 
         # return precut, shape, cutout, ball
         return precut, shape, cutout, sensor, ball
 
+    def generate_trackball_in_cluster(self, cluster):
+        pos, rot = cluster.position_rotation() if self.p.ball_side != "left" else self.left_cluster.position_rotation()
+        return self.generate_trackball(pos, rot)
 
-    def generate_trackball_in_cluster(cluster):
-        pos, rot = cluster.position_rotation() if ball_side != "left" else left_cluster.position_rotation()
-        return generate_trackball(pos, rot)
-
-
-    def tbiw_position_rotation():
-        base_pt1 = key_position(
-            list(np.array([-mount_width / 2, 0, 0]) + np.array([0, (mount_height / 2), 0])),
-            0, cornerrow - tbiw_ball_center_row - 1
+    def tbiw_position_rotation(self):
+        base_pt1 = self.key_position(
+            list(np.array([-self.p.mount_width / 2, 0, 0]) + np.array([0, (self.p.mount_height / 2), 0])),
+            0, self.p.cornerrow - self.p.tbiw_ball_center_row - 1
         )
-        base_pt2 = key_position(
-            list(np.array([-mount_width / 2, 0, 0]) + np.array([0, (mount_height / 2), 0])),
-            0, cornerrow - tbiw_ball_center_row + 1
+        base_pt2 = self.key_position(
+            list(np.array([-self.p.mount_width / 2, 0, 0]) + np.array([0, (self.p.mount_height / 2), 0])),
+            0, self.p.cornerrow - self.p.tbiw_ball_center_row + 1
         )
-        base_pt0 = key_position(
-            list(np.array([-mount_width / 2, 0, 0]) + np.array([0, (mount_height / 2), 0])),
-            0, cornerrow - tbiw_ball_center_row
+        base_pt0 = self.key_position(
+            list(np.array([-self.p.mount_width / 2, 0, 0]) + np.array([0, (self.p.mount_height / 2), 0])),
+            0, self.p.cornerrow - self.p.tbiw_ball_center_row
         )
 
-        left_wall_x_offset = tbiw_left_wall_x_offset_override
+        left_wall_x_offset = self.p.tbiw_left_wall_x_offset_override
 
         tbiw_mount_location_xyz = (
                 (np.array(base_pt1) + np.array(base_pt2)) / 2.
                 + np.array(((-left_wall_x_offset / 2), 0, 0))
-                + np.array(tbiw_translational_offset)
+                + np.array(self.p.tbiw_translational_offset)
         )
 
         # tbiw_mount_location_xyz[2] = (oled_translation_offset[2] + base_pt0[2])/2
 
         angle_x = np.arctan2(base_pt1[2] - base_pt2[2], base_pt1[1] - base_pt2[1])
         angle_z = np.arctan2(base_pt1[0] - base_pt2[0], base_pt1[1] - base_pt2[1])
-        tbiw_mount_rotation_xyz = (rad2deg(angle_x), 0, rad2deg(angle_z)) + np.array(tbiw_rotation_offset)
+        tbiw_mount_rotation_xyz = (rad2deg(angle_x), 0, rad2deg(angle_z)) + np.array(self.p.tbiw_rotation_offset)
 
         return tbiw_mount_location_xyz, tbiw_mount_rotation_xyz
 
+    def generate_trackball_in_wall(self):
+        pos, rot = self.tbiw_position_rotation()
+        return self.generate_trackball(pos, rot)
 
-    def generate_trackball_in_wall():
-        pos, rot = tbiw_position_rotation()
-        return generate_trackball(pos, rot)
-
-
-    def oled_position_rotation(side='right'):
+    def oled_position_rotation(self, side='right'):
         _oled_center_row = None
-        if trackball_in_wall and (side == ball_side or ball_side == 'both'):
-            _oled_center_row = tbiw_oled_center_row
-            _oled_translation_offset = tbiw_oled_translation_offset
-            _oled_rotation_offset = tbiw_oled_rotation_offset
+        _oled_translation_offset = None
+        if self.p.trackball_in_wall and (side == self.p.ball_side or self.p.ball_side == 'both'):
+            _oled_center_row = self.p.tbiw_oled_center_row
+            _oled_translation_offset = self.p.tbiw_oled_translation_offset
+            _oled_rotation_offset = self.p.tbiw_oled_rotation_offset
 
-        elif oled_center_row is not None:
-            _oled_center_row = oled_center_row
-            _oled_translation_offset = oled_translation_offset
-            _oled_rotation_offset = oled_rotation_offset
+        elif self.p.oled_center_row is not None:
+            _oled_center_row = self.p.oled_center_row
+            _oled_translation_offset = self.p.oled_translation_offset
+            _oled_rotation_offset = self.p.oled_rotation_offset
 
         if _oled_center_row is not None:
-            base_pt1 = key_position(
-                list(np.array([-mount_width/2, 0, 0]) + np.array([0, (mount_height / 2), 0])), 0, _oled_center_row-1
+            base_pt1 = self.key_position(
+                list(np.array([-self.p.mount_width / 2, 0, 0]) + np.array([0, (self.p.mount_height / 2), 0])), 0, _oled_center_row - 1
             )
-            base_pt2 = key_position(
-                list(np.array([-mount_width/2, 0, 0]) + np.array([0, (mount_height / 2), 0])), 0, _oled_center_row+1
+            base_pt2 = self.key_position(
+                list(np.array([-self.p.mount_width / 2, 0, 0]) + np.array([0, (self.p.mount_height / 2), 0])), 0, _oled_center_row + 1
             )
-            base_pt0 = key_position(
-                list(np.array([-mount_width / 2, 0, 0]) + np.array([0, (mount_height / 2), 0])), 0, _oled_center_row
+            base_pt0 = self.key_position(
+                list(np.array([-self.p.mount_width / 2, 0, 0]) + np.array([0, (self.p.mount_height / 2), 0])), 0, _oled_center_row
             )
 
-            if trackball_in_wall and (side == ball_side or ball_side == 'both'):
-                _left_wall_x_offset = tbiw_left_wall_x_offset_override
+            if self.p.trackball_in_wall and (side == self.p.ball_side or self.p.ball_side == 'both'):
+                _left_wall_x_offset = self.p.tbiw_left_wall_x_offset_override
             else:
-                _left_wall_x_offset = left_wall_x_offset
+                _left_wall_x_offset = self.p.left_wall_x_offset
 
-            oled_mount_location_xyz = (np.array(base_pt1)+np.array(base_pt2))/2. + np.array(((-_left_wall_x_offset/2), 0, 0)) + np.array(_oled_translation_offset)
-            oled_mount_location_xyz[2] = (oled_mount_location_xyz[2] + base_pt0[2])/2
+            oled_mount_location_xyz = (np.array(base_pt1) + np.array(base_pt2)) / 2. + np.array(
+                ((-_left_wall_x_offset / 2), 0, 0)) + np.array(_oled_translation_offset)
+            oled_mount_location_xyz[2] = (oled_mount_location_xyz[2] + base_pt0[2]) / 2
 
             angle_x = np.arctan2(base_pt1[2] - base_pt2[2], base_pt1[1] - base_pt2[1])
             angle_z = np.arctan2(base_pt1[0] - base_pt2[0], base_pt1[1] - base_pt2[1])
-            if trackball_in_wall and (side == ball_side or ball_side == 'both'):
+            if self.p.trackball_in_wall and (side == self.p.ball_side or self.p.ball_side == 'both'):
                 # oled_mount_rotation_xyz = (0, rad2deg(angle_x), -rad2deg(angle_z)-90) + np.array(oled_rotation_offset)
                 # oled_mount_rotation_xyz = (rad2deg(angle_x)*.707, rad2deg(angle_x)*.707, -45) + np.array(oled_rotation_offset)
                 oled_mount_rotation_xyz = (0, rad2deg(angle_x), -90) + np.array(_oled_rotation_offset)
@@ -1514,87 +1526,87 @@ def make_dactyl():
 
         return oled_mount_location_xyz, oled_mount_rotation_xyz
 
-
-    def oled_sliding_mount_frame(side='right'):
-        mount_ext_width = oled_mount_width + 2 * oled_mount_rim
+    def oled_sliding_mount_frame(self, side='right'):
+        mount_ext_width = self.p.oled_mount_width + 2 * self.p.oled_mount_rim
         mount_ext_height = (
-                oled_mount_height + 2 * oled_edge_overlap_end
-                + oled_edge_overlap_connector + oled_edge_overlap_clearance
-                + 2 * oled_mount_rim
+                self.p.oled_mount_height + 2 * self.p.oled_edge_overlap_end
+                + self.p.oled_edge_overlap_connector + self.p.oled_edge_overlap_clearance
+                + 2 *self.p.oled_mount_rim
         )
-        mount_ext_up_height = oled_mount_height + 2 * oled_mount_rim
-        top_hole_start = -mount_ext_height / 2.0 + oled_mount_rim + oled_edge_overlap_end + oled_edge_overlap_connector
-        top_hole_length = oled_mount_height
+        mount_ext_up_height = self.p.oled_mount_height + 2 * self.p.oled_mount_rim
+        top_hole_start = -mount_ext_height / 2.0 + self.p.oled_mount_rim + self.p.oled_edge_overlap_end + self.p.oled_edge_overlap_connector
+        top_hole_length = self.p.oled_mount_height
 
-        hole = box(mount_ext_width, mount_ext_up_height, oled_mount_cut_depth + .01)
-        hole = translate(hole, (0., top_hole_start + top_hole_length / 2, 0.))
+        hole = self.g.box(mount_ext_width, mount_ext_up_height, self.p.oled_mount_cut_depth + .01)
+        hole = self.g.translate(hole, (0., top_hole_start + top_hole_length / 2, 0.))
 
-        hole_down = box(mount_ext_width, mount_ext_height, oled_mount_depth + oled_mount_cut_depth / 2)
-        hole_down = translate(hole_down, (0., 0., -oled_mount_cut_depth / 4))
-        hole = union([hole, hole_down])
+        hole_down = self.g.box(mount_ext_width, mount_ext_height, self.p.oled_mount_depth + self.p.oled_mount_cut_depth / 2)
+        hole_down = self.g.translate(hole_down, (0., 0., -self.p.oled_mount_cut_depth / 4))
+        hole = self.g.union([hole, hole_down])
 
-        shape = box(mount_ext_width, mount_ext_height, oled_mount_depth)
+        shape = self.g.box(mount_ext_width, mount_ext_height, self.p.oled_mount_depth)
 
-        conn_hole_start = -mount_ext_height / 2.0 + oled_mount_rim
+        conn_hole_start = -mount_ext_height / 2.0 + self.p.oled_mount_rim
         conn_hole_length = (
-                oled_edge_overlap_end + oled_edge_overlap_connector
-                + oled_edge_overlap_clearance + oled_thickness
+                self.p.oled_edge_overlap_end + self.p.oled_edge_overlap_connector
+                + self.p.oled_edge_overlap_clearance + self.p.oled_thickness
         )
-        conn_hole = box(oled_mount_width, conn_hole_length + .01, oled_mount_depth)
-        conn_hole = translate(conn_hole, (
+        conn_hole = self.g.box(self.p.oled_mount_width, conn_hole_length + .01, self.p.oled_mount_depth)
+        conn_hole = self.g.translate(conn_hole, (
             0,
             conn_hole_start + conn_hole_length / 2,
-            -oled_edge_overlap_thickness
+            -self.p.oled_edge_overlap_thickness
         ))
 
         end_hole_length = (
-                oled_edge_overlap_end + oled_edge_overlap_clearance
+                self.p.oled_edge_overlap_end + self.p.oled_edge_overlap_clearance
         )
-        end_hole_start = mount_ext_height / 2.0 - oled_mount_rim - end_hole_length
-        end_hole = box(oled_mount_width, end_hole_length + .01, oled_mount_depth)
-        end_hole = translate(end_hole, (
+        end_hole_start = mount_ext_height / 2.0 - self.p.oled_mount_rim - end_hole_length
+        end_hole = self.g.box(self.p.oled_mount_width, end_hole_length + .01, self.p.oled_mount_depth)
+        end_hole = self.g.translate(end_hole, (
             0,
             end_hole_start + end_hole_length / 2,
-            -oled_edge_overlap_thickness
+            -self.p.oled_edge_overlap_thickness
         ))
 
-        top_hole_start = -mount_ext_height / 2.0 + oled_mount_rim + oled_edge_overlap_end + oled_edge_overlap_connector
-        top_hole_length = oled_mount_height
-        top_hole = box(oled_mount_width, top_hole_length, oled_edge_overlap_thickness + oled_thickness - oled_edge_chamfer)
-        top_hole = translate(top_hole, (
+        top_hole_start = -mount_ext_height / 2.0 + self.p.oled_mount_rim + self.p.oled_edge_overlap_end + self.p.oled_edge_overlap_connector
+        top_hole_length = self.p.oled_mount_height
+        top_hole = self.g.box(self.p.oled_mount_width, top_hole_length,
+                       self.p.oled_edge_overlap_thickness + self.p.oled_thickness - self.p.oled_edge_chamfer)
+        top_hole = self.g.translate(top_hole, (
             0,
             top_hole_start + top_hole_length / 2,
-            (oled_mount_depth - oled_edge_overlap_thickness - oled_thickness - oled_edge_chamfer) / 2.0
+            (self.p.oled_mount_depth - self.p.oled_edge_overlap_thickness - self.p.oled_thickness - self.p.oled_edge_chamfer) / 2.0
         ))
 
-        top_chamfer_1 = box(
-            oled_mount_width,
+        top_chamfer_1 = self.g.box(
+            self.p.oled_mount_width,
             top_hole_length,
             0.01
         )
-        top_chamfer_2 = box(
-            oled_mount_width + 2 * oled_edge_chamfer,
-            top_hole_length + 2 * oled_edge_chamfer,
+        top_chamfer_2 = self.g.box(
+            self.p.oled_mount_width + 2 * self.p.oled_edge_chamfer,
+            top_hole_length + 2 * self.p.oled_edge_chamfer,
             0.01
         )
-        top_chamfer_1 = translate(top_chamfer_1, (0, 0, -oled_edge_chamfer - .05))
+        top_chamfer_1 = self.g.translate(top_chamfer_1, (0, 0, -self.p.oled_edge_chamfer - .05))
 
-        top_chamfer_1 = hull_from_shapes([top_chamfer_1, top_chamfer_2])
+        top_chamfer_1 = self.g.hull_from_shapes([top_chamfer_1, top_chamfer_2])
 
-        top_chamfer_1 = translate(top_chamfer_1, (
+        top_chamfer_1 = self.g.translate(top_chamfer_1, (
             0,
             top_hole_start + top_hole_length / 2,
-            oled_mount_depth / 2.0 + .05
+            self.p.oled_mount_depth / 2.0 + .05
         ))
 
-        top_hole = union([top_hole, top_chamfer_1])
+        top_hole = self.g.union([top_hole, top_chamfer_1])
 
-        shape = difference(shape, [conn_hole, top_hole, end_hole])
+        shape = self.g.difference(shape, [conn_hole, top_hole, end_hole])
 
-        oled_mount_location_xyz, oled_mount_rotation_xyz = oled_position_rotation(side=side)
+        oled_mount_location_xyz, oled_mount_rotation_xyz = self.oled_position_rotation(side=side)
 
-        shape = rotate(shape, oled_mount_rotation_xyz)
-        shape = translate(shape,
+        shape = self.g.rotate(shape, oled_mount_rotation_xyz)
+        shape = self.g.translate(shape,
                           (
                               oled_mount_location_xyz[0],
                               oled_mount_location_xyz[1],
@@ -1602,8 +1614,8 @@ def make_dactyl():
                           )
                           )
 
-        hole = rotate(hole, oled_mount_rotation_xyz)
-        hole = translate(hole,
+        hole = self.g.rotate(hole, oled_mount_rotation_xyz)
+        hole = self.g.translate(hole,
                          (
                              oled_mount_location_xyz[0],
                              oled_mount_location_xyz[1],
@@ -1612,47 +1624,46 @@ def make_dactyl():
                          )
         return hole, shape
 
-
-    def oled_clip_mount_frame(side='right'):
-        mount_ext_width = oled_mount_width + 2 * oled_mount_rim
+    def oled_clip_mount_frame(self, side='right'):
+        mount_ext_width = self.p.oled_config.oled_mount_width + 2 * self.p.oled_config.oled_mount_rim
         mount_ext_height = (
-                oled_mount_height + 2 * oled_clip_thickness
-                + 2 * oled_clip_undercut + 2 * oled_clip_overhang + 2 * oled_mount_rim
+                self.p.oled_config.oled_mount_height + 2 * self.p.oled_config.oled_clip_thickness
+                + 2 * self.p.oled_config.oled_clip_undercut + 2 * self.p.oled_config.oled_clip_overhang + 2 * self.p.oled_config.oled_mount_rim
         )
-        hole = box(mount_ext_width, mount_ext_height, oled_mount_cut_depth + .01)
+        hole = self.g.box(mount_ext_width, mount_ext_height, self.p.oled_config.oled_mount_cut_depth + .01)
 
-        shape = box(mount_ext_width, mount_ext_height, oled_mount_depth)
-        shape = difference(shape, [box(oled_mount_width, oled_mount_height, oled_mount_depth + .1)])
+        shape = self.g.box(mount_ext_width, mount_ext_height, self.p.oled_config.oled_mount_depth)
+        shape = self.g.difference(shape, [self.g.box(self.p.oled_config.oled_mount_width, self.p.oled_config.oled_mount_height, self.p.oled_config.oled_mount_depth + .1)])
 
-        clip_slot = box(
-            oled_clip_width + 2 * oled_clip_width_clearance,
-            oled_mount_height + 2 * oled_clip_thickness + 2 * oled_clip_overhang,
-            oled_mount_depth + .1
-        )
-
-        shape = difference(shape, [clip_slot])
-
-        clip_undercut = box(
-            oled_clip_width + 2 * oled_clip_width_clearance,
-            oled_mount_height + 2 * oled_clip_thickness + 2 * oled_clip_overhang + 2 * oled_clip_undercut,
-            oled_mount_depth + .1
+        clip_slot = self.g.box(
+            self.p.oled_config.oled_clip_width + 2 * self.p.oled_config.oled_clip_width_clearance,
+            self.p.oled_config.oled_mount_height + 2 * self.p.oled_config.oled_clip_thickness + 2 * self.p.oled_config.oled_clip_overhang,
+            self.p.oled_config.oled_mount_depth + .1
         )
 
-        clip_undercut = translate(clip_undercut, (0., 0., oled_clip_undercut_thickness))
-        shape = difference(shape, [clip_undercut])
+        shape = self.g.difference(shape, [clip_slot])
 
-        plate = box(
-            oled_mount_width + .1,
-            oled_mount_height - 2 * oled_mount_connector_hole,
-            oled_mount_depth - oled_thickness
+        clip_undercut = self.g.box(
+            self.p.oled_config.oled_clip_width + 2 * self.p.oled_config.oled_clip_width_clearance,
+            self.p.oled_config.oled_mount_height + 2 * self.p.oled_config.oled_clip_thickness + 2 * self.p.oled_config.oled_clip_overhang + 2 * self.p.oled_config.oled_clip_undercut,
+            self.p.oled_config.oled_mount_depth + .1
         )
-        plate = translate(plate, (0., 0., -oled_thickness / 2.0))
-        shape = union([shape, plate])
 
-        oled_mount_location_xyz, oled_mount_rotation_xyz = oled_position_rotation(side=side)
+        clip_undercut = self.g.translate(clip_undercut, (0., 0., self.p.oled_config.oled_clip_undercut_thickness))
+        shape = self.g.difference(shape, [clip_undercut])
 
-        shape = rotate(shape, oled_mount_rotation_xyz)
-        shape = translate(shape,
+        plate = self.g.box(
+            self.p.oled_config.oled_mount_width + .1,
+            self.p.oled_config.oled_mount_height - 2 * self.p.oled_config.oled_mount_connector_hole,
+            self.p.oled_config.oled_mount_depth - self.p.oled_config.oled_thickness
+        )
+        plate = self.g.translate(plate, (0., 0., -self.p.oled_config.oled_thickness / 2.0))
+        shape = self.g.union([shape, plate])
+
+        oled_mount_location_xyz, oled_mount_rotation_xyz = self.oled_position_rotation(side=side)
+
+        shape = self.g.rotate(shape, oled_mount_rotation_xyz)
+        shape = self.g.translate(shape,
                           (
                               oled_mount_location_xyz[0],
                               oled_mount_location_xyz[1],
@@ -1660,8 +1671,8 @@ def make_dactyl():
                           )
                           )
 
-        hole = rotate(hole, oled_mount_rotation_xyz)
-        hole = translate(hole,
+        hole = self.g.rotate(hole, oled_mount_rotation_xyz)
+        hole = self.g.translate(hole,
                          (
                              oled_mount_location_xyz[0],
                              oled_mount_location_xyz[1],
@@ -1671,98 +1682,96 @@ def make_dactyl():
 
         return hole, shape
 
-
-    def oled_clip():
-        mount_ext_width = oled_mount_width + 2 * oled_mount_rim
+    def oled_clip(self):
+        mount_ext_width = self.p.oled_config.oled_mount_width + 2 * self.p.oled_config.oled_mount_rim
         mount_ext_height = (
-                oled_mount_height + 2 * oled_clip_thickness + 2 * oled_clip_overhang
-                + 2 * oled_clip_undercut + 2 * oled_mount_rim
+                self.p.oled_config.oled_mount_height + 2 * self.p.oled_config.oled_clip_thickness + 2 * self.p.oled_config.oled_clip_overhang
+                + 2 * self.p.oled_config.oled_clip_undercut + 2 * self.p.oled_config.oled_mount_rim
         )
 
-        oled_leg_depth = oled_mount_depth + oled_clip_z_gap
+        oled_leg_depth = self.p.oled_config.oled_mount_depth + self.p.oled_config.oled_clip_z_gap
 
-        shape = box(mount_ext_width - .1, mount_ext_height - .1, oled_mount_bezel_thickness)
-        shape = translate(shape, (0., 0., oled_mount_bezel_thickness / 2.))
+        shape = self.g.box(mount_ext_width - .1, mount_ext_height - .1, self.p.oled_config.oled_mount_bezel_thickness)
+        shape = self.g.translate(shape, (0., 0., self.p.oled_config.oled_mount_bezel_thickness / 2.))
 
-        hole_1 = box(
-            oled_screen_width + 2 * oled_mount_bezel_chamfer,
-            oled_screen_length + 2 * oled_mount_bezel_chamfer,
+        hole_1 = self.g.box(
+            self.p.oled_config.oled_screen_width + 2 * self.p.oled_config.oled_mount_bezel_chamfer,
+            self.p.oled_config.oled_screen_length + 2 * self.p.oled_config.oled_mount_bezel_chamfer,
             .01
         )
-        hole_2 = box(oled_screen_width, oled_screen_length, 2.05 * oled_mount_bezel_thickness)
-        hole = hull_from_shapes([hole_1, hole_2])
+        hole_2 = self.g.box(self.p.oled_config.oled_screen_width, self.p.oled_config.oled_screen_length, 2.05 * self.p.oled_config.oled_mount_bezel_thickness)
+        hole = self.g.hull_from_shapes([hole_1, hole_2])
 
-        shape = difference(shape, [translate(hole, (0., 0., oled_mount_bezel_thickness))])
+        shape = self.g.difference(shape, [self.g.translate(hole, (0., 0., self.p.oled_config.oled_mount_bezel_thickness))])
 
-        clip_leg = box(oled_clip_width, oled_clip_thickness, oled_leg_depth)
-        clip_leg = translate(clip_leg, (
+        clip_leg = self.g.box(self.p.oled_config.oled_clip_width, self.p.oled_config.oled_clip_thickness, oled_leg_depth)
+        clip_leg = self.g.translate(clip_leg, (
             0.,
             0.,
             # (oled_mount_height+2*oled_clip_overhang+oled_clip_thickness)/2,
             -oled_leg_depth / 2.
         ))
 
-        latch_1 = box(
-            oled_clip_width,
-            oled_clip_overhang + oled_clip_thickness,
+        latch_1 = self.g.box(
+            self.p.oled_config.oled_clip_width,
+            self.p.oled_config.oled_clip_overhang + self.p.oled_config.oled_clip_thickness,
             .01
         )
-        latch_2 = box(
-            oled_clip_width,
-            oled_clip_thickness / 2,
-            oled_clip_extension
+        latch_2 = self.g.box(
+            self.p.oled_config.oled_clip_width,
+            self.p.oled_config.oled_clip_thickness / 2,
+            self.p.oled_config.oled_clip_extension
         )
-        latch_2 = translate(latch_2, (
+        latch_2 = self.g.translate(latch_2, (
             0.,
-            -(-oled_clip_thickness / 2 + oled_clip_thickness + oled_clip_overhang) / 2,
-            -oled_clip_extension / 2
+            -(-self.p.oled_config.oled_clip_thickness / 2 + self.p.oled_config.oled_clip_thickness + self.p.oled_config.oled_clip_overhang) / 2,
+            -self.p.oled_config.oled_clip_extension / 2
         ))
-        latch = hull_from_shapes([latch_1, latch_2])
-        latch = translate(latch, (
+        latch = self.g.hull_from_shapes([latch_1, latch_2])
+        latch = self.g.translate(latch, (
             0.,
-            oled_clip_overhang / 2,
+            self.p.oled_config.oled_clip_overhang / 2,
             -oled_leg_depth
         ))
 
-        clip_leg = union([clip_leg, latch])
+        clip_leg = self.g.union([clip_leg, latch])
 
-        clip_leg = translate(clip_leg, (
+        clip_leg = self.g.translate(clip_leg, (
             0.,
-            (oled_mount_height + 2 * oled_clip_overhang + oled_clip_thickness) / 2 - oled_clip_y_gap,
+            (self.p.oled_config.oled_mount_height + 2 * self.p.oled_config.oled_clip_overhang + self.p.oled_config.oled_clip_thickness) / 2 - self.p.oled_config.oled_clip_y_gap,
             0.
         ))
 
-        shape = union([shape, clip_leg, mirror(clip_leg, 'XZ')])
+        shape = self.g.union([shape, clip_leg, self.g.mirror(clip_leg, 'XZ')])
 
         return shape
 
+    def oled_undercut_mount_frame(self, side='right'):
+        mount_ext_width = self.p.oled_config.oled_mount_width + 2 * self.p.oled_config.oled_mount_rim
+        mount_ext_height = self.p.oled_config.oled_mount_height + 2 * self.p.oled_config.oled_mount_rim
+        hole = self.g.box(mount_ext_width, mount_ext_height, self.p.oled_config.oled_mount_cut_depth + .01)
 
-    def oled_undercut_mount_frame(side='right'):
-        mount_ext_width = oled_mount_width + 2 * oled_mount_rim
-        mount_ext_height = oled_mount_height + 2 * oled_mount_rim
-        hole = box(mount_ext_width, mount_ext_height, oled_mount_cut_depth + .01)
+        shape = self.g.box(mount_ext_width, mount_ext_height, self.p.oled_config.oled_mount_depth)
+        shape = self.g.difference(shape, [self.g.box(self.p.oled_config.oled_mount_width, self.p.oled_config.oled_mount_height, self.p.oled_config.oled_mount_depth + .1)])
+        undercut = self.g.box(
+            self.p.oled_config.oled_mount_width + 2 * self.p.oled_config.oled_mount_undercut,
+            self.p.oled_config.oled_mount_height + 2 * self.p.oled_config.oled_mount_undercut,
+            self.p.oled_config.oled_mount_depth)
+        undercut = self.g.translate(undercut, (0., 0., -self.p.oled_config.oled_mount_undercut_thickness))
+        shape = self.g.difference(shape, [undercut])
 
-        shape = box(mount_ext_width, mount_ext_height, oled_mount_depth)
-        shape = difference(shape, [box(oled_mount_width, oled_mount_height, oled_mount_depth + .1)])
-        undercut = box(
-            oled_mount_width + 2 * oled_mount_undercut,
-            oled_mount_height + 2 * oled_mount_undercut,
-            oled_mount_depth)
-        undercut = translate(undercut, (0., 0., -oled_mount_undercut_thickness))
-        shape = difference(shape, [undercut])
+        oled_mount_location_xyz, oled_mount_rotation_xyz = self.oled_position_rotation(side=side)
 
-        oled_mount_location_xyz, oled_mount_rotation_xyz = oled_position_rotation(side=side)
-
-        shape = rotate(shape, oled_mount_rotation_xyz)
-        shape = translate(shape, (
+        shape = self.g.rotate(shape, oled_mount_rotation_xyz)
+        shape = self.g.translate(shape, (
             oled_mount_location_xyz[0],
             oled_mount_location_xyz[1],
             oled_mount_location_xyz[2],
         )
                           )
 
-        hole = rotate(hole, oled_mount_rotation_xyz)
-        hole = translate(hole, (
+        hole = self.g.rotate(hole, oled_mount_rotation_xyz)
+        hole = self.g.translate(hole, (
             oled_mount_location_xyz[0],
             oled_mount_location_xyz[1],
             oled_mount_location_xyz[2],
@@ -1771,89 +1780,86 @@ def make_dactyl():
 
         return hole, shape
 
-
-    def teensy_holder():
+    def teensy_holder(self):
         print('teensy_holder()')
-        teensy_top_xy = key_position(wall_locate3(-1, 0), 0, centerrow - 1)
-        teensy_bot_xy = key_position(wall_locate3(-1, 0), 0, centerrow + 1)
+        teensy_top_xy = self.key_position(self.wall_locate3(-1, 0), 0, self.p.centerrow - 1)
+        teensy_bot_xy = self.key_position(self.wall_locate3(-1, 0), 0, self.p.centerrow + 1)
         teensy_holder_length = teensy_top_xy[1] - teensy_bot_xy[1]
         teensy_holder_offset = -teensy_holder_length / 2
-        teensy_holder_top_offset = (teensy_holder_top_length / 2) - teensy_holder_length
+        teensy_holder_top_offset = (self.p.teensy_holder_top_length / 2) - teensy_holder_length
 
-        s1 = box(3, teensy_holder_length, 6 + teensy_width)
-        s1 = translate(s1, [1.5, teensy_holder_offset, 0])
+        s1 = self.g.box(3, teensy_holder_length, 6 + self.p.teensy_width)
+        s1 = self.g.translate(s1, [1.5, teensy_holder_offset, 0])
 
-        s2 = box(teensy_pcb_thickness, teensy_holder_length, 3)
-        s2 = translate(s2,
+        s2 = self.g.box(self.p.teensy_pcb_thickness, teensy_holder_length, 3)
+        s2 = self.g.translate(s2,
                        (
-                           (teensy_pcb_thickness / 2) + 3,
+                           (self.p.teensy_pcb_thickness / 2) + 3,
                            teensy_holder_offset,
-                           -1.5 - (teensy_width / 2),
+                           -1.5 - (self.p.teensy_width / 2),
                        )
                        )
 
-        s3 = box(teensy_pcb_thickness, teensy_holder_top_length, 3)
-        s3 = translate(s3,
+        s3 = self.g.box(self.p.teensy_pcb_thickness, self.p.teensy_holder_top_length, 3)
+        s3 = self.g.translate(s3,
                        [
-                           (teensy_pcb_thickness / 2) + 3,
+                           (self.p.teensy_pcb_thickness / 2) + 3,
                            teensy_holder_top_offset,
-                           1.5 + (teensy_width / 2),
+                           1.5 + (self.p.teensy_width / 2),
                        ]
                        )
 
-        s4 = box(4, teensy_holder_top_length, 4)
-        s4 = translate(s4,
-                       [teensy_pcb_thickness + 5, teensy_holder_top_offset, 1 + (teensy_width / 2)]
+        s4 = self.g.box(4, self.p.teensy_holder_top_length, 4)
+        s4 = self.g.translate(s4,
+                       [self.p.teensy_pcb_thickness + 5, teensy_holder_top_offset, 1 + (self.p.teensy_width / 2)]
                        )
 
-        shape = union((s1, s2, s3, s4))
+        shape = self.g.union((s1, s2, s3, s4))
 
-        shape = translate(shape, [-teensy_holder_width, 0, 0])
-        shape = translate(shape, [-1.4, 0, 0])
-        shape = translate(shape,
-                          [teensy_top_xy[0], teensy_top_xy[1] - 1, (6 + teensy_width) / 2]
+        shape = self.g.translate(shape, [-self.p.teensy_holder_width, 0, 0])
+        shape = self.g.translate(shape, [-1.4, 0, 0])
+        shape = self.g.translate(shape,
+                          [teensy_top_xy[0], teensy_top_xy[1] - 1, (6 + self.p.teensy_width) / 2]
                           )
 
         return shape
 
-
-    def screw_insert_shape(bottom_radius, top_radius, height):
+    def screw_insert_shape(self, bottom_radius, top_radius, height):
         debugprint('screw_insert_shape()')
         if bottom_radius == top_radius:
-            base = cylinder(radius=bottom_radius, height=height)
-            # base = translate(cylinder(radius=bottom_radius, height=height),
+            base = self.g.cylinder(radius=bottom_radius, height=height)
+            # base = self.g.translate(cylinder(radius=bottom_radius, height=height),
             #                  (0, 0, -height / 2)
             #                  )
         else:
-            base = translate(cone(r1=bottom_radius, r2=top_radius, height=height), (0, 0, -height / 2))
+            base = self.g.translate(self.g.cone(r1=bottom_radius, r2=top_radius, height=height), (0, 0, -height / 2))
 
-        shape = union((
+        shape = self.g.union((
             base,
-            translate(sphere(top_radius), (0, 0, height / 2)),
+            self.g.translate(self.g.sphere(top_radius), (0, 0, height / 2)),
         ))
         return shape
 
-
-    def screw_insert(column, row, bottom_radius, top_radius, height, side='right'):
+    def screw_insert(self, column, row, bottom_radius, top_radius, height, side='right'):
         debugprint('screw_insert()')
-        shift_right = column == lastcol
+        shift_right = column == self.p.lastcol
         shift_left = column == 0
         shift_up = (not (shift_right or shift_left)) and (row == 0)
-        shift_down = (not (shift_right or shift_left)) and (row >= lastrow)
+        shift_down = (not (shift_right or shift_left)) and (row >= self.p.lastrow)
 
-        if screws_offset == 'INSIDE':
+        if self.p.screws_offset == 'INSIDE':
             # debugprint('Shift Inside')
-            shift_left_adjust = wall_base_x_thickness
-            shift_right_adjust = -wall_base_x_thickness / 2
-            shift_down_adjust = -wall_base_y_thickness / 2
-            shift_up_adjust = -wall_base_y_thickness / 3
+            shift_left_adjust = self.p.wall_base_x_thickness
+            shift_right_adjust = -self.p.wall_base_x_thickness / 2
+            shift_down_adjust = -self.p.wall_base_y_thickness / 2
+            shift_up_adjust = -self.p.wall_base_y_thickness / 3
 
-        elif screws_offset == 'OUTSIDE':
+        elif self.p.screws_offset == 'OUTSIDE':
             debugprint('Shift Outside')
             shift_left_adjust = 0
-            shift_right_adjust = wall_base_x_thickness / 2
-            shift_down_adjust = wall_base_y_thickness * 2 / 3
-            shift_up_adjust = wall_base_y_thickness * 2 / 3
+            shift_right_adjust = self.p.wall_base_x_thickness / 2
+            shift_down_adjust = self.p.wall_base_y_thickness * 2 / 3
+            shift_up_adjust = self.p.wall_base_y_thickness * 2 / 3
 
         else:
             # debugprint('Shift Origin')
@@ -1863,60 +1869,57 @@ def make_dactyl():
             shift_up_adjust = 0
 
         if shift_up:
-            position = key_position(
-                list(np.array(wall_locate2(0, 1)) + np.array([0, (mount_height / 2) + shift_up_adjust, 0])),
+            position = self.key_position(
+                list(np.array(self.wall_locate2(0, 1)) + np.array([0, (self.p.mount_height / 2) + shift_up_adjust, 0])),
                 column,
                 row,
             )
         elif shift_down:
-            position = key_position(
-                list(np.array(wall_locate2(0, -1)) - np.array([0, (mount_height / 2) + shift_down_adjust, 0])),
+            position = self.key_position(
+                list(np.array(self.wall_locate2(0, -1)) - np.array([0, (self.p.mount_height / 2) + shift_down_adjust, 0])),
                 column,
                 row,
             )
         elif shift_left:
             position = list(
-                np.array(left_key_position(row, 0, side=side)) + np.array(wall_locate3(-1, 0)) + np.array(
+                np.array(self.left_key_position(row, 0, side=side)) + np.array(self.wall_locate3(-1, 0)) + np.array(
                     (shift_left_adjust, 0, 0))
             )
         else:
-            position = key_position(
-                list(np.array(wall_locate2(1, 0)) + np.array([(mount_height / 2), 0, 0]) + np.array(
+            position = self.key_position(
+                list(np.array(self.wall_locate2(1, 0)) + np.array([(self.p.mount_height / 2), 0, 0]) + np.array(
                     (shift_right_adjust, 0, 0))
                      ),
                 column,
                 row,
             )
 
-        shape = screw_insert_shape(bottom_radius, top_radius, height)
-        shape = translate(shape, [position[0], position[1], height / 2])
+        shape = self.screw_insert_shape(bottom_radius, top_radius, height)
+        shape = self.g.translate(shape, [position[0], position[1], height / 2])
 
         return shape
 
+    def screw_insert_thumb(self, bottom_radius, top_radius, height, side='right'):
+        position = self.cluster(side).screw_positions()
 
-    def screw_insert_thumb(bottom_radius, top_radius, height, side='right'):
-        position = cluster(side).screw_positions()
-
-        shape = screw_insert_shape(bottom_radius, top_radius, height)
-        shape = translate(shape, [position[0], position[1], height / 2])
+        shape = self.screw_insert_shape(bottom_radius, top_radius, height)
+        shape = self.g.translate(shape, [position[0], position[1], height / 2])
         return shape
-
 
     # def screw_insert_all_shapes(bottom_radius, top_radius, height, offset=0, side='right'):
     #     print('screw_insert_all_shapes()')
     #     shape = (
-    #         translate(screw_insert(0, 0, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
-    #         translate(screw_insert(0, lastrow - 1, bottom_radius, top_radius, height, side=side),
+    #         self.g.translate(screw_insert(0, 0, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
+    #         self.g.translate(screw_insert(0, lastrow - 1, bottom_radius, top_radius, height, side=side),
     #                   (0, left_wall_lower_y_offset, offset)),
-    #         translate(screw_insert(3, lastrow, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
-    #         translate(screw_insert(3, 0, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
-    #         translate(screw_insert(lastcol, 0, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
-    #         translate(screw_insert(lastcol, lastrow - 1, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
-    #         translate(screw_insert_thumb(bottom_radius, top_radius, height, side=side), (0, 0, offset)),
+    #         self.g.translate(screw_insert(3, lastrow, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
+    #         self.g.translate(screw_insert(3, 0, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
+    #         self.g.translate(screw_insert(lastcol, 0, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
+    #         self.g.translate(screw_insert(lastcol, lastrow - 1, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
+    #         self.g.translate(screw_insert_thumb(bottom_radius, top_radius, height, side=side), (0, 0, offset)),
     #     )
 
     #     return shape
-
 
     ## TODO: Check against thumb cluster definitions
     # def thumb_screw_insert(bottom_radius, top_radius, height, offset=None, side='right'):
@@ -1975,25 +1978,25 @@ def make_dactyl():
 
     #     return shapes
 
-    def screw_insert_all_shapes(bottom_radius, top_radius, height, offset=0, side='right'):
+    def screw_insert_all_shapes(self, bottom_radius, top_radius, height, offset=0, side='right'):
         print('screw_insert_all_shapes()')
         shape = (
-            translate(screw_insert(0, 0, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
-            translate(screw_insert(0, cornerrow, bottom_radius, top_radius, height, side=side), (0, left_wall_lower_y_offset, offset)),
-            translate(screw_insert(3, lastrow, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
-            translate(screw_insert(3, 0, bottom_radius, top_radius, height, side=side), (0,0, offset)),
-            translate(screw_insert(lastcol, 0, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
-            translate(screw_insert(lastcol, cornerrow, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
-            # translate(screw_insert_thumb(bottom_radius, top_radius, height), (0, 0, offset)),
+            self.g.translate(self.screw_insert(0, 0, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
+            self.g.translate(self.screw_insert(0, self.p.cornerrow, bottom_radius, top_radius, height, side=side),
+                      (0, self.p.left_wall_lower_y_offset, offset)),
+            self.g.translate(self.screw_insert(3, self.p.lastrow, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
+            self.g.translate(self.screw_insert(3, 0, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
+            self.g.translate(self.screw_insert(self.p.lastcol, 0, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
+            self.g.translate(self.screw_insert(self.p.lastcol, self.p.cornerrow, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
+            # self.g.translate(screw_insert_thumb(bottom_radius, top_radius, height), (0, 0, offset)),
         )
 
         return shape
 
-    def screw_insert_holes(side='right'):
-        return screw_insert_all_shapes(
-            screw_insert_bottom_radius, screw_insert_top_radius, screw_insert_height + .02, offset=-.01, side=side
+    def screw_insert_holes(self, side='right'):
+        return self.screw_insert_all_shapes(
+            self.p.screw_insert_bottom_radius, self.p.screw_insert_top_radius, self.p.screw_insert_height + .02, offset=-.01, side=side
         )
-
 
     # def screw_insert_outers(side='right'):
     #     return screw_insert_all_shapes(
@@ -2003,431 +2006,235 @@ def make_dactyl():
     #         side=side
     #     )
 
-    def screw_insert_outers(offset=0.0, side='right'):
+    def screw_insert_outers(self, offset=0.0, side='right'):
         # screw_insert_bottom_radius + screw_insert_wall
         # screw_insert_top_radius + screw_insert_wall
-        bottom_radius = screw_insert_outer_radius
-        top_radius = screw_insert_outer_radius
-        height = screw_insert_height + 1.5
-        return screw_insert_all_shapes(bottom_radius, top_radius, height, offset=offset, side=side)
+        bottom_radius = self.p.screw_insert_outer_radius
+        top_radius = self.p.screw_insert_outer_radius
+        height = self.p.screw_insert_height + 1.5
+        return self.screw_insert_all_shapes(bottom_radius, top_radius, height, offset=offset, side=side)
 
-
-
-    def screw_insert_screw_holes(side='right'):
-        return screw_insert_all_shapes(1.7, 1.7, 350, side=side)
-
-
-
-
-    # def model_side(side="right"):
-    #     print('model_side()' + side)
-    #     shape = union([key_holes(side=side)])
-    #     if debug_exports:
-    #         export_file(shape=shape, fname=path.join(r"..", "things", r"debug_key_plates"))
-    #     connector_shape = connectors()
-    #     shape = union([shape, connector_shape])
-    #     if debug_exports:
-    #         export_file(shape=shape, fname=path.join(r"..", "things", r"debug_connector_shape"))
-    #     thumb_shape = cluster(side).thumb(side=side)
-    #     if debug_exports:
-    #         export_file(shape=thumb_shape, fname=path.join(r"..", "things", r"debug_thumb_shape"))
-    #     shape = union([shape, thumb_shape])
-    #     thumb_connector_shape = cluster(side).thumb_connectors(side=side)
-    #     shape = union([shape, thumb_connector_shape])
-    #     if debug_exports:
-    #         export_file(shape=shape, fname=path.join(r"..", "things", r"debug_thumb_connector_shape"))
-    #     walls_shape = case_walls(side=side)
-    #     if debug_exports:
-    #         export_file(shape=walls_shape, fname=path.join(r"..", "things", r"debug_walls_shape"))
-    #     s2 = union([walls_shape])
-    #     s2 = union([s2, *screw_insert_outers(side=side)])
-
-    #     if controller_mount_type in ['RJ9_USB_TEENSY', 'USB_TEENSY']:
-    #         s2 = union([s2, teensy_holder()])
-
-    #     if controller_mount_type in ['RJ9_USB_TEENSY', 'RJ9_USB_WALL', 'USB_WALL', 'USB_TEENSY']:
-    #         s2 = union([s2, usb_holder()])
-    #         s2 = difference(s2, [usb_holder_hole()])
-
-    #     if controller_mount_type in ['RJ9_USB_TEENSY', 'RJ9_USB_WALL']:
-    #         s2 = difference(s2, [rj9_space()])
-
-    #     if controller_mount_type in ['EXTERNAL']:
-    #         s2 = difference(s2, [external_mount_hole()])
-
-    #     if controller_mount_type in ['None']:
-    #         0  # do nothing, only here to expressly state inaction.
-
-    #     s2 = difference(s2, [union(screw_insert_holes(side=side))])
-    #     shape = union([shape, s2])
-
-    #     if controller_mount_type in ['RJ9_USB_TEENSY', 'RJ9_USB_WALL']:
-    #         shape = union([shape, rj9_holder()])
-
-    #     if oled_mount_type == "UNDERCUT":
-    #         hole, frame = oled_undercut_mount_frame(side=side)
-    #         shape = difference(shape, [hole])
-    #         shape = union([shape, frame])
-
-    #     elif oled_mount_type == "SLIDING":
-    #         hole, frame = oled_sliding_mount_frame(side=side)
-    #         shape = difference(shape, [hole])
-    #         shape = union([shape, frame])
-
-    #     elif oled_mount_type == "CLIP":
-    #         hole, frame = oled_clip_mount_frame(side=side)
-    #         shape = difference(shape, [hole])
-    #         shape = union([shape, frame])
-
-    #     if trackball_in_wall and (side == ball_side or ball_side == 'both'):
-    #         tbprecut, tb, tbcutout, sensor, ball = generate_trackball_in_wall()
-
-    #         shape = difference(shape, [tbprecut])
-    #         # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_1"))
-    #         shape = union([shape, tb])
-    #         # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_2"))
-    #         shape = difference(shape, [tbcutout])
-    #         # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_3a"))
-    #         # export_file(shape=add([shape, sensor]), fname=path.join(save_path, config_name + r"_test_3b"))
-    #         shape = union([shape, sensor])
-
-    #         if show_caps:
-    #             shape = add([shape, ball])
-
-    #     if (trackball_in_wall or ('TRACKBALL' in thumb_style)) and (side == ball_side or ball_side == 'both'):
-    #         tbprecut, tb, tbcutout, sensor, ball = generate_trackball_in_cluster(cluster(side))
-
-    #         shape = difference(shape, [tbprecut])
-    #         # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_1"))
-    #         shape = union([shape, tb])
-    #         # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_2"))
-    #         shape = difference(shape, [tbcutout])
-    #         # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_3a"))
-    #         # export_file(shape=add([shape, sensor]), fname=path.join(save_path, config_name + r"_test_3b"))
-    #         shape = union([shape, sensor])
-
-    #         if show_caps:
-    #             shape = add([shape, ball])
-
-    #     block = box(350, 350, 40)
-    #     block = translate(block, (0, 0, -20))
-    #     shape = difference(shape, [block])
-
-    #     if show_caps:
-    #         shape = add([shape, cluster(side).thumbcaps(side=side)])
-    #         shape = add([shape, caps()])
-
-    #     if side == "left":
-    #         shape = mirror(shape, 'YZ')
-
-    #     return shape
+    def screw_insert_screw_holes(self, side='right'):
+        return self.screw_insert_all_shapes(1.7, 1.7, 350, side=side)
 
     ## TODO:  Find places to inject the thumb features.
 
-    def model_side(side="right"):
+    def model_side(self, side="right"):
         print('model_right()')
-        #shape = add([key_holes(side=side)])
-        shape = union([key_holes(side=side)])
+        # shape = add([key_holes(side=side)])
+        shape = self.g.union([self.key_holes(side=side)])
         if debug_exports:
-            export_file(shape=shape, fname=path.join(r"..", "things", r"debug_key_plates"))
-        connector_shape = connectors()
-        shape = union([shape, connector_shape])
+            self.g. self.g.export_file(shape=shape, fname=path.join(r"..", "things", r"debug_key_plates"))
+        connector_shape = self.connectors()
+        shape = self.g.union([shape, connector_shape])
         if debug_exports:
-            export_file(shape=shape, fname=path.join(r"..", "things", r"debug_connector_shape"))
-        walls_shape = case_walls(side=side, skeleton=skeletal)
+             self.g.export_file(shape=shape, fname=path.join(r"..", "things", r"debug_connector_shape"))
+        walls_shape = self.case_walls(side=side, skeleton=self.p.skeletal)
         if debug_exports:
-            export_file(shape=walls_shape, fname=path.join(r"..", "things", r"debug_walls_shape"))
+             self.g.export_file(shape=walls_shape, fname=path.join(r"..", "things", r"debug_walls_shape"))
 
-        s2 = union([walls_shape])
-        s2 = union([s2, *screw_insert_outers(side=side)])
+        s2 = self.g.union([walls_shape])
+        s2 = self.g.union([s2, *self.screw_insert_outers(side=side)])
 
-        if controller_mount_type in ['RJ9_USB_TEENSY', 'USB_TEENSY']:
-            s2 = union([s2, teensy_holder()])
+        if self.p.controller_mount_type in ['RJ9_USB_TEENSY', 'USB_TEENSY']:
+            s2 = self.g.union([s2, self.teensy_holder()])
 
-        if controller_mount_type in ['RJ9_USB_TEENSY', 'RJ9_USB_WALL', 'USB_WALL', 'USB_TEENSY']:
-            s2 = union([s2, usb_holder()])
-            s2 = difference(s2, [usb_holder_hole()])
+        if self.p.controller_mount_type in ['RJ9_USB_TEENSY', 'RJ9_USB_WALL', 'USB_WALL', 'USB_TEENSY']:
+            s2 = self.g.union([s2, self.usb_holder()])
+            s2 = self.g.difference(s2, [self.usb_holder_hole()])
 
-        if controller_mount_type in ['RJ9_USB_TEENSY', 'RJ9_USB_WALL']:
-            s2 = difference(s2, [rj9_space()])
+        if self.p.controller_mount_type in ['RJ9_USB_TEENSY', 'RJ9_USB_WALL']:
+            s2 = self.g.difference(s2, [self.rj9_space()])
 
-        if controller_mount_type in ['EXTERNAL']:
-            s2 = difference(s2, [external_mount_hole()])
+        if self.p.controller_mount_type in ['EXTERNAL']:
+            s2 = self.g.difference(s2, [self.external_mount_hole()])
 
-        if controller_mount_type in ['PCB_MOUNT']:
-            s2 = difference(s2, [pcb_usb_hole()])
-            s2 = difference(s2, [trrs_hole()])
-            s2 = union([s2, pcb_holder()])
-            s2 = difference(s2, [wall_thinner()])
-            s2 = difference(s2, pcb_screw_hole())
+        if self.p.controller_mount_type in ['PCB_MOUNT']:
+            s2 = self.g.difference(s2, [self.pcb_usb_hole()])
+            s2 = self.g.difference(s2, [self.trrs_hole()])
+            s2 = self.g.union([s2, self.pcb_holder()])
+            s2 = self.g.difference(s2, [self.wall_thinner()])
+            s2 = self.g.difference(s2, self.pcb_screw_hole())
 
-        if controller_mount_type in [None, 'None']:
-            0 # do nothing, only here to expressly state inaction.
+        if self.p.controller_mount_type in [None, 'None']:
+            0  # do nothing, only here to expressly state inaction.
 
-        s2 = difference(s2, [union(screw_insert_holes(side=side))])
-        shape = union([shape, s2])
+        s2 = self.g.difference(s2, [self.g.union(self.screw_insert_holes(side=side))])
+        shape = self.g.union([shape, s2])
 
-        if controller_mount_type in ['RJ9_USB_TEENSY', 'RJ9_USB_WALL']:
-            shape = union([shape, rj9_holder()])
+        if self.p.controller_mount_type in ['RJ9_USB_TEENSY', 'RJ9_USB_WALL']:
+            shape = self.g.union([shape, self.rj9_holder()])
 
-        if oled_mount_type == "UNDERCUT":
-            hole, frame = oled_undercut_mount_frame(side=side)
-            shape = difference(shape, [hole])
-            shape = union([shape, frame])
+        if self.p.oled_mount_type == "UNDERCUT":
+            hole, frame = self.oled_undercut_mount_frame(side=side)
+            shape = self.g.difference(shape, [hole])
+            shape = self.g.union([shape, frame])
 
-        elif oled_mount_type == "SLIDING":
-            hole, frame = oled_sliding_mount_frame(side=side)
-            shape = difference(shape, [hole])
-            shape = union([shape, frame])
+        elif self.p.oled_mount_type == "SLIDING":
+            hole, frame = self.oled_sliding_mount_frame(side=side)
+            shape = self.g.difference(shape, [hole])
+            shape = self.g.union([shape, frame])
 
-        elif oled_mount_type == "CLIP":
-            hole, frame = oled_clip_mount_frame(side=side)
-            shape = difference(shape, [hole])
-            shape = union([shape, frame])
+        elif self.p.oled_mount_type == "CLIP":
+            hole, frame = self.oled_clip_mount_frame(side=side)
+            shape = self.g.difference(shape, [hole])
+            shape = self.g.union([shape, frame])
 
-        if trackball_in_wall and (side == ball_side or ball_side == 'both') and separable_thumb:
-            tbprecut, tb, tbcutout, sensor, ball = generate_trackball_in_wall()
+        if self.p.trackball_in_wall and (side == self.p.ball_side or self.p.ball_side == 'both') and self.p.separable_thumb:
+            tbprecut, tb, tbcutout, sensor, ball = self.generate_trackball_in_wall()
 
-            shape = difference(shape, [tbprecut])
-            # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_1"))
-            shape = union([shape, tb])
-            # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_2"))
-            shape = difference(shape, [tbcutout])
-            # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_3a"))
-            # export_file(shape=add([shape, sensor]), fname=path.join(save_path, config_name + r"_test_3b"))
-            shape = union([shape, sensor])
+            shape = self.g.difference(shape, [tbprecut])
+            #  self.g.export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_1"))
+            shape = self.g.union([shape, tb])
+            #  self.g.export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_2"))
+            shape = self.g.difference(shape, [tbcutout])
+            #  self.g.export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_3a"))
+            #  self.g.export_file(shape=add([shape, sensor]), fname=path.join(save_path, config_name + r"_test_3b"))
+            shape = self.g.union([shape, sensor])
 
-            if show_caps:
-                shape = add([shape, ball])
+            if self.p.show_caps:
+                shape = self.g.add([shape, ball])
 
-        if plate_pcb_clear:
-            shape = difference(shape, [plate_pcb_cutouts(side=side)])
+        if self.p.plate_pcb_clear:
+            shape = self.g.difference(shape, [self.plate_pcb_cutouts(side=side)])
 
         main_shape = shape
 
-        #BUILD THUMB
+        # BUILD THUMB
 
         # thumb_shape = thumb(side=side)
-        thumb_shape = cluster(side=side).thumb(side=side),
+        thumb_shape = self.cluster(side=side).thumb(side=side),
 
         if debug_exports:
-            export_file(shape=thumb_shape, fname=path.join(r"..", "things", r"debug_thumb_shape"))
-        thumb_connector_shape = cluster(side=side).thumb_connectors(side=side)
+             self.g.export_file(shape=thumb_shape, fname=path.join(r"..", "things", r"debug_thumb_shape"))
+        thumb_connector_shape = self.cluster(side=side).thumb_connectors(side=side)
         if debug_exports:
-            export_file(shape=thumb_connector_shape, fname=path.join(r"..", "things", r"debug_thumb_connector_shape"))
+             self.g.export_file(shape=thumb_connector_shape, fname=path.join(r"..", "things", r"debug_thumb_connector_shape"))
 
-        thumb_wall_shape = cluster(side=side).walls(side=side, skeleton=skeletal)
-        #TODO: FIX THUMB INSERTS
-        # thumb_wall_shape = union([thumb_wall_shape, *cluster(side=side).thumb_screw_insert_outers(side=side)])
-        thumb_connection_shape = cluster(side=side).connection(side=side, skeleton=skeletal)
-
+        thumb_wall_shape = self.cluster(side=side).walls(side=side, skeleton=self.p.skeletal)
+        # TODO: FIX THUMB INSERTS
+        # thumb_wall_shape = self.g.union([thumb_wall_shape, *cluster(side=side).thumb_screw_insert_outers(side=side)])
+        thumb_connection_shape = self.cluster(side=side).connection(side=side, skeleton=self.p.skeletal)
 
         if debug_exports:
-            thumb_test = union([thumb_shape, thumb_connector_shape, thumb_wall_shape, thumb_connection_shape])
-            export_file(shape=thumb_test, fname=path.join(r"..", "things", r"debug_thumb_test_{}_shape".format(side)))
+            thumb_test = self.g.union([thumb_shape, thumb_connector_shape, thumb_wall_shape, thumb_connection_shape])
+            self.g.export_file(shape=thumb_test, fname=path.join(r"..", "things", r"debug_thumb_test_{}_shape".format(side)))
 
-        thumb_section = union([thumb_shape, thumb_connector_shape, thumb_wall_shape, thumb_connection_shape])
+        thumb_section = self.g.union([thumb_shape, thumb_connector_shape, thumb_wall_shape, thumb_connection_shape])
 
         # TODO: FIX THUMB INSERTS
-        # thumb_section = difference(thumb_section, [union(cluster(side=side).thumb_screw_insert_holes(side=side))])
+        # thumb_section = self.g.difference(thumb_section, [union(cluster(side=side).thumb_screw_insert_holes(side=side))])
 
         has_trackball = False
-        if ('TRACKBALL' in thumb_style) and (side == ball_side or ball_side == 'both'):
+        if ('TRACKBALL' in self.p.thumb_style) and (side == self.p.ball_side or self.p.ball_side == 'both'):
             print("Has Trackball")
-            tbprecut, tb, tbcutout, sensor, ball = generate_trackball_in_cluster(cluster(side=side))
+            tbprecut, tb, tbcutout, sensor, ball = self.generate_trackball_in_cluster(self.cluster(side=side))
             has_trackball = True
-            thumb_section = difference(thumb_section, [tbprecut])
+            thumb_section = self.g.difference(thumb_section, [tbprecut])
             if debug_exports:
-                export_file(shape=thumb_section, fname=path.join(r"..", "things", r"debug_thumb_test_1_shape".format(side)))
-            thumb_section = union([thumb_section, tb])
+                 self.g.export_file(shape=thumb_section,
+                            fname=path.join(r"..", "things", r"debug_thumb_test_1_shape".format(side)))
+            thumb_section = self.g.union([thumb_section, tb])
             if debug_exports:
-                export_file(shape=thumb_section, fname=path.join(r"..", "things", r"debug_thumb_test_2_shape".format(side)))
-            thumb_section = difference(thumb_section, [tbcutout])
+                 self.g.export_file(shape=thumb_section,
+                            fname=path.join(r"..", "things", r"debug_thumb_test_2_shape".format(side)))
+            thumb_section = self.g.difference(thumb_section, [tbcutout])
             if debug_exports:
-                export_file(shape=thumb_section, fname=path.join(r"..", "things", r"debug_thumb_test_3_shape".format(side)))
-            thumb_section = union([thumb_section, sensor])
+                 self.g.export_file(shape=thumb_section,
+                            fname=path.join(r"..", "things", r"debug_thumb_test_3_shape".format(side)))
+            thumb_section = self.g.union([thumb_section, sensor])
             if debug_exports:
-                export_file(shape=thumb_section, fname=path.join(r"..", "things", r"debug_thumb_test_4_shape".format(side)))
+                 self.g.export_file(shape=thumb_section,
+                            fname=path.join(r"..", "things", r"debug_thumb_test_4_shape".format(side)))
 
-        if plate_pcb_clear:
-            thumb_section = difference(thumb_section, [cluster(side=side).thumb_pcb_plate_cutouts(side=side)])
+        if self.p.plate_pcb_clear:
+            thumb_section = self.g.difference(thumb_section, [self.cluster(side=side).thumb_pcb_plate_cutouts(side=side)])
 
-        block = box(350, 350, 40)
-        block = translate(block, (0, 0, -20))
-        main_shape = difference(main_shape, [block])
-        thumb_section = difference(thumb_section, [block])
+        block = self.g.box(350, 350, 40)
+        block = self.g.translate(block, (0, 0, -20))
+        main_shape = self.g.difference(main_shape, [block])
+        thumb_section = self.g.difference(thumb_section, [block])
         if debug_exports:
-            export_file(shape=thumb_section, fname=path.join(r"..", "things", r"debug_thumb_test_5_shape".format(side)))
+             self.g.export_file(shape=thumb_section, fname=path.join(r"..", "things", r"debug_thumb_test_5_shape".format(side)))
 
-        if separable_thumb:
-            thumb_section = difference(thumb_section, [main_shape])
-            if show_caps:
-                thumb_section = add([thumb_section, cluster(side=side).thumbcaps(side=side)])
+        if self.p.separable_thumb:
+            thumb_section = self.g.difference(thumb_section, [main_shape])
+            if self.p.show_caps:
+                thumb_section = self.g.add([thumb_section, self.cluster(side=side).thumbcaps(side=side)])
                 if has_trackball:
-                    thumb_section = add([thumb_section, ball])
+                    thumb_section = self.g.add([thumb_section, ball])
         else:
-            main_shape = union([main_shape, thumb_section])
+            main_shape = self.g.union([main_shape, thumb_section])
             if debug_exports:
-                export_file(shape=main_shape, fname=path.join(r"..", "things", r"debug_thumb_test_6_shape".format(side)))
-            if show_caps:
-                main_shape = add([main_shape, cluster(side=side).thumbcaps(side=side)])
+                 self.g.export_file(shape=main_shape,
+                            fname=path.join(r"..", "things", r"debug_thumb_test_6_shape".format(side)))
+            if self.p.show_caps:
+                main_shape = self.g.add([main_shape, self.cluster(side=side).thumbcaps(side=side)])
                 if has_trackball:
-                    main_shape = add([main_shape, ball])
+                    main_shape = self.g.add([main_shape, ball])
 
-            if trackball_in_wall and (side == ball_side or ball_side == 'both') and not separable_thumb:
-                tbprecut, tb, tbcutout, sensor, ball = generate_trackball_in_wall()
+            if self.p.trackball_in_wall and (side == self.p.ball_side or self.p.ball_side == 'both') and not self.p.separable_thumb:
+                tbprecut, tb, tbcutout, sensor, ball = self.generate_trackball_in_wall()
 
-                main_shape = difference(main_shape, [tbprecut])
-                # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_1"))
-                main_shape = union([main_shape, tb])
-                # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_2"))
-                main_shape = difference(main_shape, [tbcutout])
-                # export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_3a"))
-                # export_file(shape=add([shape, sensor]), fname=path.join(save_path, config_name + r"_test_3b"))
-                main_shape = union([main_shape, sensor])
+                main_shape = self.g.difference(main_shape, [tbprecut])
+                #  self.g.export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_1"))
+                main_shape = self.g.union([main_shape, tb])
+                #  self.g.export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_2"))
+                main_shape = self.g.difference(main_shape, [tbcutout])
+                #  self.g.export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_3a"))
+                #  self.g.export_file(shape=add([shape, sensor]), fname=path.join(save_path, config_name + r"_test_3b"))
+                main_shape = self.g.union([main_shape, sensor])
 
-                if show_caps:
-                    main_shape = add([main_shape, ball])
+                if self.p.show_caps:
+                    main_shape = self.g.add([main_shape, ball])
 
-
-
-
-
-        if show_caps:
-            main_shape = add([main_shape, caps()])
+        if self.p.show_caps:
+            main_shape = self.g.add([main_shape, self.caps()])
 
         if side == "left":
-            main_shape = mirror(main_shape, 'YZ')
-            thumb_section = mirror(thumb_section, 'YZ')
+            main_shape = self.g.mirror(main_shape, 'YZ')
+            thumb_section = self.g.mirror(thumb_section, 'YZ')
 
         return main_shape, thumb_section
 
-
-    # NEEDS TO BE SPECIAL FOR CADQUERY
-    # def baseplate(wedge_angle=None, side='right'):
-    #     if ENGINE == 'cadquery':
-    #         # shape = mod_r
-    #         shape = union([case_walls(side=side), *screw_insert_outers(side=side)])
-    #         # tool = translate(screw_insert_screw_holes(side=side), [0, 0, -10])
-    #         tool = screw_insert_all_shapes(screw_hole_diameter / 2., screw_hole_diameter / 2., 350, side=side)
-    #         for item in tool:
-    #             item = translate(item, [0, 0, -10])
-    #             shape = difference(shape, [item])
-
-    #         shape = translate(shape, (0, 0, -0.0001))
-
-    #         square = cq.Workplane('XY').rect(1000, 1000)
-    #         for wire in square.wires().objects:
-    #             plane = cq.Workplane('XY').add(cq.Face.makeFromWires(wire))
-    #         shape = intersect(shape, plane)
-
-    #         outside = shape.vertices(cq.DirectionMinMaxSelector(cq.Vector(1, 0, 0), True)).objects[0]
-    #         sizes = []
-    #         max_val = 0
-    #         inner_index = 0
-    #         base_wires = shape.wires().objects
-    #         for i_wire, wire in enumerate(base_wires):
-    #             is_outside = False
-    #             for vert in wire.Vertices():
-    #                 if vert.toTuple() == outside.toTuple():
-    #                     outer_wire = wire
-    #                     outer_index = i_wire
-    #                     is_outside = True
-    #                     sizes.append(0)
-    #             if not is_outside:
-    #                 sizes.append(len(wire.Vertices()))
-    #             if sizes[-1] > max_val:
-    #                 inner_index = i_wire
-    #                 max_val = sizes[-1]
-    #         debugprint(sizes)
-    #         inner_wire = base_wires[inner_index]
-
-    #         # inner_plate = cq.Workplane('XY').add(cq.Face.makeFromWires(inner_wire))
-    #         if wedge_angle is not None:
-    #             cq.Workplane('XY').add(cq.Solid.revolve(outerWire, innerWires, angleDegrees, axisStart, axisEnd))
-    #         else:
-    #             inner_shape = cq.Workplane('XY').add(
-    #                 cq.Solid.extrudeLinear(outerWire=inner_wire, innerWires=[], vecNormal=cq.Vector(0, 0, base_thickness)))
-    #             inner_shape = translate(inner_shape, (0, 0, -base_rim_thickness))
-
-    #             holes = []
-    #             for i in range(len(base_wires)):
-    #                 if i not in [inner_index, outer_index]:
-    #                     holes.append(base_wires[i])
-    #             cutout = [*holes, inner_wire]
-
-    #             shape = cq.Workplane('XY').add(
-    #                 cq.Solid.extrudeLinear(outer_wire, cutout, cq.Vector(0, 0, base_rim_thickness)))
-    #             hole_shapes = []
-    #             for hole in holes:
-    #                 loc = hole.Center()
-    #                 hole_shapes.append(
-    #                     translate(
-    #                         cylinder(screw_cbore_diameter / 2.0, screw_cbore_depth),
-    #                         (loc.x, loc.y, 0)
-    #                         # (loc.x, loc.y, screw_cbore_depth/2)
-    #                     )
-    #                 )
-    #             shape = difference(shape, hole_shapes)
-    #             shape = translate(shape, (0, 0, -base_rim_thickness))
-    #             shape = union([shape, inner_shape])
-
-    #         return shape
-    #     else:
-
-    #         shape = union([
-    #             case_walls(side=side),
-    #             *screw_insert_outers(side=side)
-    #         ])
-
-    #         tool = translate(union(screw_insert_screw_holes(side=side)), [0, 0, -10])
-    #         base = box(1000, 1000, .01)
-    #         shape = shape - tool
-    #         shape = intersect(shape, base)
-
-    #         shape = translate(shape, [0, 0, -0.001])
-
-    #         return sl.projection(cut=True)(shape)
-
-
-    def baseplate(wedge_angle=None, side='right'):
-        if ENGINE == 'cadquery':
+    def baseplate(self, wedge_angle=None, side='right'):
+        if self.p.ENGINE == 'cadquery':
+            cq = self.g.cq
             # shape = mod_r
 
-
-            thumb_shape = cluster(side=side).thumb(side=side)
-            thumb_wall_shape = cluster(side=side).walls(side=side, skeleton=skeletal)
+            thumb_shape = self.cluster(side=side).thumb(side=side)
+            thumb_wall_shape = self.cluster(side=side).walls(side=side, skeleton=self.p.skeletal)
             ## TODO: FIX INSERTS
-            # thumb_wall_shape = union([thumb_wall_shape, *thumb_screw_insert_outers(side=side)])
-            thumb_connector_shape = cluster(side=side).connectors(side=side)
-            thumb_connection_shape = cluster(side=side).connection(side=side, skeleton=skeletal)
-            thumb_section = union([thumb_shape, thumb_connector_shape, thumb_wall_shape, thumb_connection_shape])
+            # thumb_wall_shape = self.g.union([thumb_wall_shape, *thumb_screw_insert_outers(side=side)])
+            thumb_connector_shape = self.cluster(side=side).connectors(side=side)
+            thumb_connection_shape = self.cluster(side=side).connection(side=side, skeleton=self.p.skeletal)
+            thumb_section = self.g.union([thumb_shape, thumb_connector_shape, thumb_wall_shape, thumb_connection_shape])
             ## TODO: FIX INSERTS
-            # thumb_section = difference(thumb_section, [union(cluster(side=side).thumb_screw_insert_holes(side=side))])
+            # thumb_section = self.g.difference(thumb_section, [union(cluster(side=side).thumb_screw_insert_holes(side=side))])
 
-            shape = union([
-                case_walls(side=side),
-                *screw_insert_outers(side=side),
+            shape = self.g.union([
+                self.case_walls(side=side),
+                *self.screw_insert_outers(side=side),
                 thumb_section
             ])
-            tool = screw_insert_all_shapes(screw_hole_diameter/2., screw_hole_diameter/2., 350, side=side)
+            tool = self.screw_insert_all_shapes(screw_hole_diameter / 2., self.p.screw_hole_diameter / 2., 350, side=side)
             for item in tool:
-                item = translate(item, [0, 0, -10])
-                shape = difference(shape, [item])
+                item = self.g.translate(item, [0, 0, -10])
+                shape = self.g.difference(shape, [item])
 
-            tool = thumb_screw_insert(screw_hole_diameter/2., screw_hole_diameter/2., 350, side=side)
+            tool = self.thumb_screw_insert(self.p.screw_hole_diameter / 2., self.p.screw_hole_diameter / 2., 350, side=side)
             for item in tool:
-                item = translate(item, [0, 0, -10])
-                shape = difference(shape, [item])
+                item = self.g.translate(item, [0, 0, -10])
+                shape = self.g.difference(shape, [item])
 
-            #shape = union([main_shape, thumb_shape])
+            # shape = self.g.union([main_shape, thumb_shape])
 
-            shape = translate(shape, (0, 0, -0.0001))
+            shape = self.g.translate(shape, (0, 0, -0.0001))
 
-            square = cq.Workplane('XY').rect(1000, 1000)
+            square = self.g.cq.Workplane('XY').rect(1000, 1000)
             for wire in square.wires().objects:
-                plane = cq.Workplane('XY').add(cq.Face.makeFromWires(wire))
-            shape = intersect(shape, plane)
+                plane = self.g.cq.Workplane('XY').add(cq.Face.makeFromWires(wire))
+            shape = self.g.intersect(shape, plane)
 
             outside = shape.vertices(cq.DirectionMinMaxSelector(cq.Vector(1, 0, 0), True)).objects[0]
             sizes = []
@@ -2444,7 +2251,7 @@ def make_dactyl():
                         sizes.append(0)
                 if not is_outside:
                     sizes.append(len(wire.Vertices()))
-                if sizes[-1]>max_val:
+                if sizes[-1] > max_val:
                     inner_index = i_wire
                     max_val = sizes[-1]
             debugprint(sizes)
@@ -2454,8 +2261,9 @@ def make_dactyl():
             if wedge_angle is not None:
                 cq.Workplane('XY').add(cq.Solid.revolve(outerWire, innerWires, angleDegrees, axisStart, axisEnd))
             else:
-                inner_shape = cq.Workplane('XY').add(cq.Solid.extrudeLinear(outerWire=inner_wire, innerWires=[], vecNormal=cq.Vector(0, 0, base_thickness)))
-                inner_shape = translate(inner_shape, (0, 0, -base_rim_thickness))
+                inner_shape = cq.Workplane('XY').add(cq.Solid.extrudeLinear(outerWire=inner_wire, innerWires=[],
+                                                                            vecNormal=cq.Vector(0, 0, base_thickness)))
+                inner_shape = self.g.translate(inner_shape, (0, 0, -self.p.base_rim_thickness))
 
                 holes = []
                 for i in range(len(base_wires)):
@@ -2463,157 +2271,153 @@ def make_dactyl():
                         holes.append(base_wires[i])
                 cutout = [*holes, inner_wire]
 
-                shape = cq.Workplane('XY').add(cq.Solid.extrudeLinear(outer_wire, cutout, cq.Vector(0, 0, base_rim_thickness)))
-                hole_shapes=[]
+                shape = cq.Workplane('XY').add(
+                    cq.Solid.extrudeLinear(outer_wire, cutout, cq.Vector(0, 0, self.p.base_rim_thickness)))
+                hole_shapes = []
                 for hole in holes:
                     loc = hole.Center()
                     hole_shapes.append(
-                        translate(
-                            cylinder(screw_cbore_diameter/2.0, screw_cbore_depth),
+                        self.g.translate(
+                            self.g.cylinder(self.p.screw_cbore_diameter / 2.0, self.p.screw_cbore_depth),
                             (loc.x, loc.y, 0)
                             # (loc.x, loc.y, screw_cbore_depth/2)
                         )
                     )
-                shape = difference(shape, hole_shapes)
-                shape = translate(shape, (0, 0, -base_rim_thickness))
-                shape = union([shape, inner_shape])
+                shape = self.g.difference(shape, hole_shapes)
+                shape = self.g.translate(shape, (0, 0, -self.p.base_rim_thickness))
+                shape = self.g.union([shape, inner_shape])
             return shape
 
         else:
-            shape = union([
-                case_walls(side=side),
-                cluster(side=side).walls(side=side),
+            shape = self.g.union([
+                self.case_walls(side=side),
+                self.cluster(side=side).walls(side=side),
                 ## TODO: FIX INSERTS
                 # *screw_insert_outers(side=side),
                 # *thumb_screw_insert_outers(side=side),
             ])
-            tool = translate(union(screw_insert_screw_holes(side=side)), [0, 0, -10])
-            base = box(1000, 1000, .01)
+            tool = self.g.translate(self.g.union(self.screw_insert_screw_holes(side=side)), [0, 0, -10])
+            base = self.g.box(1000, 1000, .01)
             shape = shape - tool
-            shape = intersect(shape, base)
+            shape = self.g.intersect(shape, base)
 
-            shape = translate(shape, [0, 0, -0.001])
+            shape = self.g.translate(shape, [0, 0, -0.001])
 
-            return sl.projection(cut=True)(shape)
+            return self.g.sl.projection(cut=True)(shape)
 
+    def run(self):
+        self.right_cluster = self.get_cluster(self.p.thumb_style)
 
-    def run():
-        config_name="FIX_IT"
-        mod_r, tmb_r = model_side(side="right")
-        export_file(shape=mod_r, fname=path.join(save_path, config_name + r"_right"))
-        export_file(shape=tmb_r, fname=path.join(save_path, config_name + r"_thumb_right"))
+        if self.right_cluster.is_tb:
+            if self.p.ball_side == "both":
+                self.left_cluster = self.right_cluster
+            elif self.p.ball_side == "left":
+                self.left_cluster = self.right_cluster
+                self.right_cluster = self.get_cluster(self.p.other_thumb)
+            else:
+                self.left_cluster = self.get_cluster(self.p.other_thumb)
+        elif self.p.other_thumb != "DEFAULT" and self.p.other_thumb != self.p.thumb_style:
+            self.left_cluster = self.get_cluster(self.p.other_thumb)
+        else:
+            self.left_cluster = self.right_cluster  # this assumes thumb_style always overrides DEFAULT other_thumb
 
-        #base = baseplate(mod_r, tmb_r, side='right')
-        base = baseplate(side='right')
-        export_file(shape=base, fname=path.join(save_path, config_name + r"_right_plate"))
-        export_dxf(shape=base, fname=path.join(save_path, config_name + r"_right_plate"))
+        self.config_name = "FIX_IT"
+        mod_r, tmb_r = self.model_side(side="right")
+        self.g.export_file(shape=mod_r, fname=path.join(self.p.save_path, self.p.config_name + r"_right"))
+        self.g.export_file(shape=tmb_r, fname=path.join(self.p.save_path, self.p.config_name + r"_thumb_right"))
 
-        if symmetry == "asymmetric":
-            mod_l, tmb_l = model_side(side="left")
-            export_file(shape=mod_l, fname=path.join(save_path, config_name + r"_left"))
-            export_file(shape=tmb_l, fname=path.join(save_path, config_name + r"_thumb_left"))
+        # base = baseplate(mod_r, tmb_r, side='right')
+        base = self.baseplate(side='right')
+        self.g.export_file(shape=base, fname=path.join(self.p.save_path, self.p.config_name + r"_right_plate"))
+        self.g.export_dxf(shape=base, fname=path.join(self.p.save_path, self.p.config_name + r"_right_plate"))
 
-            #base_l = mirror(baseplate(mod_l, tmb_l, side='left'), 'YZ')
-            base_l = mirror(baseplate(side='left'), 'YZ')
-            export_file(shape=base_l, fname=path.join(save_path, config_name + r"_left_plate"))
-            export_dxf(shape=base_l, fname=path.join(save_path, config_name + r"_left_plate"))
+        if self.p.symmetry == "asymmetric":
+            mod_l, tmb_l = self.model_side(side="left")
+            self.g.export_file(shape=mod_l, fname=path.join(self.p.save_path, self.p.config_name + r"_left"))
+            self.g.export_file(shape=tmb_l, fname=path.join(self.p.save_path, self.p.config_name + r"_thumb_left"))
+
+            # base_l = mirror(baseplate(mod_l, tmb_l, side='left'), 'YZ')
+            base_l = self.g.mirror(baseplate(side='left'), 'YZ')
+            self.g.export_file(shape=base_l, fname=path.join(self.p.save_path, self.p.config_name + r"_left_plate"))
+            self.g.export_dxf(shape=base_l, fname=path.join(self.p.save_path, self.p.config_name + r"_left_plate"))
 
         # mod_r = model_side(side="right")
-        # export_file(shape=mod_r, fname=path.join(save_path, config_name + r"_right"))
+        #  self.g.export_file(shape=mod_r, fname=path.join(save_path, config_name + r"_right"))
         #
         # base = baseplate(side='right')
-        # export_file(shape=base, fname=path.join(save_path, config_name + r"_right_plate"))
+        #  self.g.export_file(shape=base, fname=path.join(save_path, config_name + r"_right_plate"))
         # export_dxf(shape=base, fname=path.join(save_path, config_name + r"_right_plate"))
         #
         # if symmetry == "asymmetric":
         #
         #     mod_l = model_side(side="left")
-        #     export_file(shape=mod_l, fname=path.join(save_path, config_name + r"_left"))
+        #      self.g.export_file(shape=mod_l, fname=path.join(save_path, config_name + r"_left"))
         #
         #     base_l = mirror(baseplate(side='left'), 'YZ')
-        #     export_file(shape=base_l, fname=path.join(save_path, config_name + r"_left_plate"))
+        #      self.g.export_file(shape=base_l, fname=path.join(save_path, config_name + r"_left_plate"))
         #     export_dxf(shape=base_l, fname=path.join(save_path, config_name + r"_left_plate"))
 
         else:
-            export_file(shape=mirror(mod_r, 'YZ'), fname=path.join(save_path, config_name + r"_left"))
+            self.g.export_file(shape=self.g.mirror(mod_r, 'YZ'), fname=path.join(self.p.save_path, self.p.config_name + r"_left"))
 
-            lbase = mirror(base, 'YZ')
-            export_file(shape=lbase, fname=path.join(save_path, config_name + r"_left_plate"))
-            export_dxf(shape=lbase, fname=path.join(save_path, config_name + r"_left_plate"))
+            lbase = self.g.mirror(base, 'YZ')
+            self.g.export_file(shape=lbase, fname=path.join(self.p.save_path, self.p.config_name + r"_left_plate"))
+            self.g.export_dxf(shape=lbase, fname=path.join(self.p.save_path, self.p.config_name + r"_left_plate"))
 
-        if ENGINE == 'cadquery':
+        if self.p.ENGINE == 'cadquery':
             import freecad_that as freecad
-            freecad.generate_freecad_script(path.abspath(save_path), [
-                config_name + r"_right",
-                config_name + r"_left",
-                config_name + r"_right_plate",
-                config_name + r"_left_plate"
+            freecad.generate_freecad_script(path.abspath(self.p.save_path), [
+                self.p.config_name + r"_right",
+                self.p.config_name + r"_left",
+                self.p.config_name + r"_right_plate",
+                self.p.config_name + r"_left_plate"
             ])
 
-        if oled_mount_type == 'UNDERCUT':
-            export_file(shape=oled_undercut_mount_frame()[1],
-                        fname=path.join(save_path, config_name + r"_oled_undercut_test"))
+        if self.p.oled_mount_type == 'UNDERCUT':
+            self.g.export_file(shape=self.oled_undercut_mount_frame()[1],
+                    fname=path.join(self.p.save_path, self.p.config_name + r"_oled_undercut_test"))
 
-        if oled_mount_type == 'SLIDING':
-            export_file(shape=oled_sliding_mount_frame()[1],
-                        fname=path.join(save_path, config_name + r"_oled_sliding_test"))
+        if self.p.oled_mount_type == 'SLIDING':
+            self.g.export_file(shape=self.oled_sliding_mount_frame()[1],
+                    fname=path.join(self.p.save_path, self.p.config_name + r"_oled_sliding_test"))
 
-        if oled_mount_type == 'CLIP':
-            oled_mount_location_xyz = (0.0, 0.0, -oled_mount_depth / 2)
+        if self.p.oled_mount_type == 'CLIP':
+            oled_mount_location_xyz = (0.0, 0.0, -self.p.oled_config.oled_mount_depth / 2)
             oled_mount_rotation_xyz = (0.0, 0.0, 0.0)
-            export_file(shape=oled_clip(), fname=path.join(save_path, config_name + r"_oled_clip"))
-            export_file(shape=oled_clip_mount_frame()[1],
-                        fname=path.join(save_path, config_name + r"_oled_clip_test"))
-            export_file(shape=union((oled_clip_mount_frame()[1], oled_clip())),
-                        fname=path.join(save_path, config_name + r"_oled_clip_assy_test"))
+            self.g.export_file(shape=self.oled_clip(), fname=path.join(self.p.save_path, self.p.config_name + r"_oled_clip"))
+            self.g.export_file(shape=self.oled_clip_mount_frame()[1],
+                    fname=path.join(self.p.save_path, self.p.config_name + r"_oled_clip_test"))
+            self.g.export_file(shape=self.g.union((self.oled_clip_mount_frame()[1], self.oled_clip())),
+                    fname=path.join(self.p.save_path, self.p.config_name + r"_oled_clip_assy_test"))
 
-    all_merged = locals().copy()
-    for item in globals():
-        all_merged[item] = globals()[item]
+    def get_cluster(self, style):
+        # if style == CarbonfetCluster.name():
+        #     clust = CarbonfetCluster(all_merged)
+        # elif style == MiniCluster.name():
+        #     clust = MiniCluster(all_merged)
+        # elif style == MinidoxCluster.name():
+        #     clust = MinidoxCluster(all_merged)
+        # elif style == TrackballOrbyl.name():
+        #     clust = TrackballOrbyl(all_merged)
+        # elif style == TrackballWild.name():
+        #     clust = TrackballWild(all_merged)
+        # elif style == TrackballCJ.name():
+        #     clust = TrackballCJ(all_merged)
+        # elif style == CustomCluster.name():
+        #     clust = CustomCluster(all_merged)
+        # else:
+        #     clust = DefaultCluster(all_merged)
+        clust_dict = CLUSTER_LOOKUP[style]
+        clust_lib = importlib.import_module('clusters.' + clust_dict['package'])
+        #from clusters.custom_cluster import CustomCluster
+        clust = getattr(clust_lib, clust_dict['class'])
 
-    def get_cluster(style):
-        if style == CarbonfetCluster.name():
-            clust = CarbonfetCluster(all_merged)
-        elif style == MiniCluster.name():
-            clust = MiniCluster(all_merged)
-        elif style == MinidoxCluster.name():
-            clust = MinidoxCluster(all_merged)
-        elif style == TrackballOrbyl.name():
-            clust = TrackballOrbyl(all_merged)
-        elif style == TrackballWild.name():
-            clust = TrackballWild(all_merged)
-        elif style == TrackballCJ.name():
-            clust = TrackballCJ(all_merged)
-        elif style == CustomCluster.name():
-            clust = CustomCluster(all_merged)
-        else:
-            clust = DefaultCluster(all_merged)
-
-        return clust
-
-
-    right_cluster = get_cluster(thumb_style)
-
-    if right_cluster.is_tb:
-        if ball_side == "both":
-            left_cluster = right_cluster
-        elif ball_side == "left":
-            left_cluster = right_cluster
-            right_cluster = get_cluster(other_thumb)
-        else:
-            left_cluster = get_cluster(other_thumb)
-    elif other_thumb != "DEFAULT" and other_thumb != thumb_style:
-        left_cluster = get_cluster(other_thumb)
-    else:
-        left_cluster = right_cluster  # this assumes thumb_style always overrides DEFAULT other_thumb
-
-    run()
+        return clust(self)
 
 
 #
 if __name__ == '__main__':
-    make_dactyl()
+    pass
 
     # base = baseplate()
-    # export_file(shape=base, fname=path.join(save_path, config_name + r"_plate"))
-
+    #  self.g.export_file(shape=base, fname=path.join(save_path, config_name + r"_plate"))
