@@ -54,19 +54,8 @@ class MiniCluster(ca.ClusterBase):
     def name():
         return "MINI"
 
-    def __init__(self, parent, t_parameters=None):
-        print('Initialize Default Cluster')
-        self.overrides = []
-        self.g = parent.g
-        self.p = parent.p
-        self.parent = parent
-        self.sh = parent.sh
-
-        if t_parameters is None:
-            t_parameters = self.parameter_type()
-
-        self.tp = t_parameters
-
+    def set_overrides(self):
+        pass
 
     def tl_place(self, shape):
         shape = self.g.rotate(shape, self.tp.tl_rotation)
@@ -234,7 +223,7 @@ class MiniCluster(ca.ClusterBase):
                     self.parent.key_place(self.sh.web_post_bl(), 1, self.p.cornerrow),
                     self.tr_place(self.thumb_post_tr()),
                     self.parent.key_place(self.sh.web_post_br(), 1, self.p.cornerrow),
-                    # key_place(self.sh.web_post_tl(), 2, lastrow),
+                    # self.parent.key_place(self.sh.web_post_tl(), 2, self.p.lastrow),
                     self.parent.key_place(self.sh.web_post_bl(), 2, self.p.lastrow),
                     self.tr_place(self.thumb_post_tr()),
                     self.parent.key_place(self.sh.web_post_bl(), 2, self.p.lastrow),
@@ -345,5 +334,5 @@ class MiniCluster(ca.ClusterBase):
     def thumb_pcb_plate_cutouts(self, side="right"):
         shape = self.thumb_1x_layout(self.sh.plate_pcb_cutout(side=side))
         shape = self.g.union([shape, self.mini_thumb_15x_layout(self.sh.plate_pcb_cutout(side=side))])
-        #shape = add([shape, mini_thumb_15x_layout(plate_pcb_cutout(side=side))])
+        #shape = self.g.add([shape, mini_thumb_15x_layout(self.sh.plate_pcb_cutout(side=side))])
         return shape

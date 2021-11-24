@@ -3,7 +3,7 @@ import os
 import numpy as np
 from dataclasses import dataclass
 import clusters.cluster_abc as ca
-from dactyl_manuform import Override
+from dactyl_manuform import Override, rad2deg, pi
 from typing import Any, Sequence
 
 # @dataclass
@@ -24,23 +24,23 @@ class DefaultClusterParameters(ca.ClusterParametersBase):
 
     thumb_offsets: Sequence[float] = (6.0, -3.0, 7.0)
 
-    tr_rotation: Sequence[float] = (10, -15, 10)
-    tr_position: Sequence[float] = (-12.0, -16.0, 3.0)
-
     tl_rotation: Sequence[float] = (7.5, -18, 10)
     tl_position: Sequence[float] = (-32.5, -14.5, -2.5)
 
-    mr_rotation: Sequence[float] = (-6, -34, 48)
-    mr_position: Sequence[float] = (-29.0, -40.0, -13.0)
+    tr_rotation: Sequence[float] = (10, -15, 10)
+    tr_position: Sequence[float] = (-12.0, -16.0, 3.0)
 
     ml_rotation: Sequence[float] = (6, -34, 40)
     ml_position: Sequence[float] = (-51.0, -25.0, -12.0)
 
-    br_rotation: Sequence[float] = (-16, -33, 54)
-    br_position: Sequence[float] = (-37.8, -55.3, -25.3)
+    mr_rotation: Sequence[float] = (-6, -34, 48)
+    mr_position: Sequence[float] = (-29.0, -40.0, -13.0)
 
     bl_rotation: Sequence[float] = (-4.0, -35.0, 52.0)
     bl_position: Sequence[float] = (-56.3, -43.3, -23.5)
+
+    br_rotation: Sequence[float] = (-16, -33, 54)
+    br_position: Sequence[float] = (-37.8, -55.3, -25.3)
 
     thumb_plate_tr_rotation: float = 0
     thumb_plate_tl_rotation: float = 0
@@ -56,12 +56,12 @@ class DefaultClusterParameters(ca.ClusterParametersBase):
 
 
 # VARIABLES =[
-# mount_width
-# mount_height
-# post_adj
-# double_plate_height
-# cornerrow
-# lastrow
+# self.p.mount_width
+# self.p.mount_height
+# self.p.post_adj
+# self.p.double_plate_height
+# self.p.cornerrow
+# self.p.lastrow
 #
 # default_1U_cluster
 # ]
@@ -71,31 +71,12 @@ class DefaultCluster(ca.ClusterBase):
     num_keys = 6
     is_tb = False
 
-    def __init__(self, parent, t_parameters=None):
-        print('Initialize Default Cluster')
-        self.overrides = []
-        self.g = parent.g
-        self.p = parent.p
-        self.parent = parent
-        self.sh = parent.sh
-
-        if t_parameters is None:
-            t_parameters = self.parameter_type()
-
-        self.tp = t_parameters
-
+    def set_overrides(self):
         if self.tp.cluster_1U:
-            self.overrides.append(Override(
-                obj_type='base', variable='double_plate_height', value=(.7 * self.p.sa_double_length - self.p.mount_height) / 3
-            ))
+                self.parent.p.double_plate_height = (.7 * self.p.sa_double_length - self.p.mount_height) / 3
         elif self.tp.thumb_style == 'DEFAULT':
-            self.overrides.append(Override(
-                obj_type='base', variable='double_plate_height', value=(.95 * self.p.sa_double_length - self.p.mount_height) / 3
-            ))
+            self.parent.p.double_plate_height = (.95 * self.p.sa_double_length - self.p.mount_height) / 3
 
-
-    def get_overrides(self):
-        return self.overrides
 
     @staticmethod
     def name():
@@ -110,49 +91,6 @@ class DefaultCluster(ca.ClusterBase):
             origin[i] = origin[i] + self.tp.thumb_offsets[i]
 
         return origin
-
-
-    def tl_place(self, shape):
-        debugprint('tl_place()')
-        shape = self.g.rotate(shape, self.tp.tl_rotation)
-        shape = self.g.translate(shape, self.thumborigin())
-        shape = self.g.translate(shape, self.tp.tl_position)
-        return shape
-
-    def tr_place(self, shape):
-        debugprint('tr_place()')
-        shape = self.g.rotate(shape, self.tp.tr_rotation)
-        shape = self.g.translate(shape, self.thumborigin())
-        shape = self.g.translate(shape, self.tp.tr_position)
-        return shape
-
-    def mr_place(self, shape):
-        debugprint('mr_place()')
-        shape = self.g.rotate(shape, self.tp.mr_rotation)
-        shape = self.g.translate(shape, self.thumborigin())
-        shape = self.g.translate(shape, self.tp.mr_position)
-        return shape
-
-    def ml_place(self, shape):
-        debugprint('ml_place()')
-        shape = self.g.rotate(shape, self.tp.ml_rotation)
-        shape = self.g.translate(shape, self.thumborigin())
-        shape = self.g.translate(shape, self.tp.ml_position)
-        return shape
-
-    def br_place(self, shape):
-        debugprint('br_place()')
-        shape = self.g.rotate(shape,  self.tp.br_rotation)
-        shape = self.g.translate(shape, self.thumborigin())
-        shape = self.g.translate(shape, self.tp.br_position)
-        return shape
-
-    def bl_place(self, shape):
-        debugprint('bl_place()')
-        shape = self.g.rotate(shape, self.tp.bl_rotation)
-        shape = self.g.translate(shape, self.thumborigin())
-        shape = self.g.translate(shape, self.tp.bl_position)
-        return shape
 
     def thumb_1x_layout(self, shape, cap=False):
         debugprint('thumb_1x_layout()')
@@ -231,29 +169,6 @@ class DefaultCluster(ca.ClusterBase):
 
         return shape
 
-    def thumb_post_tr(self):
-        debugprint('thumb_post_tr()')
-        return self.g.translate(self.sh.web_post(),
-                         [(self.p.mount_width / 2) - self.p.post_adj, ((self.p.mount_height / 2) + self.p.double_plate_height) - self.p.post_adj, 0]
-                         )
-
-    def thumb_post_tl(self):
-        debugprint('thumb_post_tl()')
-        return self.g.translate(self.sh.web_post(),
-                         [-(self.p.mount_width / 2) + self.p.post_adj, ((self.p.mount_height / 2) + self.p.double_plate_height) - self.p.post_adj, 0]
-                         )
-
-    def thumb_post_bl(self):
-        debugprint('thumb_post_bl()')
-        return self.g.translate(self.sh.web_post(),
-                         [-(self.p.mount_width / 2) + self.p.post_adj, -((self.p.mount_height / 2) + self.p.double_plate_height) + self.p.post_adj, 0]
-                         )
-
-    def thumb_post_br(self):
-        debugprint('thumb_post_br()')
-        return self.g.translate(self.sh.web_post(),
-                         [(self.p.mount_width / 2) - self.p.post_adj, -((self.p.mount_height / 2) + self.p.double_plate_height) + self.p.post_adj, 0]
-                         )
 
     def thumb_connectors(self, side="right"):
         print('thumb_connectors()')
@@ -411,7 +326,7 @@ class DefaultCluster(ca.ClusterBase):
                 )
             )
 
-        # return add(hulls)
+        # return self.g.add(hulls)
         return self.g.union(hulls)
 
 

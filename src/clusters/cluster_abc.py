@@ -52,7 +52,6 @@ class ClusterBase(ABC):
     is_tb = False
 
     def __init__(self, parent, t_parameters=None):
-        self.overrides = {}
         self.g = parent.g
         self.p = parent.p
         self.parent = parent
@@ -63,10 +62,11 @@ class ClusterBase(ABC):
 
         self.tp = t_parameters
 
+        self.set_overrides()
 
-    def get_overrides(self):
-        return self.overrides
 
+    def set_overrides(self):
+        pass
 
     @staticmethod
     def name():
@@ -79,6 +79,74 @@ class ClusterBase(ABC):
             origin[i] = origin[i] + self.tp.thumb_offsets[i]
 
         return origin
+
+
+    def tl_place(self, shape):
+        debugprint('tl_place()')
+        shape = self.g.rotate(shape, self.tp.tl_rotation)
+        shape = self.g.translate(shape, self.thumborigin())
+        shape = self.g.translate(shape, self.tp.tl_position)
+        return shape
+
+    def tr_place(self, shape):
+        debugprint('tr_place()')
+        shape = self.g.rotate(shape, self.tp.tr_rotation)
+        shape = self.g.translate(shape, self.thumborigin())
+        shape = self.g.translate(shape, self.tp.tr_position)
+        return shape
+
+    def mr_place(self, shape):
+        debugprint('mr_place()')
+        shape = self.g.rotate(shape, self.tp.mr_rotation)
+        shape = self.g.translate(shape, self.thumborigin())
+        shape = self.g.translate(shape, self.tp.mr_position)
+        return shape
+
+    def ml_place(self, shape):
+        debugprint('ml_place()')
+        shape = self.g.rotate(shape, self.tp.ml_rotation)
+        shape = self.g.translate(shape, self.thumborigin())
+        shape = self.g.translate(shape, self.tp.ml_position)
+        return shape
+
+    def br_place(self, shape):
+        debugprint('br_place()')
+        shape = self.g.rotate(shape,  self.tp.br_rotation)
+        shape = self.g.translate(shape, self.thumborigin())
+        shape = self.g.translate(shape, self.tp.br_position)
+        return shape
+
+    def bl_place(self, shape):
+        debugprint('bl_place()')
+        shape = self.g.rotate(shape, self.tp.bl_rotation)
+        shape = self.g.translate(shape, self.thumborigin())
+        shape = self.g.translate(shape, self.tp.bl_position)
+        return shape
+
+    def thumb_post_tr(self):
+        debugprint('thumb_post_tr()')
+        return self.g.translate(self.sh.web_post(),
+                         [(self.p.mount_width / 2) - self.p.post_adj, ((self.p.mount_height / 2) + self.p.double_plate_height) - self.p.post_adj, 0]
+                         )
+
+    def thumb_post_tl(self):
+        debugprint('thumb_post_tl()')
+        return self.g.translate(self.sh.web_post(),
+                         [-(self.p.mount_width / 2) + self.p.post_adj, ((self.p.mount_height / 2) + self.p.double_plate_height) - self.p.post_adj, 0]
+                         )
+
+    def thumb_post_bl(self):
+        debugprint('thumb_post_bl()')
+        return self.g.translate(self.sh.web_post(),
+                         [-(self.p.mount_width / 2) + self.p.post_adj, -((self.p.mount_height / 2) + self.p.double_plate_height) + self.p.post_adj, 0]
+                         )
+
+    def thumb_post_br(self):
+        debugprint('thumb_post_br()')
+        return self.g.translate(self.sh.web_post(),
+                         [(self.p.mount_width / 2) - self.p.post_adj, -((self.p.mount_height / 2) + self.p.double_plate_height) + self.p.post_adj, 0]
+                         )
+
 
     def thumb_1x_layout(self, shape, cap=False):
         return shape

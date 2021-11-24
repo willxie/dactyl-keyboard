@@ -174,8 +174,6 @@ class ShapeConfiguration:
 
     # minidox_thumb_screw_xy_locations = [[-37, -34]]
     # minidox_separable_thumb_screw_xy_locations = [[-37, -34], [-62, 12], [10, -25]]
-    # carbonfet_thumb_screw_xy_locations = [[-48, -37]]
-    # carbonfet_separable_thumb_screw_xy_locations = [[-48, -37], [-52, 10], [12, -35]]
     # orbyl_thumb_screw_xy_locations = [[-53, -68]]
     # orbyl_separable_thumb_screw_xy_locations = [[-53, -68], [-66, 8], [10, -40]]
     # tbcj_thumb_screw_xy_locations = [[-40, -75]]
@@ -523,8 +521,8 @@ if __name__ == '__main__':
     import clusters.mini as clust
 
     db = DactylBase(ShapeConfiguration(
-        right_cluster=clust.MiniClusterParameters(),
-        left_cluster=clust.MiniClusterParameters(),
+        # right_cluster=clust.MiniClusterParameters(),
+        # left_cluster=clust.MiniClusterParameters(),
     ))
     db.run()
 
