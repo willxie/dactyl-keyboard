@@ -10,6 +10,8 @@ import shutil
 import importlib
 import helpers_abc
 import default_configuration as cfg
+from dataclasses import dataclass
+from typing import Any
 
 # from clusters.default_cluster import DefaultCluster
 # from clusters.carbonfet import CarbonfetCluster
@@ -20,24 +22,31 @@ import default_configuration as cfg
 # from clusters.trackball_cj import TrackballCJ
 # from clusters.custom_cluster import CustomCluster
 
-CLUSTER_LOOKUP = {
-    'DEFAULT': {'package': 'default_cluster', 'class': 'DefaultCluster'},
-    'CARBONFET': {'package': 'carbonfet', 'class': 'CarbonfetCluster'},
-    'MINI': {'package': 'mini', 'class': 'MiniCluster'},
-    'MINIDOX': {'package': 'minidox', 'class': 'MinidoxCluster'},
-    'TRACKBALL_ORBYL': {'package': 'trackball_orbyl', 'class': 'TrackballOrbyl'},
-    'TRACKBALL_WILD': {'package': 'trackball_wilder', 'class': 'TrackballWild'},
-    'TRACKBALL_CJ': {'package': 'trackball_cj', 'class': 'TrackballCJ'},
-    'TRACKBALL_CUSTOM': {'package': 'custom_cluster', 'class': 'CustomCluster'},
-}
+# CLUSTER_LOOKUP = {
+#     'DEFAULT': {'package': 'default_cluster', 'class': 'DefaultCluster'},
+#     'CARBONFET': {'package': 'carbonfet', 'class': 'CarbonfetCluster'},
+#     'MINI': {'package': 'mini', 'class': 'MiniCluster'},
+#     'MINIDOX': {'package': 'minidox', 'class': 'MinidoxCluster'},
+#     'TRACKBALL_ORBYL': {'package': 'trackball_orbyl', 'class': 'TrackballOrbyl'},
+#     'TRACKBALL_WILD': {'package': 'trackball_wilder', 'class': 'TrackballWild'},
+#     'TRACKBALL_CJ': {'package': 'trackball_cj', 'class': 'TrackballCJ'},
+#     'TRACKBALL_CUSTOM': {'package': 'custom_cluster', 'class': 'CustomCluster'},
+# }
 
 ENGINE_LOOKUP = {
     'solid': 'helpers_solid',
     'cadquery': 'helpers_cadquery',
 }
 
+
 debug_exports = False
 debug_trace = False
+
+@dataclass
+class Override:
+    obj_type: str  = 'base'  # base, cluster, oled, etc.  Should match object collection in default config.
+    variable: str = 'default'  # needs to match variable name
+    value: Any = None #  object to be assigned.  Can be nested if there are multiple levels.
 
 
 def deg2rad(degrees: float) -> float:
@@ -58,11 +67,87 @@ def debugprint(info):
         print(info)
 
 
-###############################################
-# EXTREMELY UGLY BUT FUNCTIONAL BOOTSTRAP
-###############################################
 
-## IMPORT DEFAULT CONFIG IN CASE NEW PARAMETERS EXIST
+dat = Override(obj_type='base', variable='double_plate_height', value=55)
+
+## LISTING VARIABLES IN SHAPE CLASS FOR PARAMETER SEPARATION CONSIDERATIONS.
+# shape_vars=[
+########################
+# PLATE INTERFACE DIMENSIONS
+########################
+# mount_thickness
+# mount_width
+# mount_height
+# sa_length
+# plate_thickness
+# adjustable_plate_height
+# double_plate_height
+
+########################
+# PLATE INTERNAL DIMENSIONS
+########################
+# keyswitch_width
+# keyswitch_height
+
+# clip_undercut
+# undercut_transition
+# notch_width
+#
+# plate_file
+# plate_offset
+# adjustable_plate_height
+# double_plate_height
+#
+########################
+# WEB AND POST GEOMETRIES
+########################
+# post_size
+# web_thickness
+# post_adj
+#
+#
+########################
+# PLATE HOLES FOR PCB MOUNT
+########################
+# plate_holes_width
+# plate_holes_height
+# plate_holes_xy_offset
+# plate_holes_diameter
+# plate_holes_depth
+#
+########################
+# PLATE REPRESENTATION
+########################
+# plate_pcb_size
+# plate_pcb_offset
+# pcb_hole_diameter
+# pcb_hole_pattern_width
+# pcb_hole_pattern_height
+# pcb_width
+# pcb_height
+# pcb_thickness
+#
+########################
+# TRACKBALL GEOMETRIES
+########################
+# trackball_modular
+# ball_diameter
+# ball_gap
+# ball_wall_thickness
+# trackball_modular_clearance
+# trackball_modular_lip_width
+# trackball_hole_diameter
+# trackball_hole_height
+# hole_diameter
+#
+########################
+# PARTS LOAD PATH
+########################
+# parts_path
+#
+# ]
+
+
 
 class ShapeFunctions:
     def __init__(self, parent):
@@ -96,7 +181,8 @@ class ShapeFunctions:
                     mount_thickness=self.p.mount_thickness,
                     clip_undercut=self.p.clip_undercut, undercut_transition=self.p.undercut_transition,
                 )
-            if self.p.plate_style in ['NOTCH', 'HS_NOTCH']:
+            # if self.p.plate_style in ['NOTCH', 'HS_NOTCH']:
+            else:
                 undercut = self.plate_notch(
                     keyswitch_width=self.p.keyswitch_width, keyswitch_height=self.p.keyswitch_height,
                     mount_thickness=self.p.mount_thickness,
@@ -461,14 +547,22 @@ class ShapeFunctions:
 
 
 class DactylBase:
+
     def __init__(self, parameters):
 
         self.p = parameters
-        self.g = helpers_abc
-        self.g = importlib.import_module(ENGINE_LOOKUP[self.p.ENGINE])
+
+        # Below is used to allow IDE autofill from helpers_abc regardless of actual imported engine.
+        if self.p.ENGINE is not None:
+            self.g = importlib.import_module(ENGINE_LOOKUP[self.p.ENGINE])
+        else:
+            self.g = helpers_abc
 
         self.right_cluster = None
         self.left_cluster = None
+
+        # self.p.right_thumb_style = self.p.right_cluster.thumb_style
+        # self.p.left_thumb_style = self.p.left_cluster.thumb_style
 
         self.p.left_wall_x_offset = 8
         self.p.left_wall_z_offset = 3
@@ -520,19 +614,15 @@ class DactylBase:
             self.p.plate_file = path.join(self.p.parts_path, self.p.pname)
             # plate_offset = 0.0 # this overwrote the config variable
 
-        if (self.p.trackball_in_wall or ('TRACKBALL' in self.p.thumb_style)) and not self.p.ball_side == 'both':
+        # if (self.p.trackball_in_wall or ('TRACKBALL' in self.p.thumb_style)) and not self.p.ball_side == 'both':
+        if self.right_cluster != self.left_cluster:
             self.p.symmetry = "asymmetric"
 
         self.p.mount_width = self.p.keyswitch_width + 2 * self.p.plate_rim
         self.p.mount_height = self.p.keyswitch_height + 2 * self.p.plate_rim
         self.p.mount_thickness = self.p.plate_thickness
 
-        if self.p.default_1U_cluster and self.p.thumb_style == 'DEFAULT':
-            self.p.double_plate_height = (.7 * self.p.sa_double_length - self.p.mount_height) / 3
-        elif self.p.thumb_style == 'DEFAULT':
-            self.p.double_plate_height = (.95 * self.p.sa_double_length - self.p.mount_height) / 3
-        else:
-            self.p.double_plate_height = (self.p.sa_double_length - self.p.mount_height) / 3
+        self.p.double_plate_height = (self.p.sa_double_length - self.p.mount_height) / 3
 
         if self.p.oled_mount_type is not None and self.p.oled_mount_type != "NONE":
             self.p.left_wall_x_offset = self.p.oled_config.oled_left_wall_x_offset_override
@@ -563,54 +653,6 @@ class DactylBase:
         if not path.isdir(self.p.save_path):
             os.mkdir(self.p.save_path)
 
-        #
-        # import generate_configuration as cfg
-        # for item in cfg.shape_config:
-        #     globals()[item] = cfg.shape_config[item]
-        #
-        # if True:
-        #     print("NO CONFIGURATION SPECIFIED, USING run_config.json")
-        #     with open(os.path.join(r".", 'run_config.json'), mode='r') as fid:
-        #         data = json.load(fid)
-        #
-        # else:
-        #     ## CHECK FOR CONFIG FILE AND WRITE TO ANY VARIABLES IN FILE.
-        #     opts, args = getopt.getopt(sys.argv[1:], "", ["config="])
-        #     for opt, arg in opts:
-        #         if opt in ('--config'):
-        #             with open(os.path.join(r"..", "configs", arg + '.json'), mode='r') as fid:
-        #                 data = json.load(fid)
-        #
-        # if "overrides" not in data:
-        #     data['overrides']=None
-        #
-        # if data["overrides"] not in [None, ""]:
-        #     with open(os.path.join(data["overrides"]), mode='r') as fid:
-        #         override_data = json.load(fid)
-        #     for item in override_data:
-        #         data[item] = override_data[item]
-        #
-        # for item in data:
-        #     globals()[item] = data[item]
-        #
-        # if self.p.save_name is not None:
-        #     self.p.config_name = self.p.save_name
-        #
-        # elif self.p.overrides is not None:
-        #     self.p.config_name = self.p.override_name + "_" + str(self.p.nrows) + "x" + str(self.p.ncols) + "_" + self.p.thumb_style
-        #
-        # # ENGINE = data["ENGINE"]
-        # # Really rough setup.  Check for ENGINE, set it not present from configuration.
-        # try:
-        #     print('Found Current Engine in Config = {}'.format(ENGINE))
-        # except Exception:
-        #     print('Engine Not Found in Config')
-        #     ENGINE = 'solid'
-        #     # ENGINE = 'cadquery'
-        #     print('Setting Current Engine = {}'.format(ENGINE))
-
-        parts_path = os.path.abspath(path.join(r".", "parts"))
-
         if self.p.override_name in ['', None, '.']:
             if self.p.save_dir in ['', None, '.']:
                 self.p.save_path = path.join(r"..", "things")
@@ -627,29 +669,11 @@ class DactylBase:
         if not dir_exists:
             os.makedirs(self.p.save_path, exist_ok=True)
 
-        # if overrides not in [None, ""]:
-        #     shutil.copy(overrides, save_path)
-        ###############################################
-        # END EXTREMELY UGLY BOOTSTRAP
-        ###############################################
-        #
-        # ####################################################
-        # # HELPER FUNCTIONS TO MERGE CADQUERY AND OPENSCAD
-        # ####################################################
-        #
-        # if ENGINE == 'cadquery':
-        #     globals().update(importlib.import_module("helpers_cadquery").__dict__)
-        # else:
-        #     globals().update(importlib.import_module("helpers_solid").__dict__)
-        #
-        # ####################################################
-        # # END HELPER FUNCTIONS
-        # ####################################################
-
         self.sh = ShapeFunctions(self)
+        self.set_clusters()
+
 
         ## TODO: RELOCATE ITEMS BELOW, TEMPORARILY MOVED TO INIT
-
         self.p.rj9_start = list(
             np.array([0, -3, 0])
             + np.array(
@@ -775,8 +799,8 @@ class DactylBase:
         column_angle = self.p.beta * (self.p.centercol - column)
 
         column_x_delta_actual = self.p.column_x_delta
-        if (self.p.pinky_1_5U and column == self.p.lastcol):
-            if row >= self.p.first_1_5U_row and row <= self.p.last_1_5U_row:
+        if self.p.pinky_1_5U and column == self.p.lastcol:
+            if self.p.first_1_5U_row <= row <= self.p.last_1_5U_row:
                 column_x_delta_actual = self.p.column_x_delta - 1.5
                 column_angle = self.p.beta * (self.p.centercol - column - 0.27)
 
@@ -2021,6 +2045,11 @@ class DactylBase:
 
     def model_side(self, side="right"):
         print('model_right()')
+        if side == "left":
+            cluster = self.left_cluster
+        else:
+            cluster = self.right_cluster
+
         # shape = add([key_holes(side=side)])
         shape = self.g.union([self.key_holes(side=side)])
         if debug_exports:
@@ -2103,18 +2132,18 @@ class DactylBase:
         # BUILD THUMB
 
         # thumb_shape = thumb(side=side)
-        thumb_shape = self.cluster(side=side).thumb(side=side),
+        thumb_shape = cluster.thumb(side=side),
 
         if debug_exports:
              self.g.export_file(shape=thumb_shape, fname=path.join(r"..", "things", r"debug_thumb_shape"))
-        thumb_connector_shape = self.cluster(side=side).thumb_connectors(side=side)
+        thumb_connector_shape = cluster.thumb_connectors(side=side)
         if debug_exports:
              self.g.export_file(shape=thumb_connector_shape, fname=path.join(r"..", "things", r"debug_thumb_connector_shape"))
 
-        thumb_wall_shape = self.cluster(side=side).walls(side=side, skeleton=self.p.skeletal)
+        thumb_wall_shape = cluster.walls(side=side, skeleton=self.p.skeletal)
         # TODO: FIX THUMB INSERTS
         # thumb_wall_shape = self.g.union([thumb_wall_shape, *cluster(side=side).thumb_screw_insert_outers(side=side)])
-        thumb_connection_shape = self.cluster(side=side).connection(side=side, skeleton=self.p.skeletal)
+        thumb_connection_shape = cluster.connection(side=side, skeleton=self.p.skeletal)
 
         if debug_exports:
             thumb_test = self.g.union([thumb_shape, thumb_connector_shape, thumb_wall_shape, thumb_connection_shape])
@@ -2126,9 +2155,9 @@ class DactylBase:
         # thumb_section = self.g.difference(thumb_section, [union(cluster(side=side).thumb_screw_insert_holes(side=side))])
 
         has_trackball = False
-        if ('TRACKBALL' in self.p.thumb_style) and (side == self.p.ball_side or self.p.ball_side == 'both'):
+        if cluster.is_tb:
             print("Has Trackball")
-            tbprecut, tb, tbcutout, sensor, ball = self.generate_trackball_in_cluster(self.cluster(side=side))
+            tbprecut, tb, tbcutout, sensor, ball = self.generate_trackball_in_cluster(cluster)
             has_trackball = True
             thumb_section = self.g.difference(thumb_section, [tbprecut])
             if debug_exports:
@@ -2148,7 +2177,7 @@ class DactylBase:
                             fname=path.join(r"..", "things", r"debug_thumb_test_4_shape".format(side)))
 
         if self.p.plate_pcb_clear:
-            thumb_section = self.g.difference(thumb_section, [self.cluster(side=side).thumb_pcb_plate_cutouts(side=side)])
+            thumb_section = self.g.difference(thumb_section, [cluster.thumb_pcb_plate_cutouts(side=side)])
 
         block = self.g.box(350, 350, 40)
         block = self.g.translate(block, (0, 0, -20))
@@ -2160,7 +2189,7 @@ class DactylBase:
         if self.p.separable_thumb:
             thumb_section = self.g.difference(thumb_section, [main_shape])
             if self.p.show_caps:
-                thumb_section = self.g.add([thumb_section, self.cluster(side=side).thumbcaps(side=side)])
+                thumb_section = self.g.add([thumb_section, cluster.thumbcaps(side=side)])
                 if has_trackball:
                     thumb_section = self.g.add([thumb_section, ball])
         else:
@@ -2169,7 +2198,7 @@ class DactylBase:
                  self.g.export_file(shape=main_shape,
                             fname=path.join(r"..", "things", r"debug_thumb_test_6_shape".format(side)))
             if self.p.show_caps:
-                main_shape = self.g.add([main_shape, self.cluster(side=side).thumbcaps(side=side)])
+                main_shape = self.g.add([main_shape, cluster.thumbcaps(side=side)])
                 if has_trackball:
                     main_shape = self.g.add([main_shape, ball])
 
@@ -2198,16 +2227,20 @@ class DactylBase:
         return main_shape, thumb_section
 
     def baseplate(self, wedge_angle=None, side='right'):
+        if side == "left":
+            cluster = self.left_cluster
+        else:
+            cluster = self.right_cluster
         if self.p.ENGINE == 'cadquery':
             cq = self.g.cq
             # shape = mod_r
 
-            thumb_shape = self.cluster(side=side).thumb(side=side)
-            thumb_wall_shape = self.cluster(side=side).walls(side=side, skeleton=self.p.skeletal)
+            thumb_shape = cluster.thumb(side=side)
+            thumb_wall_shape = cluster.walls(side=side, skeleton=self.p.skeletal)
             ## TODO: FIX INSERTS
             # thumb_wall_shape = self.g.union([thumb_wall_shape, *thumb_screw_insert_outers(side=side)])
-            thumb_connector_shape = self.cluster(side=side).connectors(side=side)
-            thumb_connection_shape = self.cluster(side=side).connection(side=side, skeleton=self.p.skeletal)
+            thumb_connector_shape = cluster.connectors(side=side)
+            thumb_connection_shape = cluster.connection(side=side, skeleton=self.p.skeletal)
             thumb_section = self.g.union([thumb_shape, thumb_connector_shape, thumb_wall_shape, thumb_connection_shape])
             ## TODO: FIX INSERTS
             # thumb_section = self.g.difference(thumb_section, [union(cluster(side=side).thumb_screw_insert_holes(side=side))])
@@ -2291,7 +2324,7 @@ class DactylBase:
         else:
             shape = self.g.union([
                 self.case_walls(side=side),
-                self.cluster(side=side).walls(side=side),
+                cluster.walls(side=side),
                 ## TODO: FIX INSERTS
                 # *screw_insert_outers(side=side),
                 # *thumb_screw_insert_outers(side=side),
@@ -2306,20 +2339,21 @@ class DactylBase:
             return self.g.sl.projection(cut=True)(shape)
 
     def run(self):
-        self.right_cluster = self.get_cluster(self.p.thumb_style)
+        # self.right_cluster = self.get_cluster(self.p.thumb_style)
 
-        if self.right_cluster.is_tb:
-            if self.p.ball_side == "both":
-                self.left_cluster = self.right_cluster
-            elif self.p.ball_side == "left":
-                self.left_cluster = self.right_cluster
-                self.right_cluster = self.get_cluster(self.p.other_thumb)
-            else:
-                self.left_cluster = self.get_cluster(self.p.other_thumb)
-        elif self.p.other_thumb != "DEFAULT" and self.p.other_thumb != self.p.thumb_style:
-            self.left_cluster = self.get_cluster(self.p.other_thumb)
-        else:
-            self.left_cluster = self.right_cluster  # this assumes thumb_style always overrides DEFAULT other_thumb
+        # if self.right_cluster is not None:
+        #     self.right_cluster = self.get_cluster(self.p.other_thumb)
+        #     if self.p.ball_side == "both":
+        #         self.left_cluster = self.right_cluster
+        #     elif self.p.ball_side == "left":
+        #         self.left_cluster = self.right_cluster
+        #         self.right_cluster = self.get_cluster(self.p.other_thumb)
+        #     else:
+        #         self.left_cluster = self.get_cluster(self.p.other_thumb)
+        # elif self.p.other_thumb != "DEFAULT" and self.p.other_thumb != self.p.thumb_style:
+        #     self.left_cluster = self.get_cluster(self.p.other_thumb)
+        # else:
+        #     self.left_cluster = self.right_cluster  # this assumes thumb_style always overrides DEFAULT other_thumb
 
         self.config_name = "FIX_IT"
         mod_r, tmb_r = self.model_side(side="right")
@@ -2390,31 +2424,25 @@ class DactylBase:
             self.g.export_file(shape=self.g.union((self.oled_clip_mount_frame()[1], self.oled_clip())),
                     fname=path.join(self.p.save_path, self.p.config_name + r"_oled_clip_assy_test"))
 
-    def get_cluster(self, style):
-        # if style == CarbonfetCluster.name():
-        #     clust = CarbonfetCluster(all_merged)
-        # elif style == MiniCluster.name():
-        #     clust = MiniCluster(all_merged)
-        # elif style == MinidoxCluster.name():
-        #     clust = MinidoxCluster(all_merged)
-        # elif style == TrackballOrbyl.name():
-        #     clust = TrackballOrbyl(all_merged)
-        # elif style == TrackballWild.name():
-        #     clust = TrackballWild(all_merged)
-        # elif style == TrackballCJ.name():
-        #     clust = TrackballCJ(all_merged)
-        # elif style == CustomCluster.name():
-        #     clust = CustomCluster(all_merged)
-        # else:
-        #     clust = DefaultCluster(all_merged)
-        clust_dict = CLUSTER_LOOKUP[style]
-        clust_lib = importlib.import_module('clusters.' + clust_dict['package'])
+    # def get_cluster(self, style):
+    #     clust_lib = importlib.import_module('clusters.' + self.p.cluster_parameters.package)
+    #     #from clusters.custom_cluster import CustomCluster
+    #     clust = getattr(clust_lib, self.p.cluster_parameters.class_name)
+    #     return clust(self)
+
+    def set_clusters(self):
+        clust_lib = importlib.import_module('clusters.' + self.p.right_cluster.package)
         #from clusters.custom_cluster import CustomCluster
-        clust = getattr(clust_lib, clust_dict['class'])
+        clust = getattr(clust_lib, self.p.right_cluster.class_name)
+        self.right_cluster = clust(self, self.p.right_cluster)
 
-        return clust(self)
+        clust_lib = importlib.import_module('clusters.' + self.p.left_cluster.package)
+        #from clusters.custom_cluster import CustomCluster
+        clust = getattr(clust_lib, self.p.left_cluster.class_name)
+        self.left_cluster = clust(self, self.p.left_cluster)
 
-
+        print(self.right_cluster)
+        print(self.left_cluster)
 #
 if __name__ == '__main__':
     pass

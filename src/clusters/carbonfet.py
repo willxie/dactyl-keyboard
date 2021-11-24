@@ -1,4 +1,4 @@
-from clusters.default_cluster import DefaultCluster
+from clusters.default import DefaultCluster
 import numpy as np
 import json
 import os
