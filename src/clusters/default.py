@@ -6,12 +6,6 @@ import clusters.cluster_abc as ca
 from dactyl_manuform import Override, rad2deg, pi
 from typing import Any, Sequence
 
-# @dataclass
-# class Override:
-#     obj_type:str = 'base'  # base, cluster, oled, etc.  Should match object collection in default config.
-#     variable = 'default'  # needs to match variable name
-#     value = None #  object to be assigned.  Can be nested if there are multiple levels.
-
 def debugprint(data):
     pass
     # print

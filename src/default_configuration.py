@@ -525,9 +525,19 @@ if __name__ == '__main__':
 
     # import clusters.carbonfet as clust_cf
     # right_cluster = clust_cf.CarbonfetClusterParameters()
+    #
+    # import clusters.minidox as clust_md
+    # right_cluster = clust_md.MinidoxClusterParameters()
 
-    import clusters.minidox as clust_md
-    right_cluster = clust_md.MinidoxClusterParameters()
+    # import clusters.trackball_cj as clust_tbcj
+    # right_cluster = clust_tbcj.TrackballCJClusterParameters()
+
+    # import clusters.trackball_orbyl as clust_orb
+    # right_cluster = clust_orb.OrbylClusterParameters()
+    #
+    import clusters.trackball_wilder as clust_wd
+    right_cluster = clust_wd.WilderClusterParameters()
+
 
     db = DactylBase(ShapeConfiguration(
         right_cluster=right_cluster,

@@ -575,6 +575,8 @@ class DactylBase:
         self.p.save_name = None
         self.p.override_name = None
 
+        self.p.parts_path = path.join(r"..", r"..", "src", "parts")
+
         self.p.full_last_rows = not self.p.reduced_outer_keys
 
         # if self.p.oled_mount_type is not None and self.p.oled_mount_type != "NONE":
@@ -1430,13 +1432,13 @@ class DactylBase:
         return holes
 
     def generate_trackball(self, pos, rot):
-        precut = self.trackball_cutout()
+        precut = self.sh.trackball_cutout()
         precut = self.g.rotate(precut, self.p.tb_socket_rotation_offset)
         precut = self.g.translate(precut, self.p.tb_socket_translation_offset)
         precut = self.g.rotate(precut, rot)
         precut = self.g.translate(precut, pos)
 
-        shape, cutout, sensor = self.trackball_socket()
+        shape, cutout, sensor = self.sh.trackball_socket()
 
         shape = self.g.rotate(shape, self.p.tb_socket_rotation_offset)
         shape = self.g.translate(shape, self.p.tb_socket_translation_offset)
@@ -1460,7 +1462,7 @@ class DactylBase:
         sensor = self.g.rotate(sensor, rot)
         sensor = self.g.translate(sensor, pos)
 
-        ball = self.trackball_ball()
+        ball = self.sh.trackball_ball()
         ball = self.g.rotate(ball, self.p.tb_socket_rotation_offset)
         ball = self.g.translate(ball, self.p.tb_socket_translation_offset)
         ball = self.g.rotate(ball, rot)

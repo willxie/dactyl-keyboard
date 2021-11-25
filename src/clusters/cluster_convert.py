@@ -7,9 +7,9 @@ fname = "carbonfet.py"
 fname = "mini.py"
 fname = "default.py"
 fname = "minidox.py"
-# fname = "trackball_cj.py"
-# fname = "trackball_orbyl.py"
-# fname = "trackball_wilder.py"
+fname = "trackball_cj.py"
+fname = "trackball_orbyl.py"
+fname = "trackball_wilder.py"
 
 fdir = r"."
 fpath = path.join(fdir, fname)
@@ -54,6 +54,7 @@ f_param = [
     'double_plate_height',
     'cornerrow',
     'lastrow',
+    'post_size',
 ]
 f_parent = [
     'key_place',
@@ -84,6 +85,7 @@ f_tparam = [
     'br_rotation',
     'br_position',
     'minidox_Usize',
+    'key_diameter'
 ]
 
 f_shape = [
