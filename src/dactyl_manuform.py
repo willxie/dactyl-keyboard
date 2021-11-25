@@ -518,9 +518,9 @@ class ShapeFunctions:
     def adjustable_plate_half(self, Usize=1.5):
         debugprint('double_plate()')
         adjustable_plate_height = self.adjustable_plate_size(Usize)
-        top_plate = self.g.box(self.p.mount_width, self.p.adjustable_plate_height, self.p.web_thickness)
-        top_plate = self.g.translate(self.p.top_plate,
-                                     [0, (self.p.adjustable_plate_height + self.p.mount_height) / 2,
+        top_plate = self.g.box(self.p.mount_width, adjustable_plate_height, self.p.web_thickness)
+        top_plate = self.g.translate(top_plate,
+                                     [0, (adjustable_plate_height + self.p.mount_height) / 2,
                                       self.p.plate_thickness - (self.p.web_thickness / 2)]
                                      )
         return top_plate
@@ -1246,7 +1246,7 @@ class DactylBase:
 
         return shape
 
-    def front_wall(self, skeleton=False):
+    def front_wall(self, side='right', skeleton=False):
         print('front_wall()')
         shape = None
 
@@ -1254,8 +1254,9 @@ class DactylBase:
             3, self.p.lastrow, 0, -1, self.sh.web_post_bl(),
             3, self.p.lastrow, 0.5, -1, self.sh.web_post_br()
         )])
+
         shape = self.g.union([shape, self.key_wall_brace(
-            3, self.p.lastrow, 0.5, -1, self.sh.web_post_br(), 
+            3, self.p.lastrow, 0.5, -1, self.sh.web_post_br(),
             4, self.p.cornerrow, .5, -1, self.sh.web_post_bl()
         )])
         shape = self.g.union([shape, self.key_wall_brace(
@@ -2431,6 +2432,8 @@ class DactylBase:
     #     return clust(self)
 
     def set_clusters(self):
+        print(self.p.right_cluster)
+        print(self.p.left_cluster)
         clust_lib = importlib.import_module('clusters.' + self.p.right_cluster.package)
         #from clusters.custom_cluster import CustomCluster
         clust = getattr(clust_lib, self.p.right_cluster.class_name)
@@ -2443,7 +2446,13 @@ class DactylBase:
 
         print(self.right_cluster)
         print(self.left_cluster)
-#
+
+    def get_cluster(self, side='right'):
+        if side=="right":
+            return self.right_cluster
+        else:
+            return self.left_cluster
+
 if __name__ == '__main__':
     pass
 

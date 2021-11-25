@@ -518,11 +518,20 @@ class ShapeConfiguration:
 
 if __name__ == '__main__':
     from dactyl_manuform import *
-    import clusters.mini as clust
+
+
+    # import clusters.mini as clust_min
+    # right_cluster=clust_min.MiniClusterParameters()
+
+    # import clusters.carbonfet as clust_cf
+    # right_cluster = clust_cf.CarbonfetClusterParameters()
+
+    import clusters.minidox as clust_md
+    right_cluster = clust_md.MinidoxClusterParameters()
 
     db = DactylBase(ShapeConfiguration(
-        # right_cluster=clust.MiniClusterParameters(),
-        # left_cluster=clust.MiniClusterParameters(),
+        right_cluster=right_cluster,
+        left_cluster=copy.deepcopy(right_cluster),
     ))
     db.run()
 

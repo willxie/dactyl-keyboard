@@ -6,7 +6,7 @@ import copy
 fname = "carbonfet.py"
 fname = "mini.py"
 fname = "default.py"
-# fname = "minidox.py"
+fname = "minidox.py"
 # fname = "trackball_cj.py"
 # fname = "trackball_orbyl.py"
 # fname = "trackball_wilder.py"
@@ -83,6 +83,7 @@ f_tparam = [
     'bl_position',
     'br_rotation',
     'br_position',
+    'minidox_Usize',
 ]
 
 f_shape = [
@@ -96,6 +97,8 @@ f_shape = [
     'web_post_br',
     'plate_pcb_cutout',
     'web_post',
+    'adjustable_plate',
+    'adjustable_plate_size',
 ]
 
 func_find_re = r"([\s\)\(\[]){}\("
