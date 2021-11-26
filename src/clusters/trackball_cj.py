@@ -41,8 +41,10 @@ class TrackballCJClusterParameters(ca.TrackballClusterParametersBase):
     tb_thickness: float = 2
     tb_outer_diameter: float = 53
 
-    thumb_screw_xy_locations: Sequence[Sequence[float]] = ((-21, -58),)
-    separable_thumb_screw_xy_locations: Sequence[Sequence[float]] = ((-21, -58),)
+    thumb_screw_xy_locations: Sequence[Sequence[float]] = ((-40, -75),)
+    separable_thumb_screw_xy_locations: Sequence[Sequence[float]] = (
+        (-40, -75), (-63, 10), (15, -40)
+    )
 
 
 class TrackballCJCluster(ca.TrackballClusterBase):
@@ -110,16 +112,16 @@ class TrackballCJCluster(ca.TrackballClusterBase):
 
         return shape
 
-    def thumb(self, side="right"):
-        t = self.thumb_layout(self.sh.single_plate(side=side))
+    def thumb(self):
+        t = self.thumb_layout(self.sh.single_plate())
         tb = self.track_place(self.tbcj_holder())
         return self.g.union([t, tb])
 
-    def thumbcaps(self, side='right'):
+    def thumbcaps(self):
         t = self.thumb_layout(self.sh.sa_cap(1))
         return t
 
-    def thumb_connectors(self, side="right"):
+    def thumb_connectors(self):
         hulls = []
 
         # Top two
@@ -233,7 +235,7 @@ class TrackballCJCluster(ca.TrackballClusterBase):
 
 
     # todo update walls for wild track, still identical to orbyl
-    def walls(self, side="right", skeleton=False):
+    def walls(self, skeleton=False):
         print('thumb_walls()')
         # thumb, walls
         shape = self.g.union([self.parent.wall_brace(self.ml_place, -0.3, 1, self.sh.web_post_tr(), self.ml_place, 0, 1, self.sh.web_post_tl())])
@@ -265,13 +267,13 @@ class TrackballCJCluster(ca.TrackballClusterBase):
 
         return shape
 
-    def connection(self, side='right', skeleton=False):
+    def connection(self, skeleton=False):
         print('thumb_connection()')
         # clunky bit on the top left thumb connection  (normal connectors don't work well)
         shape = self.g.union([self.g.bottom_hull(
             [
-                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1, low_corner=True, side=side),
-                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1, low_corner=True, side=side),
+                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1, low_corner=True),
                 self.ml_place(self.g.translate(self.sh.web_post_tr(), self.parent.wall_locate2(-0.3, 1))),
                 self.ml_place(self.g.translate(self.sh.web_post_tr(), self.parent.wall_locate3(-0.3, 1))),
             ]
@@ -280,10 +282,8 @@ class TrackballCJCluster(ca.TrackballClusterBase):
         shape = self.g.union([shape,
                        self.g.hull_from_shapes(
                            [
-                               self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1, low_corner=True,
-                                              side=side),
-                               self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1, low_corner=True,
-                                              side=side),
+                               self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                               self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1, low_corner=True),
                                self.ml_place(self.g.translate(self.sh.web_post_tr(), self.parent.wall_locate2(-0.3, 1))),
                                self.ml_place(self.g.translate(self.sh.web_post_tr(), self.parent.wall_locate3(-0.3, 1))),
                                self.tl_place(self.sh.web_post_tl()),
@@ -293,17 +293,17 @@ class TrackballCJCluster(ca.TrackballClusterBase):
 
         shape = self.g.union([shape, self.g.hull_from_shapes(
             [
-                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1, low_corner=True, side=side),
-                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1, low_corner=True, side=side),
-                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1, low_corner=True, side=side),
+                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1, low_corner=True),
                 self.tl_place(self.sh.web_post_tl()),
             ]
         )])
 
         shape = self.g.union([shape, self.g.hull_from_shapes(
             [
-                self.parent.left_key_place(self.sh.web_post(), self.p.cornerrow, -1, low_corner=True, side=side),
-                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1, low_corner=True, side=side),
+                self.parent.left_key_place(self.sh.web_post(), self.p.cornerrow, -1, low_corner=True),
+                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1, low_corner=True),
                 self.parent.key_place(self.sh.web_post_bl(), 0, self.p.cornerrow),
                 self.tl_place(self.sh.web_post_tl()),
             ]
@@ -321,9 +321,3 @@ class TrackballCJCluster(ca.TrackballClusterBase):
 
         return shape
 
-    def screw_positions(self):
-        position = self.thumborigin()
-        position = list(np.array(position) + np.array([-72, -40, -16]))
-        position[2] = 0
-
-        return position

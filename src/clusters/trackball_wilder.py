@@ -47,10 +47,6 @@ class WilderClusterParameters(tbob.OrbylClusterParameters):
     )
 
 
-    thumb_screw_xy_locations: Sequence[Sequence[float]] = ((-21, -58),)
-    separable_thumb_screw_xy_locations: Sequence[Sequence[float]] = ((-21, -58),)
-
-
 
 
 class WilderCluster(tbob.OrbylCluster):
@@ -119,7 +115,7 @@ class WilderCluster(tbob.OrbylCluster):
         return shape
 
 
-    def thumb_connectors(self, side="right"):
+    def thumb_connectors(self):
         print('thumb_connectors()')
         hulls = []
 
@@ -187,7 +183,7 @@ class WilderCluster(tbob.OrbylCluster):
 
         return self.g.union(hulls)
 
-    def walls(self, side="right", skeleton=False):
+    def walls(self, skeleton=False):
     # def tbjs_thumb_walls(skeleton=False):
         print('thumb_walls()')
         # thumb, walls
@@ -214,8 +210,7 @@ class WilderCluster(tbob.OrbylCluster):
 
         shape = self.g.union([shape, self.parent.wall_brace(
             self.track_place, -1.5, 0, self.tb_post_tl(),
-            # (lambda sh: self.parent.left_key_place(sh, self.p.cornerrow, -1, side=ball_side, low_corner=True)), -1, 0, self.sh.web_post(),
-            (lambda sh: self.parent.left_key_place(sh, self.p.cornerrow, -1, side='right', low_corner=True)), -1, 0,
+            (lambda sh: self.parent.left_key_place(sh, self.p.cornerrow, -1, low_corner=True)), -1, 0,
             self.sh.web_post(),
         )])
         shape = self.g.union([shape, self.parent.wall_brace(
@@ -233,7 +228,7 @@ class WilderCluster(tbob.OrbylCluster):
 
         return shape
 
-    def connection(self, side='right', skeleton=False):
+    def connection(self, skeleton=False):
         print('thumb_connection()')
         # clunky bit on the top left thumb connection  (normal connectors don't work well)
         hulls = []
@@ -241,7 +236,7 @@ class WilderCluster(tbob.OrbylCluster):
             self.g.triangle_hulls(
                 [
                     self.parent.key_place(self.sh.web_post_bl(), 0, self.p.cornerrow),
-                    self.parent.left_key_place(self.sh.web_post(), self.p.lastrow - 1, -1, side=side, low_corner=True),                # self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                    self.parent.left_key_place(self.sh.web_post(), self.p.lastrow - 1, -1, low_corner=True),                # self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1, low_corner=True),
                     self.track_place(self.tb_post_tl()),
                 ]
             )

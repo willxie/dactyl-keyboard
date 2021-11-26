@@ -38,8 +38,10 @@ class OrbylClusterParameters(ca.TrackballClusterParametersBase):
         (0.0, 0.0, 0.0),
     )
 
-    thumb_screw_xy_locations: Sequence[Sequence[float]] = ((-21, -58),)
-    separable_thumb_screw_xy_locations: Sequence[Sequence[float]] = ((-21, -58),)
+    thumb_screw_xy_locations: Sequence[Sequence[float]] = ((-53, -68),)
+    separable_thumb_screw_xy_locations: Sequence[Sequence[float]] = (
+        (-53, -68), (-66, 8), (10, -40)
+    )
 
 
 class OrbylCluster(ca.TrackballClusterBase):
@@ -128,7 +130,7 @@ class OrbylCluster(ca.TrackballClusterBase):
             self.br_place(self.g.rotate(shape, [0, 0, self.tp.thumb_plate_br_rotation])),
         ])
 
-    def thumbcaps(self, side='right'):
+    def thumbcaps(self):
         t1 = self.thumb_1x_layout(self.sh.sa_cap(1))
         return t1
 
@@ -205,20 +207,20 @@ class OrbylCluster(ca.TrackballClusterBase):
                          [0.5*(radius - self.p.post_adj), -0.866*(radius - self.p.post_adj), 0]
                          )
 
-    def thumb(self, side="right"):
-        shape = self.thumb_1x_layout(self.sh.single_plate(side=side))
+    def thumb(self):
+        shape = self.thumb_1x_layout(self.sh.single_plate())
         shape = self.g.union([shape, self.thumb_fx_layout(self.sh.adjustable_square_plate(Uwidth=self.tp.Uwidth, Uheight=self.tp.Uheight))])
 
-        # shape = tbjs_thumb_fx_layout(self.g.rotate(self.sh.single_plate(side=side), [0.0, 0.0, -90]))
+        # shape = tbjs_thumb_fx_layout(self.g.rotate(self.sh.single_plate(), [0.0, 0.0, -90]))
         # shape = tbjs_thumb_fx_layout(adjustable_square_plate(Uwidth=self.tp.Uwidth, Uheight=self.tp.Uheight))
         # shape = self.g.add([shape, *tbjs_thumb_fx_layout(adjustable_square_plate(Uwidth=self.tp.Uwidth, Uheight=self.tp.Uheight))])
 
         # shape = self.g.union([shape, trackball_layout(trackball_socket())])
-        # shape = tbjs_thumb_1x_layout(self.sh.single_plate(side=side))
+        # shape = tbjs_thumb_1x_layout(self.sh.single_plate())
         return shape
 
 
-    def thumb_connectors(self, side="right"):
+    def thumb_connectors(self):
         print('thumb_connectors()')
         hulls = []
 
@@ -287,7 +289,7 @@ class OrbylCluster(ca.TrackballClusterBase):
         return self.g.union(hulls)
 
 
-    def walls(self, side="right", skeleton=False):
+    def walls(self, skeleton=False):
     # def tbjs_thumb_walls(skeleton=False):
         print('thumb_walls()')
         # thumb, walls
@@ -314,8 +316,7 @@ class OrbylCluster(ca.TrackballClusterBase):
 
         shape = self.g.union([shape, self.parent.wall_brace(
             self.track_place, -1.5, 0, self.tb_post_tl(),
-            # (lambda sh: self.parent.left_key_place(sh, self.p.cornerrow, -1, side=ball_side, low_corner=True)), -1, 0, self.sh.web_post(),
-            (lambda sh: self.parent.left_key_place(sh, self.p.cornerrow, -1, side='right', low_corner=True)), -1, 0,
+            (lambda sh: self.parent.left_key_place(sh, self.p.cornerrow, -1, low_corner=True)), -1, 0,
             self.sh.web_post(),
         )])
         shape = self.g.union([shape, self.parent.wall_brace(
@@ -333,7 +334,7 @@ class OrbylCluster(ca.TrackballClusterBase):
 
         return shape
 
-    def connection(self, side='right', skeleton=False):
+    def connection(self, skeleton=False):
         print('thumb_connection()')
         # clunky bit on the top left thumb connection  (normal connectors don't work well)
         hulls = []
@@ -341,7 +342,7 @@ class OrbylCluster(ca.TrackballClusterBase):
             self.g.triangle_hulls(
                 [
                     self.parent.key_place(self.sh.web_post_bl(), 0, self.p.cornerrow),
-                    self.parent.left_key_place(self.sh.web_post(), self.p.lastrow - 1, -1, side=side, low_corner=True),                # self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                    self.parent.left_key_place(self.sh.web_post(), self.p.lastrow - 1, -1, low_corner=True),                # self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1, low_corner=True),
                     self.track_place(self.tb_post_tl()),
                 ]
             )
@@ -375,5 +376,5 @@ class OrbylCluster(ca.TrackballClusterBase):
         return shape
 
 
-    def thumb_pcb_plate_cutouts(self, side="right"):
-        return self.thumb_1x_layout(self.sh.plate_pcb_cutout(side=side))
+    def thumb_pcb_plate_cutouts(self):
+        return self.thumb_1x_layout(self.sh.plate_pcb_cutout())

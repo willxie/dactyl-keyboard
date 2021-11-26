@@ -36,15 +36,10 @@ class CarbonfetClusterParameters(ca.ClusterBase):
     br_rotation: Sequence[float] = (2, -37, 18)
     br_position: Sequence[float] = (-37, -46.4, -22)
 
-    thumb_plate_tr_rotation: float = 0
-    thumb_plate_tl_rotation: float = 0
-    thumb_plate_mr_rotation: float = 0
-    thumb_plate_ml_rotation: float = 0
-    thumb_plate_br_rotation: float = 0
-    thumb_plate_bl_rotation: float = 0
-
     thumb_screw_xy_locations: Sequence[Sequence[float]] = ((-48, -37),)
-    separable_thumb_screw_xy_locations: Sequence[Sequence[float]] = ((-48, -37), (-52, 10), (12, -35))
+    separable_thumb_screw_xy_locations: Sequence[Sequence[float]] = (
+        (-48, -37), (-52, 10), (12, -35)
+    )
 
 
 
@@ -80,20 +75,20 @@ class CarbonfetCluster(ca.ClusterBase):
                 self.ml_place(shape)
             ])
 
-    def thumbcaps(self, side='right'):
+    def thumbcaps(self):
         t1 = self.thumb_1x_layout(self.sh.sa_cap(1))
         t15 = self.thumb_15x_layout(self.g.rotate(self.sh.sa_cap(1.5), [0, 0, rad2deg(pi / 2)]))
         return t1.add(t15)
 
-    def thumb(self, side="right"):
+    def thumb(self):
         print('thumb()')
-        shape = self.thumb_1x_layout(self.sh.single_plate(side=side))
+        shape = self.thumb_1x_layout(self.sh.single_plate())
         shape = self.g.union([shape, self.thumb_15x_layout(self.sh.double_plate_half(), plate=False)])
-        shape = self.g.union([shape, self.thumb_15x_layout(self.sh.single_plate(side=side))])
+        shape = self.g.union([shape, self.thumb_15x_layout(self.sh.single_plate())])
 
         return shape
 
-    def thumb_connectors(self, side="right"):
+    def thumb_connectors(self):
         hulls = []
 
         # Top two
@@ -208,7 +203,7 @@ class CarbonfetCluster(ca.ClusterBase):
         return self.g.union(hulls)
 
 
-    def walls(self, side="right", skeleton=False):
+    def walls(self, skeleton=False):
         print('thumb_walls()')
         # thumb, walls
         shape = self.g.union([self.parent.wall_brace(self.mr_place, 0, -1, self.sh.web_post_br(), self.tr_place, 0, -1, self.sh.web_post_br())])
@@ -231,14 +226,14 @@ class CarbonfetCluster(ca.ClusterBase):
                                   self.sh.web_post_bl())])
         return shape
 
-    def connection(self, side='right', skeleton=False):
+    def connection(self, skeleton=False):
         print('thumb_connection()')
         # clunky bit on the top left thumb connection  (normal connectors don't work well)
         # clunky bit on the top left thumb connection  (normal connectors don't work well)
         shape = self.g.bottom_hull(
             [
-                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1, low_corner=True, side=side),
-                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1, low_corner=True, side=side),
+                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1, low_corner=True),
                 self.bl_place(self.g.translate(self.thumb_post_tr(), self.parent.wall_locate2(-0.3, 1))),
                 self.bl_place(self.g.translate(self.thumb_post_tr(), self.parent.wall_locate3(-0.3, 1))),
             ]
@@ -248,9 +243,9 @@ class CarbonfetCluster(ca.ClusterBase):
                        self.g.hull_from_shapes(
                            [
                                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1,
-                                              low_corner=True, side=side),
+                                              low_corner=True),
                                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1,
-                                              low_corner=True, side=side),
+                                              low_corner=True),
                                self.bl_place(self.g.translate(self.thumb_post_tr(), self.parent.wall_locate2(-0.3, 1))),
                                self.bl_place(self.g.translate(self.thumb_post_tr(), self.parent.wall_locate3(-0.3, 1))),
                                self.ml_place(self.thumb_post_tl()),
@@ -260,13 +255,13 @@ class CarbonfetCluster(ca.ClusterBase):
         shape = self.g.union([shape,
                        self.g.hull_from_shapes(
                            [
-                               self.parent.left_key_place(self.sh.web_post(), self.p.cornerrow, -1, low_corner=True, side=side),
+                               self.parent.left_key_place(self.sh.web_post(), self.p.cornerrow, -1, low_corner=True),
                                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1,
-                                              low_corner=True, side=side),
+                                              low_corner=True),
                                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1,
-                                              low_corner=True, side=side),
+                                              low_corner=True),
                                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1,
-                                              low_corner=True, side=side),
+                                              low_corner=True),
                                self.ml_place(self.thumb_post_tl()),
                            ]
                        )])
@@ -274,9 +269,9 @@ class CarbonfetCluster(ca.ClusterBase):
         shape = self.g.union([shape,
                        self.g.hull_from_shapes(
                            [
-                               self.parent.left_key_place(self.sh.web_post(), self.p.cornerrow, -1, low_corner=True, side=side),
+                               self.parent.left_key_place(self.sh.web_post(), self.p.cornerrow, -1, low_corner=True),
                                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1,
-                                              low_corner=True, side=side),
+                                              low_corner=True),
                                self.parent.key_place(self.sh.web_post_bl(), 0, self.p.cornerrow),
                                self.ml_place(self.thumb_post_tl()),
                            ]
@@ -295,15 +290,8 @@ class CarbonfetCluster(ca.ClusterBase):
 
         return shape
 
-    def screw_positions(self):
-        position = self.thumborigin()
-        position = list(np.array(position) + np.array([-48, -37, 0]))
-        position[2] = 0
-
-        return position
-
-    def thumb_pcb_plate_cutouts(self, side="right"):
-        shape = self.thumb_1x_layout(self.sh.plate_pcb_cutout(side=side))
+    def thumb_pcb_plate_cutouts(self):
+        shape = self.thumb_1x_layout(self.sh.plate_pcb_cutout())
         shape = self.g.union([shape, self.thumb_15x_layout(self.sh.plate_pcb_cutout())])
         #shape = self.g.add([shape, carbonfet_thumb_15x_layout(self.sh.plate_pcb_cutout())])
         return shape

@@ -159,7 +159,7 @@ class ShapeFunctions:
                      # plate_style=None, mount_width=None, mount_height=None,
                      # keyswitch_width=None, keyswitch_height=None, plate_thickness=None, mount_thickness=None,
                      # clip_undercut=None,
-                     cylinder_segments=100, side="right",
+                     cylinder_segments=100,
                      ):
         if self.p.plate_style in ['NUB', 'HS_NUB']:
             plate = self.nub_plate(
@@ -199,13 +199,13 @@ class ShapeFunctions:
 
         if self.p.plate_holes:
             plate = self.plate_screw_holes(
-                plate, side=side,
+                plate,
                 plate_holes_width=self.p.plate_holes_width, plate_holes_height=self.p.plate_holes_height,
                 plate_holes_xy_offset=self.p.plate_holes_xy_offset,
                 plate_holes_diameter=self.p.plate_holes_diameter, plate_holes_depth=self.p.plate_holes_depth
             )
 
-        if side == "left":
+        if self._parent.side == "left":
             plate = self.g.mirror(plate, 'YZ')
 
         return plate
@@ -295,14 +295,14 @@ class ShapeFunctions:
         return undercut
 
     def plate_screw_holes(
-            self, plate, side='right',
+            self, plate,
             plate_holes_width=None, plate_holes_height=None, plate_holes_xy_offset=None,
             plate_holes_diameter=None, plate_holes_depth=None
     ):
         half_width = plate_holes_width / 2.
         half_height = plate_holes_height / 2.
 
-        if side == 'right':
+        if self._parent.side == 'right':
             x_off = plate_holes_xy_offset[0]
         else:
             x_off = -plate_holes_xy_offset[0]
@@ -331,17 +331,17 @@ class ShapeFunctions:
 
         return plate
 
-    def plate_pcb_cutout(self, side="right"):
+    def plate_pcb_cutout(self):
         shape = self.g.box(*self.p.plate_pcb_size)
         shape = self.g.translate(shape, (0, 0, -self.p.plate_pcb_size[2] / 2))
         shape = self.g.translate(shape, self.p.plate_pcb_offset)
 
-        if side == "left":
+        if self._parent.side == "left":
             shape = self.g.mirror(shape, 'YZ')
 
         return shape
 
-    def trackball_cutout(self, segments=100, side="right"):
+    def trackball_cutout(self, segments=100):
         if self.p.trackball_modular:
             hole_diameter = self.p.ball_diameter + 2 * (
                         self.p.ball_gap + self.p.ball_wall_thickness + self.p.trackball_modular_clearance + self.p.trackball_modular_lip_width) - .1
@@ -350,7 +350,7 @@ class ShapeFunctions:
             shape = self.g.cylinder(self.p.trackball_hole_diameter / 2, self.p.trackball_hole_height)
         return shape
 
-    def trackball_socket(self, segments=100, side="right"):
+    def trackball_socket(self, segments=100):
         if self.p.trackball_modular:
             hole_diameter = self.p.ball_diameter + 2 * (
                         self.p.ball_gap + self.p.ball_wall_thickness + self.p.trackball_modular_clearance)
@@ -379,7 +379,7 @@ class ShapeFunctions:
         # return shape, cutter
         return shape, cutter, sensor
 
-    def trackball_ball(self, segments=100, side="right"):
+    def trackball_ball(self, segments=100):
         shape = self.g.sphere(self.p.ball_diameter / 2)
         return shape
 
@@ -550,26 +550,35 @@ class DactylBase:
 
     def __init__(self, parameters):
 
-        self.p = parameters
+        self.p_base = parameters
+        self.p = None
 
         # Below is used to allow IDE autofill from helpers_abc regardless of actual imported engine.
-        if self.p.ENGINE is not None:
-            self.g = importlib.import_module(ENGINE_LOOKUP[self.p.ENGINE])
+        if self.p_base.ENGINE is not None:
+            self.g = importlib.import_module(ENGINE_LOOKUP[self.p_base.ENGINE])
         else:
             self.g = helpers_abc
 
-        self.right_cluster = None
-        self.left_cluster = None
+
+        if self.p_base.right_cluster is None:
+            self.p_base.right_cluster = self.p_base.left_cluster
+        elif self.p_base.left_cluster is None:
+            self.p_base.left_cluster = self.p_base.right_cluster
+
+        if self.p_base.right_cluster != self.p_base.left_cluster:
+            self.p_base.symmetric = False
+
+        self.cluster = None
 
         # self.p.right_thumb_style = self.p.right_cluster.thumb_style
         # self.p.left_thumb_style = self.p.left_cluster.thumb_style
 
-        self.p.left_wall_x_offset = 8
-        self.p.left_wall_z_offset = 3
-        self.p.left_wall_lower_y_offset = 0
-        self.p.left_wall_lower_z_offset = 0
+    def process_parameters(self, side='right'):
 
-        self.p.symmetry = None
+        self.side = side
+
+        self.p = copy.deepcopy(self.p_base)
+
         self.p.column_style = None
 
         self.p.save_name = None
@@ -577,14 +586,13 @@ class DactylBase:
 
         self.p.parts_path = path.join(r"..", r"..", "src", "parts")
 
-        self.p.full_last_rows = not self.p.reduced_outer_keys
 
         # if self.p.oled_mount_type is not None and self.p.oled_mount_type != "NONE":
         #     for item in self.p.oled_configurations[oled_mount_type]:
         #         globals()[item] = oled_configurations[oled_mount_type][item]
 
         if self.p.nrows > 5:
-            self.p.column_style = 'column_style_gt5'
+            self.p.column_style = self.p.column_style_gt5
 
         self.p.lastrow = self.p.nrows - 1
         if self.p.reduced_outer_keys:
@@ -609,16 +617,12 @@ class DactylBase:
             self.p.keyswitch_width = self.p.hole_keyswitch_width
 
         if 'HS_' in self.p.plate_style:
-            self.p.symmetry = "asymmetric"
+            self.p.symmetric = False
             pname = r"hot_swap_plate"
             if self.p.plate_file_name is not None:
                 self.p.pname = self.p.plate_file_name
             self.p.plate_file = path.join(self.p.parts_path, self.p.pname)
             # plate_offset = 0.0 # this overwrote the config variable
-
-        # if (self.p.trackball_in_wall or ('TRACKBALL' in self.p.thumb_style)) and not self.p.ball_side == 'both':
-        if self.right_cluster != self.left_cluster:
-            self.p.symmetry = "asymmetric"
 
         self.p.mount_width = self.p.keyswitch_width + 2 * self.p.plate_rim
         self.p.mount_height = self.p.keyswitch_height + 2 * self.p.plate_rim
@@ -641,15 +645,7 @@ class DactylBase:
         self.p.column_x_delta = -1 - self.p.column_radius * np.sin(self.p.beta)
         self.p.column_base_angle = self.p.beta * (self.p.centercol - 2)
 
-        self.p.teensy_width = 20
-        self.p.teensy_height = 12
-        self.p.teensy_length = 33
-        self.p.teensy2_length = 53
-        self.p.teensy_pcb_thickness = 2
-        self.p.teensy_offset_height = 5
-        self.p.teensy_holder_top_length = 18
-        self.p.teensy_holder_width = 7 + self.p.teensy_pcb_thickness
-        self.p.teensy_holder_height = 6 + self.p.teensy_width
+
 
         self.p.save_path = path.join("..", "things", self.p.save_dir)
         if not path.isdir(self.p.save_path):
@@ -665,65 +661,13 @@ class DactylBase:
             # parts_path = path.join(r"..", r"..", "src", "parts")
         else:
             self.p.save_path = path.join(self.p.save_dir, self.p.override_name)
-            # parts_path = path.jo
 
         dir_exists = os.path.isdir(self.p.save_path)
         if not dir_exists:
             os.makedirs(self.p.save_path, exist_ok=True)
 
         self.sh = ShapeFunctions(self)
-        self.set_clusters()
-
-
-        ## TODO: RELOCATE ITEMS BELOW, TEMPORARILY MOVED TO INIT
-        self.p.rj9_start = list(
-            np.array([0, -3, 0])
-            + np.array(
-                self.key_position(
-                    list(np.array(self.wall_locate3(0, 1)) + np.array([0, (self.p.mount_height / 2), 0])),
-                    0,
-                    0,
-                )
-            )
-        )
-
-        self.p.rj9_position = (self.p.rj9_start[0], self.p.rj9_start[1], 11)
-
-        self.p.usb_holder_position = self.key_position(
-            list(np.array(self.wall_locate2(0, 1)) + np.array([0, (self.p.mount_height / 2), 0])), 1, 0
-        )
-        self.p.usb_holder_size = [6.5, 10.0, 13.6]
-        self.p.usb_holder_thickness = 4
-
-        self.p.external_start = list(
-            # np.array([0, -3, 0])
-            np.array([self.p.external_holder_width / 2, 0, 0])
-            + np.array(
-                self.key_position(
-                    list(np.array(self.wall_locate3(0, 1)) + np.array([0, (self.p.mount_height / 2), 0])),
-                    0,
-                    0,
-                )
-            )
-        )
-
-        self.p.pcb_mount_ref_position = self.key_position(
-            # TRRS POSITION IS REFERENCE BY CONVENIENCE
-            list(np.array(self.wall_locate3(0, 1)) + np.array([0, (self.p.mount_height / 2), 0])), 0, 0
-        )
-
-        self.p.pcb_mount_ref_position[0] = self.p.pcb_mount_ref_position[0] + self.p.pcb_mount_ref_offset[0]
-        self.p.pcb_mount_ref_position[1] = self.p.pcb_mount_ref_position[1] + self.p.pcb_mount_ref_offset[1]
-        self.p.pcb_mount_ref_position[2] = 0.0 + self.p.pcb_mount_ref_offset[2]
-
-        self.p.pcb_holder_position = copy.deepcopy(self.p.pcb_mount_ref_position)
-        self.p.pcb_holder_position[0] = self.p.pcb_holder_position[0] + self.p.pcb_holder_offset[0]
-        self.p.pcb_holder_position[1] = self.p.pcb_holder_position[1] + self.p.pcb_holder_offset[1]
-        self.p.pcb_holder_position[2] = self.p.pcb_holder_position[2] + self.p.pcb_holder_offset[2]
-        self.p.pcb_holder_thickness = self.p.pcb_holder_size[2]
-
-        self.p.pcb_screw_position = copy.deepcopy(self.p.pcb_mount_ref_position)
-        self.p.pcb_screw_position[1] = self.p.pcb_screw_position[1] + self.p.pcb_screw_y_offset
+        self.load_cluster()
 
         if self.p.oled_center_row is not None:
             base_pt1 = self.key_position(
@@ -749,14 +693,79 @@ class DactylBase:
             self.p.oled_mount_rotation_xyz = (rad2deg(angle_x), 0, -rad2deg(angle_z)) + np.array(
                 self.p.oled_rotation_offset)
 
+
+    def teensy_config(self):
+        self.p.teensy_width = 20
+        self.p.teensy_height = 12
+        self.p.teensy_length = 33
+        self.p.teensy2_length = 53
+        self.p.teensy_pcb_thickness = 2
+        self.p.teensy_offset_height = 5
+        self.p.teensy_holder_top_length = 18
+        self.p.teensy_holder_width = 7 + self.p.teensy_pcb_thickness
+        self.p.teensy_holder_height = 6 + self.p.teensy_width
+
+    def external_holder_config(self):
+        self.p.external_start = list(
+            # np.array([0, -3, 0])
+            np.array([self.p.external_holder_width / 2, 0, 0])
+            + np.array(
+                self.key_position(
+                    list(np.array(self.wall_locate3(0, 1)) + np.array([0, (self.p.mount_height / 2), 0])),
+                    0,
+                    0,
+                )
+            )
+        )
+
+
+    def rj9_config(self):
+        self.p.rj9_start = list(
+            np.array([0, -3, 0])
+            + np.array(
+                self.key_position(
+                    list(np.array(self.wall_locate3(0, 1)) + np.array([0, (self.p.mount_height / 2), 0])),
+                    0,
+                    0,
+                )
+            )
+        )
+
+        self.p.rj9_position = (self.p.rj9_start[0], self.p.rj9_start[1], 11)
+
+        self.p.usb_holder_position = self.key_position(
+            list(np.array(self.wall_locate2(0, 1)) + np.array([0, (self.p.mount_height / 2), 0])), 1, 0
+        )
+        self.p.usb_holder_size = [6.5, 10.0, 13.6]
+        self.p.usb_holder_thickness = 4
+
+
+    def pcb_mount_config(self):
+        self.p.pcb_mount_ref_position = self.key_position(
+        # TRRS POSITION IS REFERENCE BY CONVENIENCE
+        list(np.array(self.wall_locate3(0, 1)) + np.array([0, (self.p.mount_height / 2), 0])), 0, 0
+    )
+
+        self.p.pcb_mount_ref_position[0] = self.p.pcb_mount_ref_position[0] + self.p.pcb_mount_ref_offset[0]
+        self.p.pcb_mount_ref_position[1] = self.p.pcb_mount_ref_position[1] + self.p.pcb_mount_ref_offset[1]
+        self.p.pcb_mount_ref_position[2] = 0.0 + self.p.pcb_mount_ref_offset[2]
+
+        self.p.pcb_holder_position = copy.deepcopy(self.p.pcb_mount_ref_position)
+        self.p.pcb_holder_position[0] = self.p.pcb_holder_position[0] + self.p.pcb_holder_offset[0]
+        self.p.pcb_holder_position[1] = self.p.pcb_holder_position[1] + self.p.pcb_holder_offset[1]
+        self.p.pcb_holder_position[2] = self.p.pcb_holder_position[2] + self.p.pcb_holder_offset[2]
+        self.p.pcb_holder_thickness = self.p.pcb_holder_size[2]
+
+        self.p.pcb_screw_position = copy.deepcopy(self.p.pcb_mount_ref_position)
+        self.p.pcb_screw_position[1] = self.p.pcb_screw_position[1] + self.p.pcb_screw_y_offset
+
+
     def column_offset(self, column: int) -> list:
         result = self.p.column_offsets[column]
         # if (pinky_1_5U and column == lastcol):
         #     result[0] = result[0] + 1
         return result
 
-    def cluster(self, side="right"):
-        return self.right_cluster if side == "right" else self.left_cluster
 
     #########################
     ## Placement Functions ##
@@ -842,7 +851,6 @@ class DactylBase:
 
     def valid_key(self, column, row):
         if not self.p.reduced_outer_keys:
-            # if (full_last_rows):
             return (not (column in [0, 1])) or (not row == self.p.lastrow)
 
         return (column in [2, 3]) or (not row == self.p.lastrow)
@@ -866,14 +874,14 @@ class DactylBase:
             vals.append(shape[i] + xyz[i])
         return vals
 
-    def plate_pcb_cutouts(self, side="right"):
+    def plate_pcb_cutouts(self):
         debugprint('plate_pcb_cutouts()')
         # hole = single_plate()
         cutouts = []
         for column in range(self.p.ncols):
             for row in range(self.p.nrows):
                 if (column in [2, 3]) or (not row == self.p.lastrow):
-                    cutouts.append(self.key_place(self.sh.plate_pcb_cutout(side=side), column, row))
+                    cutouts.append(self.key_place(self.sh.plate_pcb_cutout(), column, row))
 
         # cutouts = self.g.union(cutouts)
 
@@ -885,13 +893,13 @@ class DactylBase:
             position, self.add_translate, self.rotate_around_x, self.rotate_around_y, column, row
         )
 
-    def key_holes(self, side="right"):
+    def key_holes(self):
         debugprint('key_holes()')
         holes = []
         for column in range(self.p.ncols):
             for row in range(self.p.nrows):
                 if self.valid_key(column, row):
-                    holes.append(self.key_place(self.sh.single_plate(side=side), column, row))
+                    holes.append(self.key_place(self.sh.single_plate(), column, row))
 
         shape = self.g.union(holes)
 
@@ -915,7 +923,7 @@ class DactylBase:
 
     def get_torow(self, column):
         torow = self.p.lastrow
-        if self.p.full_last_rows:
+        if not self.p.reduced_outer_keys:
             torow = self.p.lastrow + 1
         if column in [0, 1]:
             torow = self.p.lastrow
@@ -982,7 +990,7 @@ class DactylBase:
 
         return self.g.union(hulls)
 
-    # def thumb_pcb_plate_cutouts(self, side='right', style_override=None):
+    # def thumb_pcb_plate_cutouts(self, style_override=None):
     #     if style_override is None:
     #         _thumb_style = thumb_style
     #     else:
@@ -1011,12 +1019,12 @@ class DactylBase:
     ## Case ##
     ##########
 
-    def left_key_position(self, row, direction, low_corner=False, side='right'):
+    def left_key_position(self, row, direction, low_corner=False):
         debugprint("left_key_position()")
         pos = np.array(
             self.key_position([-self.p.mount_width * 0.5, direction * self.p.mount_height * 0.5, 0], 0, row)
         )
-        if self.p.trackball_in_wall and (side == self.p.ball_side or self.p.ball_side == 'both'):
+        if self.p.trackball_in_wall and (self.side == self.p.ball_side or self.p.ball_side == 'both'):
 
             if low_corner:
                 x_offset = self.p.tbiw_left_wall_lower_x_offset
@@ -1044,9 +1052,9 @@ class DactylBase:
 
         return list(pos - np.array([self.p.left_wall_x_offset - x_offset, -y_offset, self.p.left_wall_z_offset + z_offset]))
 
-    def left_key_place(self, shape, row, direction, low_corner=False, side='right'):
+    def left_key_place(self, shape, row, direction, low_corner=False):
         debugprint("left_key_place()")
-        pos = self.left_key_position(row, direction, low_corner=low_corner, side=side)
+        pos = self.left_key_position(row, direction, low_corner=low_corner)
         return self.g.translate(shape, pos)
 
     def wall_locate1(self, dx, dy):
@@ -1194,16 +1202,16 @@ class DactylBase:
 
         return shape
 
-    def left_wall(self, side='right', skeleton=False):
+    def left_wall(self, skeleton=False):
         print('left_wall()')
         shape = self.g.union([self.wall_brace(
             (lambda sh: self.key_place(sh, 0, 0)), 0, 1, self.sh.web_post_tl(),
-            (lambda sh: self.left_key_place(sh, 0, 1, side=side)), 0, 1, self.sh.web_post(),
+            (lambda sh: self.left_key_place(sh, 0, 1)), 0, 1, self.sh.web_post(),
         )])
 
         shape = self.g.union([shape, self.wall_brace(
-            (lambda sh: self.left_key_place(sh, 0, 1, side=side)), 0, 1, self.sh.web_post(),
-            (lambda sh: self.left_key_place(sh, 0, 1, side=side)), -1, 0, self.sh.web_post(),
+            (lambda sh: self.left_key_place(sh, 0, 1)), 0, 1, self.sh.web_post(),
+            (lambda sh: self.left_key_place(sh, 0, 1)), -1, 0, self.sh.web_post(),
             skeleton=skeleton,
         )])
 
@@ -1212,8 +1220,8 @@ class DactylBase:
             y = i
             low = (y == (self.p.cornerrow))
             temp_shape1 = self.wall_brace(
-                (lambda sh: self.left_key_place(sh, y, 1, side=side)), -1, 0, self.sh.web_post(),
-                (lambda sh: self.left_key_place(sh, y, -1, low_corner=low, side=side)), -1, 0, self.sh.web_post(),
+                (lambda sh: self.left_key_place(sh, y, 1)), -1, 0, self.sh.web_post(),
+                (lambda sh: self.left_key_place(sh, y, -1, low_corner=low)), -1, 0, self.sh.web_post(),
                 skeleton=skeleton and (y < (self.p.cornerrow)),
             )
             shape = self.g.union([shape, temp_shape1])
@@ -1221,8 +1229,8 @@ class DactylBase:
             temp_shape2 = self.g.hull_from_shapes((
                 self.key_place(self.sh.web_post_tl(), 0, y),
                 self.key_place(self.sh.web_post_bl(), 0, y),
-                self.left_key_place(self.sh.web_post(), y, 1, side=side),
-                self.left_key_place(self.sh.web_post(), y, -1, low_corner=low, side=side),
+                self.left_key_place(self.sh.web_post(), y, 1),
+                self.left_key_place(self.sh.web_post(), y, -1, low_corner=low),
             ))
 
             shape = self.g.union([shape, temp_shape2])
@@ -1231,8 +1239,8 @@ class DactylBase:
             y = i + 1
             low = (y == (self.p.cornerrow))
             temp_shape1 = self.wall_brace(
-                (lambda sh: self.left_key_place(sh, y - 1, -1, side=side)), -1, 0, self.sh.web_post(),
-                (lambda sh: self.left_key_place(sh, y, 1, side=side)), -1, 0, self.sh.web_post(),
+                (lambda sh: self.left_key_place(sh, y - 1, -1)), -1, 0, self.sh.web_post(),
+                (lambda sh: self.left_key_place(sh, y, 1)), -1, 0, self.sh.web_post(),
                 skeleton=skeleton and (y < (self.p.cornerrow)),
             )
             shape = self.g.union([shape, temp_shape1])
@@ -1240,15 +1248,15 @@ class DactylBase:
             temp_shape2 = self.g.hull_from_shapes((
                 self.key_place(self.sh.web_post_tl(), 0, y),
                 self.key_place(self.sh.web_post_bl(), 0, y - 1),
-                self.left_key_place(self.sh.web_post(), y, 1, side=side),
-                self.left_key_place(self.sh.web_post(), y - 1, -1, side=side),
+                self.left_key_place(self.sh.web_post(), y, 1),
+                self.left_key_place(self.sh.web_post(), y - 1, -1),
             ))
 
             shape = self.g.union([shape, temp_shape2])
 
         return shape
 
-    def front_wall(self, side='right', skeleton=False):
+    def front_wall(self, skeleton=False):
         print('front_wall()')
         shape = None
 
@@ -1281,17 +1289,17 @@ class DactylBase:
 
         return shape
 
-    def case_walls(self, side='right', skeleton=False):
+    def case_walls(self, skeleton=False):
         print('case_walls()')
         return (
             self.g.union([
                 self.back_wall(skeleton=skeleton),
-                self.left_wall(side=side, skeleton=skeleton),
+                self.left_wall(skeleton=skeleton),
                 self.right_wall(skeleton=skeleton),
                 self.front_wall(skeleton=skeleton),
                 # MOVED TO SEPARABLE THUMB SECTION
-                # cluster(side=side).walls(side=side),
-                # cluster(side=side).connection(side=side),
+                # cluster().walls(),
+                # cluster().connection(),
             ])
         )
 
@@ -1307,6 +1315,8 @@ class DactylBase:
 
     def rj9_holder(self):
         print('rj9_holder()')
+        self.rj9_config()
+
         shape = self.g.union([
             self.g.translate(self.g.box(10.78, 9, 18.38), (0, 2, 0)),
             self.g.translate(self.g.box(10.78, 13, 5), (0, 0, 5))
@@ -1346,6 +1356,8 @@ class DactylBase:
 
     def external_mount_hole(self):
         print('external_mount_hole()')
+        self.external_holder_config()
+
         shape = self.g.box(self.p.external_holder_width, 20.0, self.p.external_holder_height + .1)
         undercut = self.g.box(self.p.external_holder_width + 8, 10.0, self.p.external_holder_height + 8 + .1)
         shape = self.g.union([shape, self.g.translate(undercut, (0, -5, 0))])
@@ -1509,10 +1521,10 @@ class DactylBase:
         pos, rot = self.tbiw_position_rotation()
         return self.generate_trackball(pos, rot)
 
-    def oled_position_rotation(self, side='right'):
+    def oled_position_rotation(self):
         _oled_center_row = None
         _oled_translation_offset = None
-        if self.p.trackball_in_wall and (side == self.p.ball_side or self.p.ball_side == 'both'):
+        if self.p.trackball_in_wall and (self.side == self.p.ball_side or self.p.ball_side == 'both'):
             _oled_center_row = self.p.tbiw_oled_center_row
             _oled_translation_offset = self.p.tbiw_oled_translation_offset
             _oled_rotation_offset = self.p.tbiw_oled_rotation_offset
@@ -1533,7 +1545,7 @@ class DactylBase:
                 list(np.array([-self.p.mount_width / 2, 0, 0]) + np.array([0, (self.p.mount_height / 2), 0])), 0, _oled_center_row
             )
 
-            if self.p.trackball_in_wall and (side == self.p.ball_side or self.p.ball_side == 'both'):
+            if self.p.trackball_in_wall and (self.side == self.p.ball_side or self.p.ball_side == 'both'):
                 _left_wall_x_offset = self.p.tbiw_left_wall_x_offset_override
             else:
                 _left_wall_x_offset = self.p.left_wall_x_offset
@@ -1544,7 +1556,7 @@ class DactylBase:
 
             angle_x = np.arctan2(base_pt1[2] - base_pt2[2], base_pt1[1] - base_pt2[1])
             angle_z = np.arctan2(base_pt1[0] - base_pt2[0], base_pt1[1] - base_pt2[1])
-            if self.p.trackball_in_wall and (side == self.p.ball_side or self.p.ball_side == 'both'):
+            if self.p.trackball_in_wall and (self.side == self.p.ball_side or self.p.ball_side == 'both'):
                 # oled_mount_rotation_xyz = (0, rad2deg(angle_x), -rad2deg(angle_z)-90) + np.array(oled_rotation_offset)
                 # oled_mount_rotation_xyz = (rad2deg(angle_x)*.707, rad2deg(angle_x)*.707, -45) + np.array(oled_rotation_offset)
                 oled_mount_rotation_xyz = (0, rad2deg(angle_x), -90) + np.array(_oled_rotation_offset)
@@ -1553,7 +1565,7 @@ class DactylBase:
 
         return oled_mount_location_xyz, oled_mount_rotation_xyz
 
-    def oled_sliding_mount_frame(self, side='right'):
+    def oled_sliding_mount_frame(self):
         mount_ext_width = self.p.oled_mount_width + 2 * self.p.oled_mount_rim
         mount_ext_height = (
                 self.p.oled_mount_height + 2 * self.p.oled_edge_overlap_end
@@ -1630,7 +1642,7 @@ class DactylBase:
 
         shape = self.g.difference(shape, [conn_hole, top_hole, end_hole])
 
-        oled_mount_location_xyz, oled_mount_rotation_xyz = self.oled_position_rotation(side=side)
+        oled_mount_location_xyz, oled_mount_rotation_xyz = self.oled_position_rotation()
 
         shape = self.g.rotate(shape, oled_mount_rotation_xyz)
         shape = self.g.translate(shape,
@@ -1651,7 +1663,7 @@ class DactylBase:
                          )
         return hole, shape
 
-    def oled_clip_mount_frame(self, side='right'):
+    def oled_clip_mount_frame(self):
         mount_ext_width = self.p.oled_config.oled_mount_width + 2 * self.p.oled_config.oled_mount_rim
         mount_ext_height = (
                 self.p.oled_config.oled_mount_height + 2 * self.p.oled_config.oled_clip_thickness
@@ -1687,7 +1699,7 @@ class DactylBase:
         plate = self.g.translate(plate, (0., 0., -self.p.oled_config.oled_thickness / 2.0))
         shape = self.g.union([shape, plate])
 
-        oled_mount_location_xyz, oled_mount_rotation_xyz = self.oled_position_rotation(side=side)
+        oled_mount_location_xyz, oled_mount_rotation_xyz = self.oled_position_rotation()
 
         shape = self.g.rotate(shape, oled_mount_rotation_xyz)
         shape = self.g.translate(shape,
@@ -1773,7 +1785,7 @@ class DactylBase:
 
         return shape
 
-    def oled_undercut_mount_frame(self, side='right'):
+    def oled_undercut_mount_frame(self):
         mount_ext_width = self.p.oled_config.oled_mount_width + 2 * self.p.oled_config.oled_mount_rim
         mount_ext_height = self.p.oled_config.oled_mount_height + 2 * self.p.oled_config.oled_mount_rim
         hole = self.g.box(mount_ext_width, mount_ext_height, self.p.oled_config.oled_mount_cut_depth + .01)
@@ -1787,7 +1799,7 @@ class DactylBase:
         undercut = self.g.translate(undercut, (0., 0., -self.p.oled_config.oled_mount_undercut_thickness))
         shape = self.g.difference(shape, [undercut])
 
-        oled_mount_location_xyz, oled_mount_rotation_xyz = self.oled_position_rotation(side=side)
+        oled_mount_location_xyz, oled_mount_rotation_xyz = self.oled_position_rotation()
 
         shape = self.g.rotate(shape, oled_mount_rotation_xyz)
         shape = self.g.translate(shape, (
@@ -1809,6 +1821,9 @@ class DactylBase:
 
     def teensy_holder(self):
         print('teensy_holder()')
+
+        self.teensy_config()
+
         teensy_top_xy = self.key_position(self.wall_locate3(-1, 0), 0, self.p.centerrow - 1)
         teensy_bot_xy = self.key_position(self.wall_locate3(-1, 0), 0, self.p.centerrow + 1)
         teensy_holder_length = teensy_top_xy[1] - teensy_bot_xy[1]
@@ -1855,9 +1870,7 @@ class DactylBase:
         debugprint('screw_insert_shape()')
         if bottom_radius == top_radius:
             base = self.g.cylinder(radius=bottom_radius, height=height)
-            # base = self.g.translate(cylinder(radius=bottom_radius, height=height),
-            #                  (0, 0, -height / 2)
-            #                  )
+            # base = self.g.translate(cylinder(radius=bottom_radius, height=height),(0, 0, -height / 2))
         else:
             base = self.g.translate(self.g.cone(r1=bottom_radius, r2=top_radius, height=height), (0, 0, -height / 2))
 
@@ -1867,7 +1880,7 @@ class DactylBase:
         ))
         return shape
 
-    def screw_insert(self, column, row, bottom_radius, top_radius, height, side='right'):
+    def screw_insert(self, column, row, bottom_radius, top_radius, height):
         debugprint('screw_insert()')
         shift_right = column == self.p.lastcol
         shift_left = column == 0
@@ -1882,7 +1895,7 @@ class DactylBase:
             shift_up_adjust = -self.p.wall_base_y_thickness / 3
 
         elif self.p.screws_offset == 'OUTSIDE':
-            debugprint('Shift Outside')
+            # debugprint('Shift Outside')
             shift_left_adjust = 0
             shift_right_adjust = self.p.wall_base_x_thickness / 2
             shift_down_adjust = self.p.wall_base_y_thickness * 2 / 3
@@ -1909,7 +1922,7 @@ class DactylBase:
             )
         elif shift_left:
             position = list(
-                np.array(self.left_key_position(row, 0, side=side)) + np.array(self.wall_locate3(-1, 0)) + np.array(
+                np.array(self.left_key_position(row, 0)) + np.array(self.wall_locate3(-1, 0)) + np.array(
                     (shift_left_adjust, 0, 0))
             )
         else:
@@ -1926,147 +1939,94 @@ class DactylBase:
 
         return shape
 
-    def screw_insert_thumb(self, bottom_radius, top_radius, height, side='right'):
-        position = self.cluster(side).screw_positions()
+    def screw_insert_thumb_shapes(self, bottom_radius, top_radius, height, offset=0):
+        positions = self.cluster.screw_positions()
+        # print(positions)
+        shapes = []
+        for position in positions:
+            scr_shape = self.screw_insert_shape(bottom_radius, top_radius, height)
+            scr_shape = self.g.translate(scr_shape, [position[0], position[1], height / 2])
+            scr_shape = self.g.translate(scr_shape,(0, 0, offset))
+            shapes.append(scr_shape)
+        return shapes
 
-        shape = self.screw_insert_shape(bottom_radius, top_radius, height)
-        shape = self.g.translate(shape, [position[0], position[1], height / 2])
-        return shape
 
-    # def screw_insert_all_shapes(bottom_radius, top_radius, height, offset=0, side='right'):
-    #     print('screw_insert_all_shapes()')
-    #     shape = (
-    #         self.g.translate(screw_insert(0, 0, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
-    #         self.g.translate(screw_insert(0, lastrow - 1, bottom_radius, top_radius, height, side=side),
-    #                   (0, left_wall_lower_y_offset, offset)),
-    #         self.g.translate(screw_insert(3, lastrow, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
-    #         self.g.translate(screw_insert(3, 0, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
-    #         self.g.translate(screw_insert(lastcol, 0, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
-    #         self.g.translate(screw_insert(lastcol, lastrow - 1, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
-    #         self.g.translate(screw_insert_thumb(bottom_radius, top_radius, height, side=side), (0, 0, offset)),
-    #     )
-
-    #     return shape
-
-    ## TODO: Check against thumb cluster definitions
-    # def thumb_screw_insert(bottom_radius, top_radius, height, offset=None, side='right'):
-    #     shape = screw_insert_shape(bottom_radius, top_radius, height)
-    #     shapes = []
-    #     if offset is None:
-    #         offset = 0.0
-
-    #     origin = thumborigin()
-
-    #     if ('TRACKBALL' in thumb_style) and not (side == ball_side or ball_side == 'both'):
-    #         _thumb_style = other_thumb
-    #     else:
-    #         _thumb_style = thumb_style
-
-    #     if _thumb_style == 'MINI':
-    #         if separable_thumb:
-    #             xypositions = copy.deepcopy(mini_separable_thumb_screw_xy_locations)
-    #         else:
-    #             xypositions = copy.deepcopy(mini_thumb_screw_xy_locations)
-
-    #     elif _thumb_style == 'MINIDOX':
-    #         if separable_thumb:
-    #             xypositions = copy.deepcopy(minidox_separable_thumb_screw_xy_locations)
-    #         else:
-    #             xypositions = copy.deepcopy(minidox_thumb_screw_xy_locations)
-    #         xypositions[0][1] = xypositions[0][1] - .4 * (minidox_Usize - 1) * sa_length
-
-    #     elif _thumb_style == 'CARBONFET':
-    #         if separable_thumb:
-    #             xypositions = copy.deepcopy(carbonfet_separable_thumb_screw_xy_locations)
-    #         else:
-    #             xypositions = copy.deepcopy(carbonfet_thumb_screw_xy_locations)
-
-    #     elif _thumb_style == 'TRACKBALL_ORBYL':
-    #         if separable_thumb:
-    #             xypositions = copy.deepcopy(orbyl_separable_thumb_screw_xy_locations)
-    #         else:
-    #             xypositions = copy.deepcopy(orbyl_thumb_screw_xy_locations)
-
-    #     elif _thumb_style == 'TRACKBALL_CJ':
-    #         if separable_thumb:
-    #             xypositions = copy.deepcopy(tbcj_separable_thumb_screw_xy_locations)
-    #         else:
-    #             xypositions = copy.deepcopy(tbcj_thumb_screw_xy_locations)
-
-    #     else:
-    #         if separable_thumb:
-    #             xypositions = copy.deepcopy(default_separable_thumb_screw_xy_locations)
-    #         else:
-    #             xypositions = copy.deepcopy(default_thumb_screw_xy_locations)
-
-    #     for xyposition in xypositions:
-    #         position = list(np.array(origin) + np.array([*xyposition, -origin[2]]))
-    #         shapes.append(translate(shape, [position[0], position[1], height / 2 + offset]))
-
-    #     return shapes
-
-    def screw_insert_all_shapes(self, bottom_radius, top_radius, height, offset=0, side='right'):
+    def screw_insert_all_shapes(self, bottom_radius, top_radius, height, offset=0):
         print('screw_insert_all_shapes()')
         shape = (
-            self.g.translate(self.screw_insert(0, 0, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
-            self.g.translate(self.screw_insert(0, self.p.cornerrow, bottom_radius, top_radius, height, side=side),
-                      (0, self.p.left_wall_lower_y_offset, offset)),
-            self.g.translate(self.screw_insert(3, self.p.lastrow, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
-            self.g.translate(self.screw_insert(3, 0, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
-            self.g.translate(self.screw_insert(self.p.lastcol, 0, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
-            self.g.translate(self.screw_insert(self.p.lastcol, self.p.cornerrow, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
+            self.g.translate(self.screw_insert(0, 0, bottom_radius, top_radius, height),
+                             (0, 0, offset)),
+            self.g.translate(self.screw_insert(0, self.p.cornerrow, bottom_radius, top_radius, height),
+                             (0, self.p.left_wall_lower_y_offset, offset)),
+            self.g.translate(self.screw_insert(3, self.p.lastrow, bottom_radius, top_radius, height),
+                             (0, 0, offset)),
+            self.g.translate(self.screw_insert(3, 0, bottom_radius, top_radius, height),
+                             (0, 0, offset)),
+            self.g.translate(self.screw_insert(self.p.lastcol, 0, bottom_radius, top_radius, height),
+                             (0, 0, offset)),
+            self.g.translate(self.screw_insert(self.p.lastcol, self.p.cornerrow, bottom_radius, top_radius, height, ),
+                             (0, 0, offset)),
             # self.g.translate(screw_insert_thumb(bottom_radius, top_radius, height), (0, 0, offset)),
         )
 
         return shape
 
-    def screw_insert_holes(self, side='right'):
-        return self.screw_insert_all_shapes(
-            self.p.screw_insert_bottom_radius, self.p.screw_insert_top_radius, self.p.screw_insert_height + .02, offset=-.01, side=side
-        )
+    def screw_insert_holes(self, thumb=False):
+        if thumb:
+            return self.screw_insert_thumb_shapes(
+                self.p.screw_insert_bottom_radius, self.p.screw_insert_top_radius, self.p.screw_insert_height + .02,
+                offset=-.01
+            )
+        else:
+            return self.screw_insert_all_shapes(
+                self.p.screw_insert_bottom_radius, self.p.screw_insert_top_radius, self.p.screw_insert_height + .02,
+                offset=-.01
+            )
 
-    # def screw_insert_outers(side='right'):
-    #     return screw_insert_all_shapes(
-    #         screw_insert_bottom_radius + 1.6,
-    #         screw_insert_top_radius + 1.6,
-    #         screw_insert_height + 1.5,
-    #         side=side
-    #     )
 
-    def screw_insert_outers(self, offset=0.0, side='right'):
+
+    def screw_insert_outers(self, offset=0.0, thumb=False):
         # screw_insert_bottom_radius + screw_insert_wall
         # screw_insert_top_radius + screw_insert_wall
         bottom_radius = self.p.screw_insert_outer_radius
         top_radius = self.p.screw_insert_outer_radius
         height = self.p.screw_insert_height + 1.5
-        return self.screw_insert_all_shapes(bottom_radius, top_radius, height, offset=offset, side=side)
 
-    def screw_insert_screw_holes(self, side='right'):
-        return self.screw_insert_all_shapes(1.7, 1.7, 350, side=side)
+        if thumb:
+            return self.screw_insert_thumb_shapes(bottom_radius, top_radius, height, offset=offset)
+        else:
+            return self.screw_insert_all_shapes(bottom_radius, top_radius, height, offset=offset)
+
+
+    def screw_insert_screw_holes(self, thumb=False):
+        if thumb:
+            return self.screw_insert_thumb_shapes(1.7, 1.7, 350)
+        else:
+            return self.screw_insert_all_shapes(1.7, 1.7, 350)
 
     ## TODO:  Find places to inject the thumb features.
 
-    def model_side(self, side="right"):
+    def model_side(self):
         print('model_right()')
-        if side == "left":
-            cluster = self.left_cluster
-        else:
-            cluster = self.right_cluster
+        # if side == "left":
+        #     cluster = self.left_cluster
+        # else:
+        #     cluster = self.right_cluster
 
-        # shape = add([key_holes(side=side)])
-        shape = self.g.union([self.key_holes(side=side)])
+        # shape = add([key_holes()])
+        shape = self.g.union([self.key_holes()])
         if debug_exports:
             self.g. self.g.export_file(shape=shape, fname=path.join(r"..", "things", r"debug_key_plates"))
         connector_shape = self.connectors()
         shape = self.g.union([shape, connector_shape])
         if debug_exports:
              self.g.export_file(shape=shape, fname=path.join(r"..", "things", r"debug_connector_shape"))
-        walls_shape = self.case_walls(side=side, skeleton=self.p.skeletal)
+        walls_shape = self.case_walls(skeleton=self.p.skeletal)
         if debug_exports:
              self.g.export_file(shape=walls_shape, fname=path.join(r"..", "things", r"debug_walls_shape"))
 
         s2 = self.g.union([walls_shape])
-        s2 = self.g.union([s2, *self.screw_insert_outers(side=side)])
+        s2 = self.g.union([s2, *self.screw_insert_outers()])
 
         if self.p.controller_mount_type in ['RJ9_USB_TEENSY', 'USB_TEENSY']:
             s2 = self.g.union([s2, self.teensy_holder()])
@@ -2082,6 +2042,7 @@ class DactylBase:
             s2 = self.g.difference(s2, [self.external_mount_hole()])
 
         if self.p.controller_mount_type in ['PCB_MOUNT']:
+            self.pcb_mount_config()
             s2 = self.g.difference(s2, [self.pcb_usb_hole()])
             s2 = self.g.difference(s2, [self.trrs_hole()])
             s2 = self.g.union([s2, self.pcb_holder()])
@@ -2091,28 +2052,28 @@ class DactylBase:
         if self.p.controller_mount_type in [None, 'None']:
             0  # do nothing, only here to expressly state inaction.
 
-        s2 = self.g.difference(s2, [self.g.union(self.screw_insert_holes(side=side))])
+        s2 = self.g.difference(s2, [self.g.union(self.screw_insert_holes())])
         shape = self.g.union([shape, s2])
 
         if self.p.controller_mount_type in ['RJ9_USB_TEENSY', 'RJ9_USB_WALL']:
             shape = self.g.union([shape, self.rj9_holder()])
 
         if self.p.oled_mount_type == "UNDERCUT":
-            hole, frame = self.oled_undercut_mount_frame(side=side)
+            hole, frame = self.oled_undercut_mount_frame()
             shape = self.g.difference(shape, [hole])
             shape = self.g.union([shape, frame])
 
         elif self.p.oled_mount_type == "SLIDING":
-            hole, frame = self.oled_sliding_mount_frame(side=side)
+            hole, frame = self.oled_sliding_mount_frame()
             shape = self.g.difference(shape, [hole])
             shape = self.g.union([shape, frame])
 
         elif self.p.oled_mount_type == "CLIP":
-            hole, frame = self.oled_clip_mount_frame(side=side)
+            hole, frame = self.oled_clip_mount_frame()
             shape = self.g.difference(shape, [hole])
             shape = self.g.union([shape, frame])
 
-        if self.p.trackball_in_wall and (side == self.p.ball_side or self.p.ball_side == 'both') and self.p.separable_thumb:
+        if self.p.trackball_in_wall and (self.side == self.p.ball_side or self.p.ball_side == 'both') and self.p.separable_thumb:
             tbprecut, tb, tbcutout, sensor, ball = self.generate_trackball_in_wall()
 
             shape = self.g.difference(shape, [tbprecut])
@@ -2128,71 +2089,72 @@ class DactylBase:
                 shape = self.g.add([shape, ball])
 
         if self.p.plate_pcb_clear:
-            shape = self.g.difference(shape, [self.plate_pcb_cutouts(side=side)])
+            shape = self.g.difference(shape, [self.plate_pcb_cutouts()])
 
         main_shape = shape
 
         # BUILD THUMB
 
-        # thumb_shape = thumb(side=side)
-        thumb_shape = cluster.thumb(side=side),
+        # thumb_shape = thumb()
+        thumb_shape = self.cluster.thumb()
 
         if debug_exports:
              self.g.export_file(shape=thumb_shape, fname=path.join(r"..", "things", r"debug_thumb_shape"))
-        thumb_connector_shape = cluster.thumb_connectors(side=side)
+        thumb_connector_shape = self.cluster.thumb_connectors()
         if debug_exports:
              self.g.export_file(shape=thumb_connector_shape, fname=path.join(r"..", "things", r"debug_thumb_connector_shape"))
 
-        thumb_wall_shape = cluster.walls(side=side, skeleton=self.p.skeletal)
+        thumb_wall_shape = self.cluster.walls(skeleton=self.p.skeletal)
         # TODO: FIX THUMB INSERTS
-        # thumb_wall_shape = self.g.union([thumb_wall_shape, *cluster(side=side).thumb_screw_insert_outers(side=side)])
-        thumb_connection_shape = cluster.connection(side=side, skeleton=self.p.skeletal)
+        # screws = cluster().screw_positions(self.p.separable_thumb)
+        thumb_wall_shape = self.g.union([thumb_wall_shape, *self.screw_insert_outers(thumb=True)])
+        thumb_connection_shape = self.cluster.connection(skeleton=self.p.skeletal)
 
         if debug_exports:
             thumb_test = self.g.union([thumb_shape, thumb_connector_shape, thumb_wall_shape, thumb_connection_shape])
-            self.g.export_file(shape=thumb_test, fname=path.join(r"..", "things", r"debug_thumb_test_{}_shape".format(side)))
+            self.g.export_file(shape=thumb_test, fname=path.join(r"..", "things", r"debug_thumb_test_{}_shape".format(self.side)))
 
         thumb_section = self.g.union([thumb_shape, thumb_connector_shape, thumb_wall_shape, thumb_connection_shape])
 
         # TODO: FIX THUMB INSERTS
-        # thumb_section = self.g.difference(thumb_section, [union(cluster(side=side).thumb_screw_insert_holes(side=side))])
+        thumb_section = self.g.difference(thumb_section, self.screw_insert_holes(thumb=True))
 
         has_trackball = False
-        if cluster.is_tb:
+        if self.cluster.is_tb:
             print("Has Trackball")
-            tbprecut, tb, tbcutout, sensor, ball = self.generate_trackball_in_cluster(cluster)
+            tbprecut, tb, tbcutout, sensor, ball = self.generate_trackball_in_cluster(self.cluster)
             has_trackball = True
             thumb_section = self.g.difference(thumb_section, [tbprecut])
             if debug_exports:
                  self.g.export_file(shape=thumb_section,
-                            fname=path.join(r"..", "things", r"debug_thumb_test_1_shape".format(side)))
+                            fname=path.join(r"..", "things", r"debug_thumb_test_1_shape".format(self.side)))
             thumb_section = self.g.union([thumb_section, tb])
             if debug_exports:
                  self.g.export_file(shape=thumb_section,
-                            fname=path.join(r"..", "things", r"debug_thumb_test_2_shape".format(side)))
+                            fname=path.join(r"..", "things", r"debug_thumb_test_2_shape".format(self.side)))
             thumb_section = self.g.difference(thumb_section, [tbcutout])
             if debug_exports:
                  self.g.export_file(shape=thumb_section,
-                            fname=path.join(r"..", "things", r"debug_thumb_test_3_shape".format(side)))
+                            fname=path.join(r"..", "things", r"debug_thumb_test_3_shape".format(self.side)))
             thumb_section = self.g.union([thumb_section, sensor])
             if debug_exports:
                  self.g.export_file(shape=thumb_section,
-                            fname=path.join(r"..", "things", r"debug_thumb_test_4_shape".format(side)))
+                            fname=path.join(r"..", "things", r"debug_thumb_test_4_shape".format(self.side)))
 
         if self.p.plate_pcb_clear:
-            thumb_section = self.g.difference(thumb_section, [cluster.thumb_pcb_plate_cutouts(side=side)])
+            thumb_section = self.g.difference(thumb_section, [self.cluster.thumb_pcb_plate_cutouts()])
 
         block = self.g.box(350, 350, 40)
         block = self.g.translate(block, (0, 0, -20))
         main_shape = self.g.difference(main_shape, [block])
         thumb_section = self.g.difference(thumb_section, [block])
         if debug_exports:
-             self.g.export_file(shape=thumb_section, fname=path.join(r"..", "things", r"debug_thumb_test_5_shape".format(side)))
+             self.g.export_file(shape=thumb_section, fname=path.join(r"..", "things", r"debug_thumb_test_5_shape".format(self.side)))
 
         if self.p.separable_thumb:
             thumb_section = self.g.difference(thumb_section, [main_shape])
             if self.p.show_caps:
-                thumb_section = self.g.add([thumb_section, cluster.thumbcaps(side=side)])
+                thumb_section = self.g.add([thumb_section, self.cluster.thumbcaps()])
                 if has_trackball:
                     thumb_section = self.g.add([thumb_section, ball])
         else:
@@ -2201,11 +2163,11 @@ class DactylBase:
                  self.g.export_file(shape=main_shape,
                             fname=path.join(r"..", "things", r"debug_thumb_test_6_shape".format(side)))
             if self.p.show_caps:
-                main_shape = self.g.add([main_shape, cluster.thumbcaps(side=side)])
+                main_shape = self.g.add([main_shape, self.cluster.thumbcaps()])
                 if has_trackball:
                     main_shape = self.g.add([main_shape, ball])
 
-            if self.p.trackball_in_wall and (side == self.p.ball_side or self.p.ball_side == 'both') and not self.p.separable_thumb:
+            if self.p.trackball_in_wall and (self.side == self.p.ball_side or self.p.ball_side == 'both') and not self.p.separable_thumb:
                 tbprecut, tb, tbcutout, sensor, ball = self.generate_trackball_in_wall()
 
                 main_shape = self.g.difference(main_shape, [tbprecut])
@@ -2223,42 +2185,37 @@ class DactylBase:
         if self.p.show_caps:
             main_shape = self.g.add([main_shape, self.caps()])
 
-        if side == "left":
+        if self.side == "left":
             main_shape = self.g.mirror(main_shape, 'YZ')
             thumb_section = self.g.mirror(thumb_section, 'YZ')
 
         return main_shape, thumb_section
 
-    def baseplate(self, wedge_angle=None, side='right'):
-        if side == "left":
-            cluster = self.left_cluster
-        else:
-            cluster = self.right_cluster
+    def baseplate(self, wedge_angle=None):
+
         if self.p.ENGINE == 'cadquery':
             cq = self.g.cq
             # shape = mod_r
 
-            thumb_shape = cluster.thumb(side=side)
-            thumb_wall_shape = cluster.walls(side=side, skeleton=self.p.skeletal)
-            ## TODO: FIX INSERTS
-            # thumb_wall_shape = self.g.union([thumb_wall_shape, *thumb_screw_insert_outers(side=side)])
-            thumb_connector_shape = cluster.connectors(side=side)
-            thumb_connection_shape = cluster.connection(side=side, skeleton=self.p.skeletal)
+            thumb_shape = self.cluster.thumb()
+            thumb_wall_shape = self.cluster.walls(skeleton=self.p.skeletal)
+            thumb_wall_shape = self.g.union([thumb_wall_shape, *self.screw_insert_outers(thumb=True)])
+            thumb_connector_shape = self.cluster.connectors()
+            thumb_connection_shape = self.cluster.connection(skeleton=self.p.skeletal)
             thumb_section = self.g.union([thumb_shape, thumb_connector_shape, thumb_wall_shape, thumb_connection_shape])
-            ## TODO: FIX INSERTS
-            # thumb_section = self.g.difference(thumb_section, [union(cluster(side=side).thumb_screw_insert_holes(side=side))])
+            thumb_section = self.g.difference(thumb_section, self.screw_insert_holes(thumb=True))
 
             shape = self.g.union([
-                self.case_walls(side=side),
-                *self.screw_insert_outers(side=side),
+                self.case_walls(),
+                *self.screw_insert_outers(),
                 thumb_section
             ])
-            tool = self.screw_insert_all_shapes(screw_hole_diameter / 2., self.p.screw_hole_diameter / 2., 350, side=side)
+            tool = self.screw_insert_all_shapes(self.p.screw_hole_diameter / 2., self.p.screw_hole_diameter / 2., 350, )
             for item in tool:
                 item = self.g.translate(item, [0, 0, -10])
                 shape = self.g.difference(shape, [item])
 
-            tool = self.thumb_screw_insert(self.p.screw_hole_diameter / 2., self.p.screw_hole_diameter / 2., 350, side=side)
+            tool = self.screw_insert_tumb_shapes(self.p.screw_hole_diameter / 2., self.p.screw_hole_diameter / 2., 350, )
             for item in tool:
                 item = self.g.translate(item, [0, 0, -10])
                 shape = self.g.difference(shape, [item])
@@ -2285,7 +2242,7 @@ class DactylBase:
                         outer_index = i_wire
                         is_outside = True
                         sizes.append(0)
-                if not is_outside:
+                if not is_out:
                     sizes.append(len(wire.Vertices()))
                 if sizes[-1] > max_val:
                     inner_index = i_wire
@@ -2295,10 +2252,12 @@ class DactylBase:
 
             # inner_plate = cq.Workplane('XY').add(cq.Face.makeFromWires(inner_wire))
             if wedge_angle is not None:
-                cq.Workplane('XY').add(cq.Solid.revolve(outerWire, innerWires, angleDegrees, axisStart, axisEnd))
+                0
+                #NOT IMPLEMENTED
+                # cq.Workplane('XY').add(cq.Solid.revolve(outerWire, innerWires, angleDegrees, axisStart, axisEnd))
             else:
                 inner_shape = cq.Workplane('XY').add(cq.Solid.extrudeLinear(outerWire=inner_wire, innerWires=[],
-                                                                            vecNormal=cq.Vector(0, 0, base_thickness)))
+                                                                            vecNormal=cq.Vector(0, 0, self.p.base_thickness)))
                 inner_shape = self.g.translate(inner_shape, (0, 0, -self.p.base_rim_thickness))
 
                 holes = []
@@ -2326,13 +2285,16 @@ class DactylBase:
 
         else:
             shape = self.g.union([
-                self.case_walls(side=side),
-                cluster.walls(side=side),
-                ## TODO: FIX INSERTS
-                # *screw_insert_outers(side=side),
-                # *thumb_screw_insert_outers(side=side),
+                self.case_walls(),
+                self.cluster.walls(),
+                self.cluster.connection(),
+                *self.screw_insert_outers(),
+                *self.screw_insert_outers(thumb=True),
             ])
-            tool = self.g.translate(self.g.union(self.screw_insert_screw_holes(side=side)), [0, 0, -10])
+            tool = self.g.translate(self.g.union([
+                *self.screw_insert_screw_holes(),
+                *self.screw_insert_screw_holes(thumb=True),
+            ]), [0, 0, -10])
             base = self.g.box(1000, 1000, .01)
             shape = shape - tool
             shape = self.g.intersect(shape, base)
@@ -2342,59 +2304,35 @@ class DactylBase:
             return self.g.sl.projection(cut=True)(shape)
 
     def run(self):
-        # self.right_cluster = self.get_cluster(self.p.thumb_style)
+        # Process parameters sets the parameter based on the right cluster and any assymmetric features.
+        # Features can provide overwrites for parameters for their side.
 
-        # if self.right_cluster is not None:
-        #     self.right_cluster = self.get_cluster(self.p.other_thumb)
-        #     if self.p.ball_side == "both":
-        #         self.left_cluster = self.right_cluster
-        #     elif self.p.ball_side == "left":
-        #         self.left_cluster = self.right_cluster
-        #         self.right_cluster = self.get_cluster(self.p.other_thumb)
-        #     else:
-        #         self.left_cluster = self.get_cluster(self.p.other_thumb)
-        # elif self.p.other_thumb != "DEFAULT" and self.p.other_thumb != self.p.thumb_style:
-        #     self.left_cluster = self.get_cluster(self.p.other_thumb)
-        # else:
-        #     self.left_cluster = self.right_cluster  # this assumes thumb_style always overrides DEFAULT other_thumb
-
-        self.config_name = "FIX_IT"
-        mod_r, tmb_r = self.model_side(side="right")
+        # Side-ality has been removed from arguments and moved to an instance variable to minimize passing
+        # class level settings during generation.
+        self.process_parameters('right')
+        mod_r, tmb_r = self.model_side()
         self.g.export_file(shape=mod_r, fname=path.join(self.p.save_path, self.p.config_name + r"_right"))
         self.g.export_file(shape=tmb_r, fname=path.join(self.p.save_path, self.p.config_name + r"_thumb_right"))
 
-        # base = baseplate(mod_r, tmb_r, side='right')
-        base = self.baseplate(side='right')
+        # base = baseplate(mod_r, tmb_r)
+        base = self.baseplate()
         self.g.export_file(shape=base, fname=path.join(self.p.save_path, self.p.config_name + r"_right_plate"))
         self.g.export_dxf(shape=base, fname=path.join(self.p.save_path, self.p.config_name + r"_right_plate"))
 
-        if self.p.symmetry == "asymmetric":
-            mod_l, tmb_l = self.model_side(side="left")
+        if not self.p.symmetric:
+            print('ASSYMMETRIC')
+            self.process_parameters('left')
+
+            mod_l, tmb_l = self.model_side()
             self.g.export_file(shape=mod_l, fname=path.join(self.p.save_path, self.p.config_name + r"_left"))
             self.g.export_file(shape=tmb_l, fname=path.join(self.p.save_path, self.p.config_name + r"_thumb_left"))
 
-            # base_l = mirror(baseplate(mod_l, tmb_l, side='left'), 'YZ')
-            base_l = self.g.mirror(baseplate(side='left'), 'YZ')
+            base_l = self.g.mirror(self.baseplate(), 'YZ')
             self.g.export_file(shape=base_l, fname=path.join(self.p.save_path, self.p.config_name + r"_left_plate"))
             self.g.export_dxf(shape=base_l, fname=path.join(self.p.save_path, self.p.config_name + r"_left_plate"))
 
-        # mod_r = model_side(side="right")
-        #  self.g.export_file(shape=mod_r, fname=path.join(save_path, config_name + r"_right"))
-        #
-        # base = baseplate(side='right')
-        #  self.g.export_file(shape=base, fname=path.join(save_path, config_name + r"_right_plate"))
-        # export_dxf(shape=base, fname=path.join(save_path, config_name + r"_right_plate"))
-        #
-        # if symmetry == "asymmetric":
-        #
-        #     mod_l = model_side(side="left")
-        #      self.g.export_file(shape=mod_l, fname=path.join(save_path, config_name + r"_left"))
-        #
-        #     base_l = mirror(baseplate(side='left'), 'YZ')
-        #      self.g.export_file(shape=base_l, fname=path.join(save_path, config_name + r"_left_plate"))
-        #     export_dxf(shape=base_l, fname=path.join(save_path, config_name + r"_left_plate"))
-
         else:
+            print('SYMMETRIC')
             self.g.export_file(shape=self.g.mirror(mod_r, 'YZ'), fname=path.join(self.p.save_path, self.p.config_name + r"_left"))
 
             lbase = self.g.mirror(base, 'YZ')
@@ -2427,33 +2365,24 @@ class DactylBase:
             self.g.export_file(shape=self.g.union((self.oled_clip_mount_frame()[1], self.oled_clip())),
                     fname=path.join(self.p.save_path, self.p.config_name + r"_oled_clip_assy_test"))
 
-    # def get_cluster(self, style):
-    #     clust_lib = importlib.import_module('clusters.' + self.p.cluster_parameters.package)
-    #     #from clusters.custom_cluster import CustomCluster
-    #     clust = getattr(clust_lib, self.p.cluster_parameters.class_name)
-    #     return clust(self)
+    def load_cluster(self):
+        # print(self.p.right_cluster)
+        # print(self.p.left_cluster)
 
-    def set_clusters(self):
-        print(self.p.right_cluster)
-        print(self.p.left_cluster)
-        clust_lib = importlib.import_module('clusters.' + self.p.right_cluster.package)
-        #from clusters.custom_cluster import CustomCluster
-        clust = getattr(clust_lib, self.p.right_cluster.class_name)
-        self.right_cluster = clust(self, self.p.right_cluster)
+        if self.side == 'left':
+            clust_setup = self.p.left_cluster
 
-        clust_lib = importlib.import_module('clusters.' + self.p.left_cluster.package)
-        #from clusters.custom_cluster import CustomCluster
-        clust = getattr(clust_lib, self.p.left_cluster.class_name)
-        self.left_cluster = clust(self, self.p.left_cluster)
-
-        print(self.right_cluster)
-        print(self.left_cluster)
-
-    def get_cluster(self, side='right'):
-        if side=="right":
-            return self.right_cluster
         else:
-            return self.left_cluster
+            clust_setup = self.p.right_cluster
+
+        print(clust_setup)
+        clust_lib = importlib.import_module('clusters.' + clust_setup.package)
+        clust = getattr(clust_lib, clust_setup.class_name)
+        self.cluster = clust(self, clust_setup)
+
+        print(self.cluster)
+
+
 
 if __name__ == '__main__':
     pass

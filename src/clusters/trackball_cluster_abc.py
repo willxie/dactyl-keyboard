@@ -52,48 +52,6 @@ class TrackballClusterBase(ca.ClusterBase):
         shape = self.g.translate(shape, self.tp.track_position)
         return shape
 
-    def tl_place(self, shape):
-        debugprint('tl_place()')
-        shape = self.g.rotate(shape, self.tp.tl_rotation)
-        shape = self.g.translate(shape, self.thumborigin())
-        shape = self.g.translate(shape, self.tp.tl_position)
-        return shape
-
-    def tr_place(self, shape):
-        debugprint('tr_place()')
-        shape = self.g.rotate(shape, self.tp.tr_rotation)
-        shape = self.g.translate(shape, self.thumborigin())
-        shape = self.g.translate(shape, self.tp.tr_position)
-        return shape
-
-    def mr_place(self, shape):
-        debugprint('mr_place()')
-        shape = self.g.rotate(shape, self.tp.mr_rotation)
-        shape = self.g.translate(shape, self.thumborigin())
-        shape = self.g.translate(shape, self.tp.mr_position)
-        return shape
-
-    def ml_place(self, shape):
-        debugprint('ml_place()')
-        shape = self.g.rotate(shape, self.tp.ml_rotation)
-        shape = self.g.translate(shape, self.thumborigin())
-        shape = self.g.translate(shape, self.tp.ml_position)
-        return shape
-
-    def br_place(self, shape):
-        debugprint('br_place()')
-        shape = self.g.rotate(shape,  self.tp.br_rotation)
-        shape = self.g.translate(shape, self.thumborigin())
-        shape = self.g.translate(shape, self.tp.br_position)
-        return shape
-
-    def bl_place(self, shape):
-        debugprint('bl_place()')
-        shape = self.g.rotate(shape, self.tp.bl_rotation)
-        shape = self.g.translate(shape, self.thumborigin())
-        shape = self.g.translate(shape, self.tp.bl_position)
-        return shape
-
     def thumb_post_tr(self):
         debugprint('thumb_post_tr()')
         return self.g.translate(self.sh.web_post(),
@@ -117,37 +75,3 @@ class TrackballClusterBase(ca.ClusterBase):
         return self.g.translate(self.sh.web_post(),
                          [(self.p.mount_width / 2) - self.p.post_adj, -((self.p.mount_height / 2) + self.p.double_plate_height) + self.p.post_adj, 0]
                          )
-
-
-    def thumb_1x_layout(self, shape, cap=False):
-        return shape
-
-    def thumb_15x_layout(self, shape, cap=False, plate=True):
-        return shape
-
-    def thumbcaps(self, side='right'):
-        return self.sh.sa_cap(1)
-
-    def thumb(self, side="right"):
-        return self.sh.single_plate(side=side)
-
-    def thumb_connectors(self, side="right"):
-        return self.sh.web_post_tl()
-
-
-    def walls(self, side="right", skeleton=False):
-        return self.sh.web_post_tl()
-
-    def connection(self, side='right', skeleton=False):
-        return self.sh.web_post_tl()
-
-
-    def screw_positions(self):
-        position = [self.thumborigin()]
-        return position
-
-    def get_extras(self, shape, pos):
-        return shape
-
-    def thumb_pcb_plate_cutouts(self, side="right"):
-        return self.sh.plate_pcb_cutout(side=side)

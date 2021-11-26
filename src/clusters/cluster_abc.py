@@ -154,29 +154,39 @@ class ClusterBase(ABC):
     def thumb_15x_layout(self, shape, cap=False, plate=True):
         return shape
 
-    def thumbcaps(self, side='right'):
+    def thumbcaps(self):
         return self.sh.sa_cap(1)
 
-    def thumb(self, side="right"):
-        return self.sh.single_plate(side=side)
+    def thumb(self):
+        return self.sh.single_plate()
 
-    def thumb_connectors(self, side="right"):
+    def thumb_connectors(self):
         return self.sh.web_post_tl()
 
 
-    def walls(self, side="right", skeleton=False):
+    def walls(self, skeleton=False):
         return self.sh.web_post_tl()
 
-    def connection(self, side='right', skeleton=False):
+    def connection(self, skeleton=False):
         return self.sh.web_post_tl()
 
 
-    def screw_positions(self):
-        position = [self.thumborigin()]
-        return position
+    def screw_positions(self, separate_thumb=True):
+        if separate_thumb:
+            locations = self.tp.separable_thumb_screw_xy_locations
+        else:
+            locations = self.tp.thumb_screw_xy_locations
+
+        origin = self.thumborigin()
+        positions = []
+        for i, loc in enumerate(locations):
+            positions.append([])
+            for j in range(2):
+                positions[i].append(locations[i][j] + origin[j])
+        return positions
 
     def get_extras(self, shape, pos):
         return shape
 
-    def thumb_pcb_plate_cutouts(self, side="right"):
-        return self.sh.plate_pcb_cutout(side=side)
+    def thumb_pcb_plate_cutouts(self):
+        return self.sh.plate_pcb_cutout()

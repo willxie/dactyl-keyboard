@@ -140,13 +140,12 @@ class ShapeConfiguration:
     # symmetry states if it is a symmetric or asymmetric bui.  If asymmetric it doubles the generation time.
     symmetry: str = "symmetric"  # "asymmetric" or "symmetric"
 
-    column_style_gt5: str = "orthographic"
     column_style: str = "standard"  # options include :standard, :orthographic, and :fixed
+    column_style_gt5: str = "orthographic"
+
     reduced_outer_keys: bool = True
 
-    thumb_offsets: Sequence[float] = (6, -3, 7)
     keyboard_z_offset: float = (11)  # controls overall height# original=9 with centercol=3# use 16 for centercol=2
-
 
     extra_width: float = 2.5  # extra space between the base of keys# original= 2
     extra_height: float = 1.0  # original= 0.5
@@ -156,6 +155,34 @@ class ShapeConfiguration:
     # post_adj =  post_size / 2
     post_adj: float = 0
 
+    ###################################
+    ## Bottom Plate Dimensions
+    ###################################
+    # COMMON DIMENSION
+    screw_hole_diameter: float = 3
+    # USED FOR CADQUERY ONLY
+    base_thickness: float = 3.0  # thickness in the middle of the plate
+    base_offset: float = 3.0  # Both start flat/flush on the bottom.  This offsets the base up (if positive)
+    base_rim_thickness: float = 5.0  # thickness on the outer frame with screws
+    screw_cbore_diameter: float = 6.0
+    screw_cbore_depth: float = 2.5
+
+    # Offset is from the top inner corner of the top inner key.
+
+    ###################################
+    ## COLUMN OFFSETS
+    ####################################
+
+    column_offsets: Sequence[Sequence[float]] = (
+        (0, 0, 0),
+        (0, 0, 0),
+        (0, 2.82, -4.5),
+        (0, 0, 0),
+        (0, -6, 5),  # REDUCED STAGGER
+        (0, -6, 5),  # REDUCED STAGGER
+        (0, -6, 5),  # NOT USED IN MOST FORMATS (7th column)
+    )
+
     ##############################
     # THUMB PARAMETERS
     ##############################
@@ -164,31 +191,7 @@ class ShapeConfiguration:
     # thumb_style = 'DEFAULT'
     left_cluster: Any = None
     right_cluster: Any = None
-
-    # Thumb key size.  May need slight oversizing, check w/ caps.  Additional spacing will be automatically added for larger keys.
-    minidox_Usize: float = 1.6
-
-    # Screw locations and extra screw locations for separable thumb, all from thumb origin
-    # Pulled out of hardcoding as drastic changes to the geometry may require fixes to the screw mounts.
-    # First screw in separable should be similar to the standard location as it will receive the same modifiers.
-
-    # minidox_thumb_screw_xy_locations = [[-37, -34]]
-    # minidox_separable_thumb_screw_xy_locations = [[-37, -34], [-62, 12], [10, -25]]
-    # orbyl_thumb_screw_xy_locations = [[-53, -68]]
-    # orbyl_separable_thumb_screw_xy_locations = [[-53, -68], [-66, 8], [10, -40]]
-    # tbcj_thumb_screw_xy_locations = [[-40, -75]]
-    # tbcj_separable_thumb_screw_xy_locations = [[-40, -75], [-63, 10], [15, -40]]
-
-    # thumb_plate_tr_rotation = 0.0  # Top right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
-    # thumb_plate_tl_rotation = 0.0  # Top left plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
-    # thumb_plate_mr_rotation = 0.0  # Mid right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
-    # thumb_plate_ml_rotation = 0.0  # Mid left plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
-    # thumb_plate_br_rotation = 0.0  # Bottom right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
-    # thumb_plate_bl_rotation = 0.0  # Bottom right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
-    ##############################
-    # EXPERIMENTAL
     separable_thumb: bool = False  # creates a separable thumb section with additional screws to hold it down.  Only attached at base.
-    ##############################
 
     ###################################
     ## Trackball in Wall             ##
@@ -218,39 +221,6 @@ class ShapeConfiguration:
     tbiw_top_wall_z_offset_override: float = 0.0
     tbiw_top_wall_extension_cols: float = 4
 
-    ###########################################
-    ## Trackball JS / ORBYL Thumb Cluster    ##
-    ###########################################
-    other_thumb: str = 'DEFAULT'  # cluster used for second thumb except if ball_side == 'both'
-    tbjs_key_diameter: float = 70
-    tbjs_Uwidth: float = 1.2  # size for inner key near trackball
-    tbjs_Uheight: float = 1.2  # size for inner key near trackball
-
-    # Offsets are per key and are applied before rotating into place around the ball
-    # X and Y act like Tangential and Radial around the ball
-    # 'tbjs_translation_offset = (0, 0, 10)  # applied to the whole assy
-    # 'tbjs_rotation_offset = (0, 10, 0)  # applied to the whole assy
-    tbjs_translation_offset: Sequence[float] = (0, 0, 2)  # applied to the whole assy
-    tbjs_rotation_offset: Sequence[float] = (0, -8, 0)  # applied to the whole assy
-    tbjs_key_translation_offsets: Sequence[Sequence[float]] = (
-        (0.0, 0.0, -3.0 - 5),
-        (0.0, 0.0, -3.0 - 5),
-        (0.0, 0.0, -3.0 - 5),
-        (0.0, 0.0, -3.0 - 5),
-    )
-    tbjs_key_rotation_offsets: Sequence[Sequence[float]] = (
-        (0.0, 0.0, 0.0),
-        (0.0, 0.0, 0.0),
-        (0.0, 0.0, 0.0),
-        (0.0, 0.0, 0.0),
-    )
-
-    ###################################
-    ## Trackball CJ Thumb Cluster    ##
-    ###################################
-    tbcj_inner_diameter: float = 42
-    tbcj_thickness: float = 2
-    tbcj_outer_diameter: float = 53
 
     ###################################
     ## Trackball General             ##
@@ -351,6 +321,35 @@ class ShapeConfiguration:
     plate_file: bool = None
     plate_offset: float = 0.0
 
+    ###################################
+    ## HOLES ON PLATE FOR PCB MOUNT
+    ###################################
+    plate_holes: bool = True
+    plate_holes_xy_offset: Sequence[float] = (0.0, 0.0)
+    plate_holes_width: float = 14.3
+    plate_holes_height: float = 14.3
+    plate_holes_diameter: float = 1.6
+    plate_holes_depth: float = 20.0
+
+    ###################################
+    ## EXPERIMENTAL
+    plate_pcb_clear: bool = False
+    plate_pcb_size: Sequence[float] = (18.5, 18.5, 5)
+    plate_pcb_offset: Sequence[float] = (0, 0, 0)  # this is off of the back of the plate size.
+    ###################################
+
+    ###################################
+    ## SHOW PCB FOR FIT CHECK
+    ###################################
+    pcb_width: float = 18.0
+    pcb_height: float = 18.0
+    pcb_thickness: float = 1.5
+    pcb_hole_diameter: float = 2
+    pcb_hole_pattern_width: float = 14.3
+    pcb_hole_pattern_height: float = 14.3
+
+
+
     ##########################
     ## OLED Mount Location
     ##########################
@@ -368,8 +367,12 @@ class ShapeConfiguration:
 
     oled_config: Any = OLED_LOOKUP[oled_mount_type]()
 
-    screws_offset: str = 'INSIDE'  # 'OUTSIDE', 'INSIDE', 'ORIGINAL'
 
+    ###################################
+    ## SCREWS SETUP                  ##
+    ###################################
+
+    screws_offset: str = 'INSIDE'  # 'OUTSIDE', 'INSIDE', 'ORIGINAL'
     screw_insert_height: float = 3.8
 
     # 'screw_insert_bottom_radius = 5.31 / 2  #Designed for inserts
@@ -422,60 +425,6 @@ class ShapeConfiguration:
     pcb_screw_x_offsets: Sequence[float] = (- 5.5, 7.75, 22)  # for the screw positions off of reference
     pcb_screw_y_offset: float = -2
 
-    ###################################
-    ## Bottom Plate Dimensions
-    ###################################
-    # COMMON DIMENSION
-    screw_hole_diameter: float = 3
-    # USED FOR CADQUERY ONLY
-    base_thickness: float = 3.0  # thickness in the middle of the plate
-    base_offset: float = 3.0  # Both start flat/flush on the bottom.  This offsets the base up (if positive)
-    base_rim_thickness: float = 5.0  # thickness on the outer frame with screws
-    screw_cbore_diameter: float = 6.0
-    screw_cbore_depth: float = 2.5
-
-    # Offset is from the top inner corner of the top inner key.
-
-    ###################################
-    ## HOLES ON PLATE FOR PCB MOUNT
-    ###################################
-    plate_holes: bool = True
-    plate_holes_xy_offset: Sequence[float] = (0.0, 0.0)
-    plate_holes_width: float = 14.3
-    plate_holes_height: float = 14.3
-    plate_holes_diameter: float = 1.6
-    plate_holes_depth: float = 20.0
-
-    ###################################
-    ## EXPERIMENTAL
-    plate_pcb_clear: bool = False
-    plate_pcb_size: Sequence[float] = (18.5, 18.5, 5)
-    plate_pcb_offset: Sequence[float] = (0, 0, 0)  # this is off of the back of the plate size.
-    ###################################
-
-    ###################################
-    ## SHOW PCB FOR FIT CHECK
-    ###################################
-    pcb_width: float = 18.0
-    pcb_height: float = 18.0
-    pcb_thickness: float = 1.5
-    pcb_hole_diameter: float = 2
-    pcb_hole_pattern_width: float = 14.3
-    pcb_hole_pattern_height: float = 14.3
-
-    ###################################
-    ## COLUMN OFFSETS
-    ####################################
-
-    column_offsets: Sequence[Sequence[float]] = (
-        (0, 0, 0),
-        (0, 0, 0),
-        (0, 2.82, -4.5),
-        (0, 0, 0),
-        (0, -6, 5),  # REDUCED STAGGER
-        (0, -6, 5),  # REDUCED STAGGER
-        (0, -6, 5),  # NOT USED IN MOST FORMATS (7th column)
-    )
 
     ####################################
     ## END CONFIGURATION SECTION
@@ -519,29 +468,33 @@ class ShapeConfiguration:
 if __name__ == '__main__':
     from dactyl_manuform import *
 
+    import clusters.default as clust_def
+    left_cluster = clust_def.DefaultClusterParameters()
+    # right_cluster = clust_def.DefaultClusterParameters()
 
     # import clusters.mini as clust_min
-    # right_cluster=clust_min.MiniClusterParameters()
+    # right_cluster = clust_min.MiniClusterParameters()
 
     # import clusters.carbonfet as clust_cf
     # right_cluster = clust_cf.CarbonfetClusterParameters()
     #
-    # import clusters.minidox as clust_md
-    # right_cluster = clust_md.MinidoxClusterParameters()
+    import clusters.minidox as clust_md
+    right_cluster = clust_md.MinidoxClusterParameters()
 
     # import clusters.trackball_cj as clust_tbcj
     # right_cluster = clust_tbcj.TrackballCJClusterParameters()
 
     # import clusters.trackball_orbyl as clust_orb
     # right_cluster = clust_orb.OrbylClusterParameters()
-    #
-    import clusters.trackball_wilder as clust_wd
-    right_cluster = clust_wd.WilderClusterParameters()
 
+    # import clusters.trackball_wilder as clust_wd
+    # right_cluster = clust_wd.WilderClusterParameters()
+
+    # left_cluster = copy.deepcopy(right_cluster)
 
     db = DactylBase(ShapeConfiguration(
         right_cluster=right_cluster,
-        left_cluster=copy.deepcopy(right_cluster),
+        left_cluster=left_cluster,
     ))
     db.run()
 
