@@ -10,8 +10,8 @@ r2d = 180 / pi
 
 shape_config = {
 
-    # 'ENGINE': 'solid',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
-    'ENGINE': 'cadquery',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
+    'ENGINE': 'solid',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
+    # 'ENGINE': 'cadquery',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
 
 
     ######################
@@ -25,7 +25,7 @@ shape_config = {
     'show_pcbs': False, #only runs if caps are shown, easist place to initially inject geometry
 
     'nrows':  5, #5,  # key rows
-    'ncols':  3, #6,  # key columns
+    'ncols':  6, #6,  # key columns
 
     'alpha':  pi / 12.0,  # curvature of the columns
     'beta':  pi / 36.0,  # curvature of the rows

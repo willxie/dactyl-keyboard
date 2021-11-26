@@ -1131,6 +1131,7 @@ def default_thumb_connectors():
                     key_place(web_post_bl(), 2, lastrow),
                     default_thumb_tr_place(thumb_post_br()),
                     key_place(web_post_br(), 2, lastrow),
+                    key_place(web_post_bl(), 3, lastrow),
                 ]
             )
         )
