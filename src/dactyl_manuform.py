@@ -946,7 +946,8 @@ def default_thumb(side="right"):
     shape = union([shape, default_thumb_15x_layout(double_plate(), plate=False)])
     #shape = add([shape, default_thumb_15x_layout(rotate(single_plate(side=side), (0, 0, -90)))])
     #shape = add([shape, default_thumb_15x_layout(double_plate(), plate=False)])
-    shape = difference(shape, [default_thumb_pcb_plate_cutouts()])
+    # if plate_pcb_clear:
+    #     shape = difference(shape, [default_thumb_pcb_plate_cutouts()])
     return shape
 
 
