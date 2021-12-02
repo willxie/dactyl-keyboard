@@ -4,35 +4,35 @@ import json
 import numpy as np
 from dataclasses import dataclass
 import clusters.cluster_abc as ca
-from dactyl_manuform import Override, rad2deg, pi
+from dactyl_manuform import rad2deg, pi
 from typing import Any, Sequence
 
 def debugprint(data):
     pass
 
 
-def minidox_thumb_tl_place(shape):
-    shape = rotate(shape, [10, -23, 25])
-    shape = translate(shape, thumborigin())
-    shape = translate(shape, [-35, -16, -2])
-    return shape
-
-def minidox_thumb_tr_place(shape):
-    shape = rotate(shape, [14, -15, 10])
-    shape = translate(shape, thumborigin())
-    shape = translate(shape, [-15, -10, 5])
-    return shape
-
-def minidox_thumb_ml_place(shape):
-    shape = rotate(shape, [6, -34, 40])
-    shape = translate(shape, thumborigin())
-    shape = translate(shape, [-53, -26, -12])
-    return shape
+# def minidox_thumb_tl_place(shape):
+#     shape = rotate(shape, [10, -23, 25])
+#     shape = translate(shape, thumborigin())
+#     shape = translate(shape, [-35, -16, -2])
+#     return shape
+#
+# def minidox_thumb_tr_place(shape):
+#     shape = rotate(shape, [14, -15, 10])
+#     shape = translate(shape, thumborigin())
+#     shape = translate(shape, [-15, -10, 5])
+#     return shape
+#
+# def minidox_thumb_ml_place(shape):
+#     shape = rotate(shape, [6, -34, 40])
+#     shape = translate(shape, thumborigin())
+#     shape = translate(shape, [-53, -26, -12])
+#     return shape
 
 @dataclass
 class MinidoxClusterParameters(ca.ClusterParametersBase):
     thumb_style: str = 'MINIDOX'
-    package: str = 'minidox'
+    package: str = 'clusters.minidox'
     class_name: str = 'MinidoxCluster'
 
     thumb_offsets: Sequence[float] = (6.0, -3.0, 7.0)
@@ -54,7 +54,7 @@ class MinidoxClusterParameters(ca.ClusterParametersBase):
 
     thumb_screw_xy_locations: Sequence[Sequence[float]] = ((-37, -34),)
     separable_thumb_screw_xy_locations: Sequence[Sequence[float]] = (
-        (-37, -34), (-62, 12), (10, -25),
+        (-37, -37), (-65, 11), (10, -26),
     )
 
 class MinidoxCluster(ca.ClusterBase):

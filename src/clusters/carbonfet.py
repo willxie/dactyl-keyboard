@@ -3,7 +3,7 @@ import os
 import numpy as np
 from dataclasses import dataclass
 import clusters.cluster_abc as ca
-from dactyl_manuform import Override, rad2deg, pi
+from dactyl_manuform import rad2deg, pi
 from typing import Any, Sequence
 
 def debugprint(data):
@@ -13,7 +13,7 @@ def debugprint(data):
 class CarbonfetClusterParameters(ca.ClusterBase):
     thumb_style: str = 'CARBONFET'
 
-    package: str = 'carbonfet'
+    package: str = 'clusters.carbonfet'
     class_name: str = 'CarbonfetCluster'
 
     thumb_offsets: Sequence[float] = (6.0, -3.0, 7.0)

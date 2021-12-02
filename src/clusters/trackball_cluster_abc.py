@@ -1,10 +1,8 @@
-import json
-import os
-import numpy as np
 import clusters.cluster_abc as ca
 from dataclasses import dataclass
-from abc import ABC
 from typing import Any, Sequence, Tuple
+
+
 
 def debugprint(data):
     pass
@@ -13,7 +11,7 @@ def debugprint(data):
 @dataclass
 class TrackballClusterParametersBase(ca.ClusterParametersBase):
     thumb_style: str = 'NONE'
-    package: str = 'trackball_cluster_abc'
+    package: str = 'clusters.trackball_cluster_abc'
     class_name: str = 'TrackballClusterBase'
 
     track_rotation: Sequence[float] = (0, 0, 0)

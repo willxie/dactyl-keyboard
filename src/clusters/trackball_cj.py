@@ -4,7 +4,7 @@ import math
 import numpy as np
 from dataclasses import dataclass
 import clusters.trackball_cluster_abc as ca
-from dactyl_manuform import Override, rad2deg, pi
+from dactyl_manuform import rad2deg, pi
 from typing import Any, Sequence
 
 def debugprint(data):
@@ -17,7 +17,7 @@ def debugprint(data):
 class TrackballCJClusterParameters(ca.TrackballClusterParametersBase):
     thumb_style: str = 'TRACKBALL_CJ'
 
-    package: str = 'trackball_cj'
+    package: str = 'clusters.trackball_cj'
     class_name: str = 'TrackballCJCluster'
 
     thumb_offsets: Sequence[float] = (6.0, -3.0, 7.0)

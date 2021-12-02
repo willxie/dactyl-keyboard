@@ -3,7 +3,7 @@ import os
 
 from dataclasses import dataclass
 import clusters.cluster_abc as ca
-from dactyl_manuform import Override, rad2deg, pi
+from dactyl_manuform import rad2deg, pi
 from typing import Any, Sequence
 import numpy as np
 
@@ -14,7 +14,7 @@ def debugprint(data):
 class MiniClusterParameters(ca.ClusterParametersBase):
     thumb_style: str = 'MINI'
 
-    package: str = 'mini'
+    package: str = 'clusters.mini'
     class_name: str = 'MiniCluster'
 
     thumb_offsets: Sequence[float] = (6.0, -3.0, 7.0)

@@ -3,15 +3,16 @@ import re
 import shutil
 import copy
 
-fname = "carbonfet.py"
-fname = "mini.py"
-fname = "default.py"
-fname = "minidox.py"
-fname = "trackball_cj.py"
-fname = "trackball_orbyl.py"
-fname = "trackball_wilder.py"
-
-fdir = r"."
+# fname = "carbonfet.py"
+# fname = "mini.py"
+# fname = "default.py"
+# fname = "minidox.py"
+# fname = "trackball_cj.py"
+# fname = "trackball_orbyl.py"
+# fname = "trackball_wilder.py"
+#
+fname = "controllers.py"
+fdir = r".\shapes"
 fpath = path.join(fdir, fname)
 
 with open(fpath, mode='r') as fid:
@@ -130,8 +131,8 @@ replacements = [
     {'name': 'shape', 'items': f_shape, 'find': func_find_re, 'repl': shape_repl},
     {'name': 'parent', 'items': f_parent, 'find': func_find_re, 'repl': prnt_repl},
     {'name': 'params', 'items': f_param, 'find': param_find_re, 'repl': param_repl},
-    {'name': 'tparams', 'items': f_tparam, 'find': tparam_find_re, 'repl': tparam_repl},
-    {'name': 'tparams', 'items': f_tparam, 'find': tparam2_find_re, 'repl': tparam2_repl},
+    # {'name': 'tparams', 'items': f_tparam, 'find': tparam_find_re, 'repl': tparam_repl},
+    # {'name': 'tparams', 'items': f_tparam, 'find': tparam2_find_re, 'repl': tparam2_repl},
 ]
 
 

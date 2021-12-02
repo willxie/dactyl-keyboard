@@ -4,7 +4,7 @@ import os
 import numpy as np
 from dataclasses import dataclass
 import clusters.trackball_cluster_abc as ca
-from dactyl_manuform import Override, rad2deg, pi
+from dactyl_manuform import rad2deg, pi
 from typing import Any, Sequence
 
 def debugprint(data):
@@ -17,7 +17,7 @@ def debugprint(data):
 class OrbylClusterParameters(ca.TrackballClusterParametersBase):
     thumb_style: str = 'TRACKBALL_ORBYL'
 
-    package: str = 'trackball_orbyl'
+    package: str = 'clusters.trackball_orbyl'
     class_name: str = 'OrbylCluster'
 
     Uwidth: float = 1.2

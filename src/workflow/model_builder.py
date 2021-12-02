@@ -88,7 +88,7 @@ def build_release(base, configurations, engines=('solid', 'cadquery')):
     
         for engine in engines:
             shape_config['ENGINE'] = engine
-            with open('run_config.json', mode='w') as fid:
+            with open('../run_config.json', mode='w') as fid:
                 json.dump(shape_config, fid, indent=4)
     
             if init:
