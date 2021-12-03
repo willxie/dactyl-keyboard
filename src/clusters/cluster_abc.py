@@ -1,17 +1,20 @@
 import json
 import os
 import numpy as np
+from dataclasses_json import dataclass_json
 from dataclasses import dataclass
 from abc import ABC
 from typing import Any, Sequence, Tuple
+from src.dactyl_manuform import ParametersBase
 
 def debugprint(data):
     pass
     # print
 
+@dataclass_json
 @dataclass
-class ClusterParametersBase:
-    thumb_style: str = 'NONE'
+class ClusterParametersBase(ParametersBase):
+    name: str = 'NONE'
     package: str = 'cluster_abc'
     class_name: str = 'ClusterBase'
 
@@ -126,25 +129,25 @@ class ClusterBase(ABC):
     def thumb_post_tr(self):
         debugprint('thumb_post_tr()')
         return self.g.translate(self.sh.web_post(),
-                         [(self.p.mount_width / 2) - self.p.post_adj, ((self.p.mount_height / 2) + self.p.double_plate_height) - self.p.post_adj, 0]
+                         [(self.p.mount_width / 2) - self.p.post_adj, ((self.p.mount_height / 2) + self.sh.pp.double_plate_height) - self.p.post_adj, 0]
                          )
 
     def thumb_post_tl(self):
         debugprint('thumb_post_tl()')
         return self.g.translate(self.sh.web_post(),
-                         [-(self.p.mount_width / 2) + self.p.post_adj, ((self.p.mount_height / 2) + self.p.double_plate_height) - self.p.post_adj, 0]
+                         [-(self.p.mount_width / 2) + self.p.post_adj, ((self.p.mount_height / 2) + self.sh.pp.double_plate_height) - self.p.post_adj, 0]
                          )
 
     def thumb_post_bl(self):
         debugprint('thumb_post_bl()')
         return self.g.translate(self.sh.web_post(),
-                         [-(self.p.mount_width / 2) + self.p.post_adj, -((self.p.mount_height / 2) + self.p.double_plate_height) + self.p.post_adj, 0]
+                         [-(self.p.mount_width / 2) + self.p.post_adj, -((self.p.mount_height / 2) + self.sh.pp.double_plate_height) + self.p.post_adj, 0]
                          )
 
     def thumb_post_br(self):
         debugprint('thumb_post_br()')
         return self.g.translate(self.sh.web_post(),
-                         [(self.p.mount_width / 2) - self.p.post_adj, -((self.p.mount_height / 2) + self.p.double_plate_height) + self.p.post_adj, 0]
+                         [(self.p.mount_width / 2) - self.p.post_adj, -((self.p.mount_height / 2) + self.sh.pp.double_plate_height) + self.p.post_adj, 0]
                          )
 
 

@@ -1,8 +1,5 @@
-
-import json
-import os
-
 import numpy as np
+from dataclasses_json import dataclass_json
 from dataclasses import dataclass
 import clusters.trackball_orbyl as tbob
 from dactyl_manuform import rad2deg, pi
@@ -14,9 +11,10 @@ def debugprint(data):
 
 
 
+@dataclass_json
 @dataclass
 class WilderClusterParameters(tbob.OrbylClusterParameters):
-    thumb_style: str = 'TRACKBALL_WILDER'
+    name: str = 'TRACKBALL_WILDER'
 
     package: str = 'clusters.trackball_wilder'
     class_name: str = 'WilderCluster'

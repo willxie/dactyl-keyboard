@@ -2,6 +2,7 @@ import sys
 import getopt
 import os
 import json
+from dataclasses_json import dataclass_json
 from dataclasses import dataclass
 from typing import Any, Sequence
 
@@ -21,6 +22,7 @@ OLED_LOOKUP = {
 }
 
 
+@dataclass_json
 @dataclass
 class ShapeConfiguration:
     ENGINE = 'solid'  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
@@ -64,9 +66,9 @@ class ShapeConfiguration:
     post_adj: float = 0
 
 
-    oled_config: Any = None  #OLED_LOOKUP[oled_mount_type]()
-
+    oled_config: Any = None   #OLED_LOOKUP[oled_mount_type]()
     controller_mount_config: Any = None
+    plate_config: Any = None
 
 
     ###################################
@@ -227,74 +229,7 @@ class ShapeConfiguration:
 
 
 
-    #################
-    ## Switch Hole ##
-    #################
 
-    # plate options are
-    # 'HOLE' = a square hole.  Also useful for applying custom plate files.
-    # 'NUB' = original side nubs.
-    # 'UNDERCUT' = snap fit undercut.  May require CLIP_THICKNESS and possibly CLIP_UNDERCUT tweaking
-    #       and/or filing to get proper snap.
-    # 'NOTCH' = snap fit undercut only near switch clip.  May require CLIP_THICKNESS and possibly CLIP_UNDERCUT
-    #       tweaking and/or filing to get proper snap.
-    # 'HS_NUB' = hot swap underside with nubs.
-    # 'HS_UNDERCUT' = hot swap underside with undercut. Does not generate properly.  Hot swap step needs to be modified.
-    # 'HS_NOTCH' = hot swap underside with notch.  Does not generate properly.  Hot swap step needs to be modified.
-    # 'plate_style = NUB'
-    plate_style: str = 'NOTCH'
-
-    hole_keyswitch_height: float = 14.0
-    hole_keyswitch_width: float = 14.0
-
-    nub_keyswitch_height: float = 14.4
-    nub_keyswitch_width: float = 14.4
-
-    undercut_keyswitch_height: float = 14.0
-    undercut_keyswitch_width: float = 14.0
-    notch_width: float = 6.0  # If using notch, it is identical to undecut, but only locally by the switch clip
-
-    sa_profile_key_height: float = 12.7
-    sa_length: float = 18.5
-    sa_double_length: float = 37.5
-    plate_thickness: float = 4 + 1.1
-
-    plate_rim: float = 1.5 + 0.5
-    # Undercut style dimensions
-    clip_thickness: float = 1.1
-    clip_undercut: float = 1.0
-    undercut_transition: float = .2  # NOT FUNCTIONAL WITH OPENSCAD, ONLY WORKS WITH CADQUERY
-
-    # Custom plate step file
-    plate_file: bool = None
-    plate_offset: float = 0.0
-
-    ###################################
-    ## HOLES ON PLATE FOR PCB MOUNT
-    ###################################
-    plate_holes: bool = True
-    plate_holes_xy_offset: Sequence[float] = (0.0, 0.0)
-    plate_holes_width: float = 14.3
-    plate_holes_height: float = 14.3
-    plate_holes_diameter: float = 1.6
-    plate_holes_depth: float = 20.0
-
-    ###################################
-    ## EXPERIMENTAL
-    plate_pcb_clear: bool = False
-    plate_pcb_size: Sequence[float] = (18.5, 18.5, 5)
-    plate_pcb_offset: Sequence[float] = (0, 0, 0)  # this is off of the back of the plate size.
-    ###################################
-
-    ###################################
-    ## SHOW PCB FOR FIT CHECK
-    ###################################
-    pcb_width: float = 18.0
-    pcb_height: float = 18.0
-    pcb_thickness: float = 1.5
-    pcb_hole_diameter: float = 2
-    pcb_hole_pattern_width: float = 14.3
-    pcb_hole_pattern_height: float = 14.3
 
 
 
@@ -317,6 +252,10 @@ class ShapeConfiguration:
         if self.controller_mount_config is None:
             from shapes import controllers
             self.controller_mount_config = controllers.ExternalControllerParameters()
+
+        if self.plate_config is None:
+            from shapes import plates
+            self.plate_config = plates.NotchPlateParameters()
 
 
 if __name__ == '__main__':
@@ -355,15 +294,18 @@ if __name__ == '__main__':
     # ctrl = controllers.OriginalControllerParameters()
     # ctrl = controllers.PCBMountControllerParameters()
 
-
-
-    db = DactylBase(ShapeConfiguration(
+    config = ShapeConfiguration(
         right_cluster=right_cluster,
         left_cluster=left_cluster,
         oled_config=oled,
         controller_mount_config=ctrl,
-    ))
+    )
+
+    db = DactylBase(config)
     db.run()
+
+    with open('test.json', mode='w') as fid:
+        fid.write(config.to_json(indent=4))
 
     ## HERE FOR QUICK TESTING, SHOULD BE COMMENTED ON COMMIT
     # from dactyl_manuform import *

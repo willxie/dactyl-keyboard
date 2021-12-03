@@ -1,0 +1,75 @@
+{
+    "defaults": {
+        "oled": "None",
+        "clusters": "DEFAULT",
+        "controllers": "EXTERNAL",
+        "plates": "NOTCH"
+    },
+
+    "oled": {
+        "NONE": null,
+        "CLIP": {
+            "package": "oled.oled_clip",
+            "class": "OLEDClipParameters"
+        },
+        "UNDERCUT": {
+            "package": "oled.oled_undercut",
+            "class": "OLEDUndercutParameters"
+        },
+        "SLIDING": {
+            "package": "oled.oled_sliding",
+            "class": "OLEDSlidingParameters"
+        }
+    },
+
+    "clusters": {
+        "DEFAULT": {
+            "package": "clusters.default",
+            "class": "DefaultClusterParameters"
+        },
+        "CARBONFET": {
+            "package": "clusters.carbonfet",
+            "class": "CarbonfetClusterParameters"
+        },
+        "MINI": {
+            "package": "clusters.mini",
+            "class": "MiniClusterParameters"
+        },
+        "MINIDOX": {
+            "package": "clusters.minidox",
+            "class": "MinidoxClusterParameters"
+        },
+        "TRACKBALL_CJ": {
+            "package": "clusters.trackball_cj",
+            "class": "TrackballCJClusterParameters"
+        },
+        "TRACKBALL_ORBYL": {
+            "package": "clusters.trackball_orbyl",
+            "class": "OrbylClusterParameters"
+        },
+        "TRACKBALL_WILDER": {
+            "package": "clusters.trackball_wilder",
+            "class": "WilderClusterParameters"
+        }
+    },
+
+    "controllers": {
+        "NONE": null,
+        "ORIGINAL": {
+            "package": "shapes.controllers",
+            "class": "OriginalControllerParameters"
+        },
+        "EXTERNAL": {
+            "package": "shapes.controllers",
+            "class": "ExternalControllerParameters"
+        },
+        "PCBMOUNT": {
+            "package": "shapes.controllers",
+            "class": "PCBMountControllerParameters"
+        },
+    },
+    "plates": {
+
+
+},
+

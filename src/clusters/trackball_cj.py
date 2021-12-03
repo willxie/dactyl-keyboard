@@ -2,6 +2,7 @@ import json
 import os
 import math
 import numpy as np
+from dataclasses_json import dataclass_json
 from dataclasses import dataclass
 import clusters.trackball_cluster_abc as ca
 from dactyl_manuform import rad2deg, pi
@@ -13,9 +14,10 @@ def debugprint(data):
 
 
 
+@dataclass_json
 @dataclass
 class TrackballCJClusterParameters(ca.TrackballClusterParametersBase):
-    thumb_style: str = 'TRACKBALL_CJ'
+    name: str = 'TRACKBALL_CJ'
 
     package: str = 'clusters.trackball_cj'
     class_name: str = 'TrackballCJCluster'

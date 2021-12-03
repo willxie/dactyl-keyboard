@@ -1,6 +1,7 @@
 import json
 import os
 import numpy as np
+from dataclasses_json import dataclass_json
 from dataclasses import dataclass
 from typing import Any, Sequence, Tuple
 import oled.oled_abc as oa
@@ -13,11 +14,12 @@ def rad2deg(rad: float) -> float:
     return rad * 180 / 3.14159
 
 
+@dataclass_json
 @dataclass
 class OLEDUndercutParameters(oa.OLEDBaseParameters):
     package: str = 'oled.oled_undercut'
     class_name: str = 'OLEDUndercut'
-    oled_mount_type: str = 'UNDERCUT'
+    name: str = 'UNDERCUT'
 
     vertical: bool = True
     mount_width: float = 12.5  # whole OLED width

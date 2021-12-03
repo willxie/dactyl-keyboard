@@ -1,4 +1,5 @@
 import clusters.cluster_abc as ca
+from dataclasses_json import dataclass_json
 from dataclasses import dataclass
 from typing import Any, Sequence, Tuple
 
@@ -8,9 +9,10 @@ def debugprint(data):
     pass
     # print
 
+@dataclass_json
 @dataclass
 class TrackballClusterParametersBase(ca.ClusterParametersBase):
-    thumb_style: str = 'NONE'
+    name: str = 'NONE'
     package: str = 'clusters.trackball_cluster_abc'
     class_name: str = 'TrackballClusterBase'
 
@@ -53,23 +55,23 @@ class TrackballClusterBase(ca.ClusterBase):
     def thumb_post_tr(self):
         debugprint('thumb_post_tr()')
         return self.g.translate(self.sh.web_post(),
-                         [(self.p.mount_width / 2) - self.p.post_adj, ((self.p.mount_height / 2) + self.p.double_plate_height) - self.p.post_adj, 0]
+                         [(self.p.mount_width / 2) - self.p.post_adj, ((self.p.mount_height / 2) + self.sh.pp.double_plate_height) - self.p.post_adj, 0]
                          )
 
     def thumb_post_tl(self):
         debugprint('thumb_post_tl()')
         return self.g.translate(self.sh.web_post(),
-                         [-(self.p.mount_width / 2) + self.p.post_adj, ((self.p.mount_height / 2) + self.p.double_plate_height) - self.p.post_adj, 0]
+                         [-(self.p.mount_width / 2) + self.p.post_adj, ((self.p.mount_height / 2) + self.sh.pp.double_plate_height) - self.p.post_adj, 0]
                          )
 
     def thumb_post_bl(self):
         debugprint('thumb_post_bl()')
         return self.g.translate(self.sh.web_post(),
-                         [-(self.p.mount_width / 2) + self.p.post_adj, -((self.p.mount_height / 2) + self.p.double_plate_height) + self.p.post_adj, 0]
+                         [-(self.p.mount_width / 2) + self.p.post_adj, -((self.p.mount_height / 2) + self.sh.pp.double_plate_height) + self.p.post_adj, 0]
                          )
 
     def thumb_post_br(self):
         debugprint('thumb_post_br()')
         return self.g.translate(self.sh.web_post(),
-                         [(self.p.mount_width / 2) - self.p.post_adj, -((self.p.mount_height / 2) + self.p.double_plate_height) + self.p.post_adj, 0]
+                         [(self.p.mount_width / 2) - self.p.post_adj, -((self.p.mount_height / 2) + self.sh.pp.double_plate_height) + self.p.post_adj, 0]
                          )

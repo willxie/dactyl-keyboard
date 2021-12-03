@@ -1,6 +1,7 @@
 from helpers import helpers_abc
 import os.path as path
 import numpy as np
+from dataclasses_json import dataclass_json
 from dataclasses import dataclass
 import copy
 from typing import Any, Sequence, Tuple, Optional
@@ -12,8 +13,10 @@ def debugprint(info):
         print(info)
 
 
+@dataclass_json
 @dataclass
 class OriginalControllerParameters:
+    name: str = 'ORIGINAL'
     package: str = 'shapes.controllers'
     class_name: str = 'OriginalController'
 
@@ -184,10 +187,12 @@ class OriginalController:
         return shape
 
 
+@dataclass_json
 @dataclass
 class ExternalControllerParameters:
     package: str = 'shapes.controllers'
     class_name: str = 'ExternalController'
+    name: str = 'EXTERNAL'
 
     external_holder_height: float = 12.5
     external_holder_width: float = 28.75
@@ -248,10 +253,12 @@ class ExternalController:
 
 
 
+@dataclass_json
 @dataclass
 class PCBMountControllerParameters:
     package: str = 'shapes.controllers'
     class_name: str = 'PCBMountController'
+    name: str = 'PCBMOUNT'
 
     pcb_mount_ref_offset: Sequence[float] = (0, -5, 0)
     pcb_holder_size: Sequence[float] = (34.6, 7, 4)

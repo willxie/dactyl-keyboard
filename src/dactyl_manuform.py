@@ -5,8 +5,9 @@ import os
 import copy
 import importlib
 from helpers import helpers_abc, freecad_that as freecad
-from shapes.plates import PlateShapes
-
+#from shapes.plates import
+from dataclasses_json import dataclass_json
+from dataclasses import dataclass
 
 # from clusters.default_cluster import DefaultCluster
 # from clusters.carbonfet import CarbonfetCluster
@@ -55,7 +56,14 @@ def usize_dimension(Usize=1.5):
     return Usize * sa_length
 
 
-
+# # CREATING A BASE CLASS TO USE FOR ANY PARAMETER SET WITH ACCOMPANYING FUNCTIONS.
+# # NEED A BASE CLASS TO LOOK FOR TO BUILD A LIST OF AVAILABLE MODULES.
+# @dataclass_json
+# @dataclass
+# class ParametersBase:
+#     name: str = 'NONE'
+#     package: str = 'dactyl_manuform'
+#     class_name: str = 'Base'
 
 
 class DactylBase:
@@ -90,6 +98,7 @@ class DactylBase:
         self.cluster = None
         self.ctrl = None
         self.oled = None
+        self.sh = None
 
         # self.p.right_thumb_style = self.p.right_cluster.thumb_style
         # self.p.left_thumb_style = self.p.left_cluster.thumb_style
@@ -125,35 +134,10 @@ class DactylBase:
 
         self.p.centerrow = self.p.nrows - self.p.centerrow_offset
 
-        self.p.plate_file = None
+        # Loaded first to set the mount dimensions based on the switch dimensions
+        self.load_plates()
 
-        # Derived values
-        if self.p.plate_style in ['NUB', 'HS_NUB']:
-            self.p.keyswitch_height = self.p.nub_keyswitch_height
-            self.p.keyswitch_width = self.p.nub_keyswitch_width
-        elif self.p.plate_style in ['UNDERCUT', 'HS_UNDERCUT', 'NOTCH', 'HS_NOTCH']:
-            self.p.keyswitch_height = self.p.undercut_keyswitch_height
-            self.p.keyswitch_width = self.p.undercut_keyswitch_width
-        else:
-            self.p.keyswitch_height = self.p.hole_keyswitch_height
-            self.p.keyswitch_width = self.p.hole_keyswitch_width
-
-        if 'HS_' in self.p.plate_style:
-            self.p.symmetric = False
-            pname = r"hot_swap_plate"
-            if self.p.plate_file_name is not None:
-                self.p.pname = self.p.plate_file_name
-            self.p.plate_file = path.join(self.p.parts_path, self.p.pname)
-            # plate_offset = 0.0 # this overwrote the config variable
-
-        self.p.mount_width = self.p.keyswitch_width + 2 * self.p.plate_rim
-        self.p.mount_height = self.p.keyswitch_height + 2 * self.p.plate_rim
-        self.p.mount_thickness = self.p.plate_thickness
-
-        self.p.double_plate_height = (self.p.sa_double_length - self.p.mount_height) / 3
-
-
-        self.p.cap_top_height = self.p.plate_thickness + self.p.sa_profile_key_height
+        # self.p.cap_top_height = self.p.plate_thickness + self.p.sa_profile_key_height
         self.p.row_radius = ((self.p.mount_height + self.p.extra_height) / 2) / (
                 np.sin(self.p.alpha / 2)) + self.p.cap_top_height
         self.p.column_radius = (
@@ -181,47 +165,41 @@ class DactylBase:
         if not dir_exists:
             os.makedirs(self.p.save_path, exist_ok=True)
 
-        self.sh = PlateShapes(self)
+        # self.sh = PlateShapes(self)
         self.load_controller()
         self.load_cluster()
         self.load_oled()
 
+    def load_module(self, config):
+        if config is None:
+            print("NO MODULE CONFIG")
+            return None
+        else:
+            lib = importlib.import_module(config.package)
+            obj = getattr(lib, config.class_name)
+            print("LOADING: {}".format(obj))
+            return obj(self, config)
+
 
     def load_cluster(self):
-        # print(self.p.right_cluster)
-        # print(self.p.left_cluster)
-
         if self.side == 'left':
             clust_setup = self.p.left_cluster
-
         else:
             clust_setup = self.p.right_cluster
 
-        print(clust_setup)
-        clust_lib = importlib.import_module(clust_setup.package)
-        clust = getattr(clust_lib, clust_setup.class_name)
-        self.cluster = clust(self, clust_setup)
-
-        print(self.cluster)
-
+        self.cluster = self.load_module(clust_setup)
+        # print(self.cluster)
 
     def load_oled(self):
-        if self.p.oled_config is None:
-            self.oled = None
-        else:
-            config = self.p.oled_config
-            lib = importlib.import_module(config.package)
-            oled = getattr(lib, config.class_name)
-            self.oled = oled(self, config)
+        self.oled = self.load_module(self.p.oled_config)
 
     def load_controller(self):
-        if self.p.controller_mount_config is None:
-            self.ctrl = None
-        else:
-            config = self.p.controller_mount_config
-            lib = importlib.import_module(config.package)
-            obj = getattr(lib, config.class_name)
-            self.ctrl = obj(self, config)
+        self.ctrl = self.load_module(self.p.controller_mount_config)
+
+    def load_plates(self):
+        self.sh = self.load_module(self.p.plate_config)
+
+
 
     def column_offset(self, column: int) -> list:
         result = self.p.column_offsets[column]
@@ -891,7 +869,7 @@ class DactylBase:
         return shape
 
     def screw_insert_thumb_shapes(self, bottom_radius, top_radius, height, offset=0):
-        positions = self.cluster.screw_positions()
+        positions = self.cluster.screw_positions(self.p.separable_thumb)
         # print(positions)
         shapes = []
         for position in positions:
@@ -1001,7 +979,7 @@ class DactylBase:
             if self.p.show_caps:
                 shape = self.g.add([shape, ball])
 
-        if self.p.plate_pcb_clear:
+        if self.sh.pp.plate_pcb_clear:
             shape = self.g.difference(shape, [self.plate_pcb_cutouts()])
 
         main_shape = shape
@@ -1054,7 +1032,7 @@ class DactylBase:
                  self.g.export_file(shape=thumb_section,
                             fname=path.join(r"..", "things", r"debug_thumb_test_4_shape".format(self.side)))
 
-        if self.p.plate_pcb_clear:
+        if self.sh.pp.plate_pcb_clear:
             thumb_section = self.g.difference(thumb_section, [self.cluster.thumb_pcb_plate_cutouts()])
 
         block = self.g.box(350, 350, 40)

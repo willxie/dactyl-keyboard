@@ -1,6 +1,7 @@
 import json
 import os
 import numpy as np
+from dataclasses_json import dataclass_json
 from dataclasses import dataclass
 import clusters.cluster_abc as ca
 from dactyl_manuform import rad2deg, pi
@@ -9,9 +10,10 @@ from typing import Any, Sequence
 def debugprint(data):
     pass
     # print
+@dataclass_json
 @dataclass
 class DefaultClusterParameters(ca.ClusterParametersBase):
-    thumb_style: str = 'DEFAULT'
+    name: str = 'DEFAULT'
 
     package: str = 'clusters.default'
     class_name: str = 'DefaultCluster'
@@ -62,9 +64,9 @@ class DefaultCluster(ca.ClusterBase):
 
     def set_overrides(self):
         if self.tp.cluster_1U:
-                self.parent.p.double_plate_height = (.7 * self.p.sa_double_length - self.p.mount_height) / 3
-        elif self.tp.thumb_style == 'DEFAULT':
-            self.parent.p.double_plate_height = (.95 * self.p.sa_double_length - self.p.mount_height) / 3
+                self.parent.sh.pp.double_plate_height = (.7 * self.sh.pp.sa_double_length - self.p.mount_height) / 3
+        elif self.tp.name == 'DEFAULT':
+            self.parent.sh.pp.double_plate_height = (.95 * self.sh.pp.sa_double_length - self.p.mount_height) / 3
 
 
     @staticmethod

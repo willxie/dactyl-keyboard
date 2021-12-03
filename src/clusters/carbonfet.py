@@ -1,6 +1,9 @@
 import json
 import os
 import numpy as np
+from dataclasses_json import dataclass_json
+from dataclasses import dataclass
+from dataclasses_json import dataclass_json
 from dataclasses import dataclass
 import clusters.cluster_abc as ca
 from dactyl_manuform import rad2deg, pi
@@ -9,9 +12,10 @@ from typing import Any, Sequence
 def debugprint(data):
     pass
     # print
+@dataclass_json
 @dataclass
-class CarbonfetClusterParameters(ca.ClusterBase):
-    thumb_style: str = 'CARBONFET'
+class CarbonfetClusterParameters(ca.ClusterParametersBase):
+    name: str = 'CARBONFET'
 
     package: str = 'clusters.carbonfet'
     class_name: str = 'CarbonfetCluster'

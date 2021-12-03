@@ -1,6 +1,7 @@
 import json
 import os
 
+from dataclasses_json import dataclass_json
 from dataclasses import dataclass
 import clusters.cluster_abc as ca
 from dactyl_manuform import rad2deg, pi
@@ -10,9 +11,10 @@ import numpy as np
 def debugprint(data):
     pass
     # print
+@dataclass_json
 @dataclass
 class MiniClusterParameters(ca.ClusterParametersBase):
-    thumb_style: str = 'MINI'
+    name: str = 'MINI'
 
     package: str = 'clusters.mini'
     class_name: str = 'MiniCluster'

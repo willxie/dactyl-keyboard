@@ -1,9 +1,11 @@
 import json
 import os
 import numpy as np
+from dataclasses_json import dataclass_json
 from dataclasses import dataclass
 from abc import ABC
 from typing import Any, Sequence, Tuple, Optional
+# from src.dactyl_manuform import ParametersBase
 
 def debugprint(data):
     pass
@@ -12,12 +14,15 @@ def debugprint(data):
 def rad2deg(rad: float) -> float:
     return rad * 180 / 3.14159
 
+@dataclass_json
 @dataclass
 class OLEDBaseParameters:
+# class OLEDBaseParameters(ParametersBase):
+
     package: str = 'oled.oled_abc'
     class_name: str = 'OLEDBase'
 
-    oled_mount_type: str = 'OLED_ABC'
+    name: str = 'OLED_ABC'
 
     vertical: bool = True
     mount_width: float = 12.5  # whole OLED width
@@ -153,7 +158,7 @@ class OLEDBase(ABC):
 
 
 # Generic class with special parameters.
-# @dataclass
+# @dataclass_json
 # class OLEDConfiguration:
 #     oled_configuration_name: str = 'BASE'
 #     oled_mount_width: float = 12.5  # whole OLED width
@@ -169,7 +174,7 @@ class OLEDBase(ABC):
 #     oled_left_wall_lower_z_offset: float = 5.0
 #
 
-# @dataclass
+# @dataclass_json
 # class OLEDUndercut(OLEDConfiguration):
 #     oled_configuration_name: str = 'UNDERCUT'
 #     # Common parameters
@@ -189,7 +194,7 @@ class OLEDBase(ABC):
 #     oled_mount_undercut_thickness: float = 2.0
 
 
-# @dataclass
+# @dataclass_json
 # class OLEDSliding(OLEDConfiguration):
 #     oled_configuration_name: str = 'SLIDING'
 #     # Common parameters
@@ -214,7 +219,7 @@ class OLEDBase(ABC):
 #     oled_edge_chamfer: float = 2.0
 
 
-# @dataclass
+# @dataclass_json
 # class OLEDClip(OLEDConfiguration):
 #     oled_configuration_name: str = 'CLIP'
 #     oled_mount_width: float = 12.5  # whole OLED width
