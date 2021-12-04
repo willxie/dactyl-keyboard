@@ -138,7 +138,7 @@ class WilderCluster(tbob.OrbylCluster):
                     self.track_place(self.tb_post_r()),
                     self.tl_place(self.thumb_post_bl()),
                     self.track_place(self.tb_post_tr()),
-                    self.parent.key_place(self.sh.web_post_bl(), 0, self.p.cornerrow),
+                    self.parent.key_place(self.pl.web_post_bl(), 0, self.p.cornerrow),
                     self.track_place(self.tb_post_tl()),
                 ]
             )
@@ -187,7 +187,7 @@ class WilderCluster(tbob.OrbylCluster):
         # thumb, walls
         shape = self.parent.wall_brace(
             self.mr_place, .5, 1, self.thumb_post_tr(),
-            (lambda sh: self.parent.key_place(sh, 3, self.p.lastrow)), 0, -1, self.sh.web_post_bl(),
+            (lambda sh: self.parent.key_place(sh, 3, self.p.lastrow)), 0, -1, self.pl.web_post_bl(),
         )
         shape = self.g.union([shape, self.parent.wall_brace(
             self.mr_place, .5, 1, self.thumb_post_tr(),
@@ -209,7 +209,7 @@ class WilderCluster(tbob.OrbylCluster):
         shape = self.g.union([shape, self.parent.wall_brace(
             self.track_place, -1.5, 0, self.tb_post_tl(),
             (lambda sh: self.parent.left_key_place(sh, self.p.cornerrow, -1, low_corner=True)), -1, 0,
-            self.sh.web_post(),
+            self.pl.web_post(),
         )])
         shape = self.g.union([shape, self.parent.wall_brace(
             self.track_place, -1.5, 0, self.tb_post_tl(),
@@ -233,8 +233,8 @@ class WilderCluster(tbob.OrbylCluster):
         hulls.append(
             self.g.triangle_hulls(
                 [
-                    self.parent.key_place(self.sh.web_post_bl(), 0, self.p.cornerrow),
-                    self.parent.left_key_place(self.sh.web_post(), self.p.lastrow - 1, -1, low_corner=True),                # self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                    self.parent.key_place(self.pl.web_post_bl(), 0, self.p.cornerrow),
+                    self.parent.left_key_place(self.pl.web_post(), self.p.lastrow - 1, -1, low_corner=True),                # self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1, low_corner=True),
                     self.track_place(self.tb_post_tl()),
                 ]
             )
@@ -243,23 +243,23 @@ class WilderCluster(tbob.OrbylCluster):
         hulls.append(
             self.g.triangle_hulls(
                 [
-                    self.parent.key_place(self.sh.web_post_bl(), 0, self.p.cornerrow),
+                    self.parent.key_place(self.pl.web_post_bl(), 0, self.p.cornerrow),
                     self.tl_place(self.thumb_post_bl()),
-                    self.parent.key_place(self.sh.web_post_br(), 0, self.p.cornerrow),
+                    self.parent.key_place(self.pl.web_post_br(), 0, self.p.cornerrow),
                     self.tl_place(self.thumb_post_tl()),
-                    self.parent.key_place(self.sh.web_post_bl(), 1, self.p.cornerrow),
+                    self.parent.key_place(self.pl.web_post_bl(), 1, self.p.cornerrow),
                     self.tl_place(self.thumb_post_tl()),
-                    self.parent.key_place(self.sh.web_post_br(), 1, self.p.cornerrow),
+                    self.parent.key_place(self.pl.web_post_br(), 1, self.p.cornerrow),
                     self.tl_place(self.thumb_post_tr()),
-                    self.parent.key_place(self.sh.web_post_bl(), 2, self.p.lastrow),
+                    self.parent.key_place(self.pl.web_post_bl(), 2, self.p.lastrow),
                     self.tl_place(self.thumb_post_tr()),
-                    self.parent.key_place(self.sh.web_post_bl(), 2, self.p.lastrow),
+                    self.parent.key_place(self.pl.web_post_bl(), 2, self.p.lastrow),
                     self.mr_place(self.thumb_post_tl()),
-                    self.parent.key_place(self.sh.web_post_br(), 2, self.p.lastrow),
-                    self.parent.key_place(self.sh.web_post_bl(), 3, self.p.lastrow),
+                    self.parent.key_place(self.pl.web_post_br(), 2, self.p.lastrow),
+                    self.parent.key_place(self.pl.web_post_bl(), 3, self.p.lastrow),
                     self.mr_place(self.thumb_post_tr()),
                     self.mr_place(self.thumb_post_tl()),
-                    self.parent.key_place(self.sh.web_post_br(), 2, self.p.lastrow),
+                    self.parent.key_place(self.pl.web_post_br(), 2, self.p.lastrow),
 
                 ]
             )

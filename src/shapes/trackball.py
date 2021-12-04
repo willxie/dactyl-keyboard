@@ -1,11 +1,46 @@
 from helpers import helpers_abc
 import os.path as path
 import numpy as np
+from dataclasses_json import dataclass_json
+from dataclasses import dataclass
 
-class TrackballShapes:
+from typing import Any, Sequence, Tuple
+
+
+@dataclass_json
+@dataclass
+class TrackballParameters:
+    package: str = 'shapes.trackball'
+    class_name: str = 'Trackball'
+
+    ###################################
+    ## Trackball General             ##
+    ###################################
+    trackball_modular: bool = False  # Added, creates a hole with space for the lip size listed below.
+    trackball_modular_lip_width: float = 3.0  # width of lip cleared out in ring location
+    trackball_modular_ball_height: float = 3.0  # height of ball from ring , used to create identical position to fixed.
+    trackball_modular_ring_height: float = 10.0  # height mount ring down from ball height. Covers gaps on elevated ball.
+    trackball_modular_clearance: float = 0.5  # height of ball from ring, used to create identical position to fixed.
+
+    ball_diameter: float = 34.0
+    ball_wall_thickness: float = 3  # should not be changed unless the import models are changed.
+    ball_gap: float = 1.0
+    trackball_hole_diameter: float = 36.5
+    trackball_hole_height: float = 40
+    trackball_plate_thickness: float = 2
+    trackball_plate_width: float = 2
+    # Removed trackball_rotation, ball_z_offset. and trackball_sensor_rotation and added more flexibility.
+    tb_socket_translation_offset: Sequence[float] = (0, 0, 2.0)  # applied to the socket and sensor, large values will cause web/wall issues.
+    tb_socket_rotation_offset: Sequence[float] = (0, 0, 0)  # applied to the socket and sensor, large values will cause web/wall issues.
+    tb_sensor_translation_offset: Sequence[float] = (0, 0, 0)  # deviation from socket offsets, for fixing generated geometry issues
+    tb_sensor_rotation_offset: Sequence[float] = (0, 0, 0)  # deviation from socket offsets, for changing the sensor roll orientation
+
+
+
+class Trackball:
     g: helpers_abc
 
-    def __init__(self, parent):
+    def __init__(self, parent, t_parameters):
         self._parent = parent
         self.p = parent.p
         self.g = parent.g
@@ -91,6 +126,48 @@ class TrackballShapes:
         final = self.g.difference(base_shape, [ball, screw1, screw2, bottom_hole])
 
         return final
+
+
+
+    def generate_trackball_components(self, pos, rot):
+        precut = self.sh.trackball_cutout()
+        precut = self.g.rotate(precut, self.p.tb_socket_rotation_offset)
+        precut = self.g.translate(precut, self.p.tb_socket_translation_offset)
+        precut = self.g.rotate(precut, rot)
+        precut = self.g.translate(precut, pos)
+
+        shape, cutout, sensor = self.sh.trackball_socket()
+
+        shape = self.g.rotate(shape, self.p.tb_socket_rotation_offset)
+        shape = self.g.translate(shape, self.p.tb_socket_translation_offset)
+        shape = self.g.rotate(shape, rot)
+        shape = self.g.translate(shape, pos)
+
+        cutout = self.g.rotate(cutout, self.p.tb_socket_rotation_offset)
+        cutout = self.g.translate(cutout, self.p.tb_socket_translation_offset)
+        # cutout = self.g.rotate(cutout, tb_sensor_translation_offset)
+        # cutout = self.g.translate(cutout, tb_sensor_rotation_offset)
+        cutout = self.g.rotate(cutout, rot)
+        cutout = self.g.translate(cutout, pos)
+
+        # Small adjustment due to line to line surface / minute numerical error issues
+        # Creates small overlap to assist engines in union function later
+        sensor = self.g.rotate(sensor, self.p.tb_socket_rotation_offset)
+        sensor = self.g.translate(sensor, self.p.tb_socket_translation_offset)
+        # sensor = self.g.rotate(sensor, tb_sensor_translation_offset)
+        # sensor = self.g.translate(sensor, tb_sensor_rotation_offset)
+        sensor = self.g.translate(sensor, (0, 0, .005))
+        sensor = self.g.rotate(sensor, rot)
+        sensor = self.g.translate(sensor, pos)
+
+        ball = self.sh.trackball_ball()
+        ball = self.g.rotate(ball, self.p.tb_socket_rotation_offset)
+        ball = self.g.translate(ball, self.p.tb_socket_translation_offset)
+        ball = self.g.rotate(ball, rot)
+        ball = self.g.translate(ball, pos)
+
+        # return precut, shape, cutout, ball
+        return precut, shape, cutout, sensor, ball
 
 
     def coords(self, angle, dist):
@@ -182,6 +259,23 @@ class TrackballShapes:
 
     def test_socket(self):
         self.g.export_file(shape=self.gen_track_socket(), fname=path.join("..", "things", "play"))
+
+    def generate_trackball(self, shape):
+        tbprecut, tb, tbcutout, sensor, ball = self.generate_trackball_components()
+        shape = self.g.difference(shape, [tbprecut])
+        #  self.g.export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_1"))
+        shape = self.g.union([shape, tb])
+        #  self.g.export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_2"))
+        shape = self.g.difference(shape, [tbcutout])
+        #  self.g.export_file(shape=shape, fname=path.join(save_path, config_name + r"_test_3a"))
+        #  self.g.export_file(shape=add([shape, sensor]), fname=path.join(save_path, config_name + r"_test_3b"))
+        shape = self.g.union([shape, sensor])
+
+        if self.p.show_caps:
+            shape = self.g.add([shape, ball])
+
+        return shape
+
 
 
     # cutter_fin = socket_bearing_fin(7, 3, 2, 7, -35)

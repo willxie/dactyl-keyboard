@@ -8,7 +8,7 @@
     "centercol": 3,
     "centerrow_offset": 3,
     "tenting_angle": 0.26179916666666664,
-    "symmetry": "symmetric",
+    "symmetric": true,
     "column_style": "standard",
     "column_style_gt5": "orthographic",
     "reduced_outer_keys": true,
@@ -123,6 +123,7 @@
         "clip_undercut": 1.0,
         "undercut_transition": 0.2
     },
+    "module_configs": [],
     "screw_hole_diameter": 3,
     "base_thickness": 3.0,
     "base_offset": 3.0,
@@ -264,33 +265,33 @@
         "cluster_1U": false
     },
     "right_cluster": {
-        "name": "MINIDOX",
-        "package": "clusters.minidox",
-        "class_name": "MinidoxCluster",
+        "name": "DEFAULT",
+        "package": "clusters.default",
+        "class_name": "DefaultCluster",
         "thumb_offsets": [
             6.0,
             -3.0,
             7.0
         ],
         "tr_rotation": [
-            14,
+            10,
             -15,
             10
         ],
         "tr_position": [
-            -15,
-            -10,
-            5
+            -12.0,
+            -16.0,
+            3.0
         ],
         "tl_rotation": [
-            10,
-            -23,
-            25
+            7.5,
+            -18,
+            10
         ],
         "tl_position": [
-            -35,
-            -16,
-            -2
+            -32.5,
+            -14.5,
+            -2.5
         ],
         "mr_rotation": [
             -6,
@@ -298,9 +299,9 @@
             48
         ],
         "mr_position": [
-            -29,
-            -40,
-            -13
+            -29.0,
+            -40.0,
+            -13.0
         ],
         "ml_rotation": [
             6,
@@ -308,9 +309,9 @@
             40
         ],
         "ml_position": [
-            -53,
-            -26,
-            -12
+            -51.0,
+            -25.0,
+            -12.0
         ],
         "br_rotation": [
             -16,
@@ -323,9 +324,9 @@
             -25.3
         ],
         "bl_rotation": [
-            -4,
-            -35,
-            52
+            -4.0,
+            -35.0,
+            52.0
         ],
         "bl_position": [
             -56.3,
@@ -340,25 +341,25 @@
         "thumb_plate_bl_rotation": 0,
         "thumb_screw_xy_locations": [
             [
-                -37,
-                -34
+                -21,
+                -58
             ]
         ],
         "separable_thumb_screw_xy_locations": [
             [
-                -37,
-                -37
+                -28,
+                -65
             ],
             [
-                -65,
-                11
+                8,
+                -31
             ],
             [
-                10,
-                -26
+                -53,
+                -3
             ]
         ],
-        "minidox_Usize": 1.6
+        "cluster_1U": false
     },
     "separable_thumb": false,
     "wall_z_offset": 15,
@@ -410,81 +411,5 @@
     "wire_post_overhang": 3.5,
     "wire_post_diameter": 2.6,
     "pinky_1_5U": false,
-    "skeletal": false,
-    "trackball_in_wall": false,
-    "tbiw_ball_center_row": 0.2,
-    "tbiw_translational_offset": [
-        0.0,
-        0.0,
-        0.0
-    ],
-    "tbiw_rotation_offset": [
-        0.0,
-        0.0,
-        0.0
-    ],
-    "tbiw_left_wall_x_offset_override": 50.0,
-    "tbiw_left_wall_z_offset_override": 0.0,
-    "tbiw_left_wall_lower_x_offset": 0.0,
-    "tbiw_left_wall_lower_y_offset": 0.0,
-    "tbiw_left_wall_lower_z_offset": 0.0,
-    "tbiw_oled_center_row": 0.75,
-    "tbiw_oled_translation_offset": [
-        -3.5,
-        0,
-        1.5
-    ],
-    "tbiw_oled_rotation_offset": [
-        0,
-        0,
-        0
-    ],
-    "finger_trackball_in_wall": false,
-    "tbiw_ball_center_column": 0.2,
-    "tbiw_top_wall_translational_offset": [
-        0.0,
-        0.0,
-        0.0
-    ],
-    "tbiw_top_wall_rotation_offset": [
-        0.0,
-        0.0,
-        0.0
-    ],
-    "tbiw_top_wall_y_offset_override": 50.0,
-    "tbiw_top_wall_z_offset_override": 0.0,
-    "tbiw_top_wall_extension_cols": 4,
-    "trackball_modular": false,
-    "trackball_modular_lip_width": 3.0,
-    "trackball_modular_ball_height": 3.0,
-    "trackball_modular_ring_height": 10.0,
-    "trackball_modular_clearance": 0.5,
-    "ball_side": "both",
-    "ball_diameter": 34.0,
-    "ball_wall_thickness": 3,
-    "ball_gap": 1.0,
-    "trackball_hole_diameter": 36.5,
-    "trackball_hole_height": 40,
-    "trackball_plate_thickness": 2,
-    "trackball_plate_width": 2,
-    "tb_socket_translation_offset": [
-        0,
-        0,
-        2.0
-    ],
-    "tb_socket_rotation_offset": [
-        0,
-        0,
-        0
-    ],
-    "tb_sensor_translation_offset": [
-        0,
-        0,
-        0
-    ],
-    "tb_sensor_rotation_offset": [
-        0,
-        0,
-        0
-    ]
+    "skeletal": false
 }

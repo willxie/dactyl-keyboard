@@ -133,85 +133,85 @@ class OrbylCluster(ca.TrackballClusterBase):
         ])
 
     def thumbcaps(self):
-        t1 = self.thumb_1x_layout(self.sh.sa_cap(1))
+        t1 = self.thumb_1x_layout(self.pl.sa_cap(1))
         return t1
 
     def thumb_post_tr(self):
         debugprint('thumb_post_tr()')
-        return self.g.translate(self.sh.web_post(),
-                         [(self.p.mount_width / 2) + self.sh.adjustable_plate_size(self.tp.Uwidth) - self.p.post_adj,
-                          ((self.p.mount_height / 2) + self.sh.adjustable_plate_size(self.tp.Uheight)) - self.p.post_adj, 0]
-                         )
+        return self.g.translate(self.pl.web_post(),
+                                [(self.p.mount_width / 2) + self.pl.adjustable_plate_size(self.tp.Uwidth) - self.p.post_adj,
+                                 ((self.p.mount_height / 2) + self.pl.adjustable_plate_size(self.tp.Uheight)) - self.p.post_adj, 0]
+                                )
 
     def thumb_post_tl(self):
         debugprint('thumb_post_tl()')
-        return self.g.translate(self.sh.web_post(),
-                         [-(self.p.mount_width / 2) - self.sh.adjustable_plate_size(self.tp.Uwidth) + self.p.post_adj,
-                          ((self.p.mount_height / 2) + self.sh.adjustable_plate_size(self.tp.Uheight)) - self.p.post_adj, 0]
-                         )
+        return self.g.translate(self.pl.web_post(),
+                                [-(self.p.mount_width / 2) - self.pl.adjustable_plate_size(self.tp.Uwidth) + self.p.post_adj,
+                                 ((self.p.mount_height / 2) + self.pl.adjustable_plate_size(self.tp.Uheight)) - self.p.post_adj, 0]
+                                )
 
     def thumb_post_bl(self):
         debugprint('thumb_post_bl()')
-        return self.g.translate(self.sh.web_post(),
-                         [-(self.p.mount_width / 2) - self.sh.adjustable_plate_size(self.tp.Uwidth) + self.p.post_adj,
-                          -((self.p.mount_height / 2) + self.sh.adjustable_plate_size(self.tp.Uheight)) + self.p.post_adj, 0]
-                         )
+        return self.g.translate(self.pl.web_post(),
+                                [-(self.p.mount_width / 2) - self.pl.adjustable_plate_size(self.tp.Uwidth) + self.p.post_adj,
+                                 -((self.p.mount_height / 2) + self.pl.adjustable_plate_size(self.tp.Uheight)) + self.p.post_adj, 0]
+                                )
 
     def thumb_post_br(self):
         debugprint('thumb_post_br()')
-        return self.g.translate(self.sh.web_post(),
-                         [(self.p.mount_width / 2) + self.sh.adjustable_plate_size(self.tp.Uwidth) - self.p.post_adj,
-                          - ((self.p.mount_height / 2) + self.sh.adjustable_plate_size(self.tp.Uheight)) + self.p.post_adj, 0]
-                         )
+        return self.g.translate(self.pl.web_post(),
+                                [(self.p.mount_width / 2) + self.pl.adjustable_plate_size(self.tp.Uwidth) - self.p.post_adj,
+                                 - ((self.p.mount_height / 2) + self.pl.adjustable_plate_size(self.tp.Uheight)) + self.p.post_adj, 0]
+                                )
 
     def tb_post_r(self):
         debugprint('post_r()')
         radius = self.p.ball_diameter/2+self.p.ball_wall_thickness + self.p.ball_gap
-        return self.g.translate(self.sh.web_post(),
-                         [1.0*(radius - self.p.post_adj), 0.0*(radius - self.p.post_adj), 0]
-                         )
+        return self.g.translate(self.pl.web_post(),
+                                [1.0*(radius - self.p.post_adj), 0.0*(radius - self.p.post_adj), 0]
+                                )
 
     def tb_post_tr(self):
         debugprint('post_tr()')
         radius = self.p.ball_diameter/2+self.p.ball_wall_thickness + self.p.ball_gap
-        return self.g.translate(self.sh.web_post(),
-                         [0.5*(radius - self.p.post_adj), 0.866*(radius - self.p.post_adj), 0]
-                         )
+        return self.g.translate(self.pl.web_post(),
+                                [0.5*(radius - self.p.post_adj), 0.866*(radius - self.p.post_adj), 0]
+                                )
 
 
     def tb_post_tl(self):
         debugprint('post_tl()')
         radius = self.p.ball_diameter/2+self.p.ball_wall_thickness + self.p.ball_gap
-        return self.g.translate(self.sh.web_post(),
-                         [-0.5*(radius - self.p.post_adj), 0.866*(radius - self.p.post_adj), 0]
-                         )
+        return self.g.translate(self.pl.web_post(),
+                                [-0.5*(radius - self.p.post_adj), 0.866*(radius - self.p.post_adj), 0]
+                                )
 
 
     def tb_post_l(self):
         debugprint('post_l()')
         radius = self.p.ball_diameter/2+self.p.ball_wall_thickness + self.p.ball_gap
-        return self.g.translate(self.sh.web_post(),
-                         [-1.0*(radius - self.p.post_adj), 0.0*(radius - self.p.post_adj), 0]
-                         )
+        return self.g.translate(self.pl.web_post(),
+                                [-1.0*(radius - self.p.post_adj), 0.0*(radius - self.p.post_adj), 0]
+                                )
 
     def tb_post_bl(self):
         debugprint('post_bl()')
         radius = self.p.ball_diameter/2+self.p.ball_wall_thickness + self.p.ball_gap
-        return self.g.translate(self.sh.web_post(),
-                         [-0.5*(radius - self.p.post_adj), -0.866*(radius - self.p.post_adj), 0]
-                         )
+        return self.g.translate(self.pl.web_post(),
+                                [-0.5*(radius - self.p.post_adj), -0.866*(radius - self.p.post_adj), 0]
+                                )
 
 
     def tb_post_br(self):
         debugprint('post_br()')
         radius = self.p.ball_diameter/2+self.p.ball_wall_thickness + self.p.ball_gap
-        return self.g.translate(self.sh.web_post(),
-                         [0.5*(radius - self.p.post_adj), -0.866*(radius - self.p.post_adj), 0]
-                         )
+        return self.g.translate(self.pl.web_post(),
+                                [0.5*(radius - self.p.post_adj), -0.866*(radius - self.p.post_adj), 0]
+                                )
 
     def thumb(self):
-        shape = self.thumb_1x_layout(self.sh.single_plate())
-        shape = self.g.union([shape, self.thumb_fx_layout(self.sh.adjustable_square_plate(Uwidth=self.tp.Uwidth, Uheight=self.tp.Uheight))])
+        shape = self.thumb_1x_layout(self.pl.single_plate())
+        shape = self.g.union([shape, self.thumb_fx_layout(self.pl.adjustable_square_plate(Uwidth=self.tp.Uwidth, Uheight=self.tp.Uheight))])
 
         # shape = tbjs_thumb_fx_layout(self.g.rotate(self.sh.single_plate(), [0.0, 0.0, -90]))
         # shape = tbjs_thumb_fx_layout(adjustable_square_plate(Uwidth=self.tp.Uwidth, Uheight=self.tp.Uheight))
@@ -247,7 +247,7 @@ class OrbylCluster(ca.TrackballClusterBase):
                     self.track_place(self.tb_post_r()),
                     self.tl_place(self.thumb_post_bl()),
                     self.track_place(self.tb_post_tr()),
-                    self.parent.key_place(self.sh.web_post_bl(), 0, self.p.cornerrow),
+                    self.parent.key_place(self.pl.web_post_bl(), 0, self.p.cornerrow),
                     self.track_place(self.tb_post_tl()),
                 ]
             )
@@ -297,7 +297,7 @@ class OrbylCluster(ca.TrackballClusterBase):
         # thumb, walls
         shape = self.parent.wall_brace(
             self.mr_place, .5, 1, self.thumb_post_tr(),
-            (lambda sh: self.parent.key_place(sh, 3, self.p.lastrow)), 0, -1, self.sh.web_post_bl(),
+            (lambda sh: self.parent.key_place(sh, 3, self.p.lastrow)), 0, -1, self.pl.web_post_bl(),
         )
         shape = self.g.union([shape, self.parent.wall_brace(
             self.mr_place, .5, 1, self.thumb_post_tr(),
@@ -319,7 +319,7 @@ class OrbylCluster(ca.TrackballClusterBase):
         shape = self.g.union([shape, self.parent.wall_brace(
             self.track_place, -1.5, 0, self.tb_post_tl(),
             (lambda sh: self.parent.left_key_place(sh, self.p.cornerrow, -1, low_corner=True)), -1, 0,
-            self.sh.web_post(),
+            self.pl.web_post(),
         )])
         shape = self.g.union([shape, self.parent.wall_brace(
             self.track_place, -1.5, 0, self.tb_post_tl(),
@@ -343,8 +343,8 @@ class OrbylCluster(ca.TrackballClusterBase):
         hulls.append(
             self.g.triangle_hulls(
                 [
-                    self.parent.key_place(self.sh.web_post_bl(), 0, self.p.cornerrow),
-                    self.parent.left_key_place(self.sh.web_post(), self.p.lastrow - 1, -1, low_corner=True),                # self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                    self.parent.key_place(self.pl.web_post_bl(), 0, self.p.cornerrow),
+                    self.parent.left_key_place(self.pl.web_post(), self.p.lastrow - 1, -1, low_corner=True),                # self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1, low_corner=True),
                     self.track_place(self.tb_post_tl()),
                 ]
             )
@@ -353,23 +353,23 @@ class OrbylCluster(ca.TrackballClusterBase):
         hulls.append(
             self.g.triangle_hulls(
                 [
-                    self.parent.key_place(self.sh.web_post_bl(), 0, self.p.cornerrow),
+                    self.parent.key_place(self.pl.web_post_bl(), 0, self.p.cornerrow),
                     self.tl_place(self.thumb_post_bl()),
-                    self.parent.key_place(self.sh.web_post_br(), 0, self.p.cornerrow),
+                    self.parent.key_place(self.pl.web_post_br(), 0, self.p.cornerrow),
                     self.tl_place(self.thumb_post_tl()),
-                    self.parent.key_place(self.sh.web_post_bl(), 1, self.p.cornerrow),
+                    self.parent.key_place(self.pl.web_post_bl(), 1, self.p.cornerrow),
                     self.tl_place(self.thumb_post_tl()),
-                    self.parent.key_place(self.sh.web_post_br(), 1, self.p.cornerrow),
+                    self.parent.key_place(self.pl.web_post_br(), 1, self.p.cornerrow),
                     self.tl_place(self.thumb_post_tr()),
-                    self.parent.key_place(self.sh.web_post_bl(), 2, self.p.lastrow),
+                    self.parent.key_place(self.pl.web_post_bl(), 2, self.p.lastrow),
                     self.tl_place(self.thumb_post_tr()),
-                    self.parent.key_place(self.sh.web_post_bl(), 2, self.p.lastrow),
+                    self.parent.key_place(self.pl.web_post_bl(), 2, self.p.lastrow),
                     self.mr_place(self.thumb_post_tl()),
-                    self.parent.key_place(self.sh.web_post_br(), 2, self.p.lastrow),
-                    self.parent.key_place(self.sh.web_post_bl(), 3, self.p.lastrow),
+                    self.parent.key_place(self.pl.web_post_br(), 2, self.p.lastrow),
+                    self.parent.key_place(self.pl.web_post_bl(), 3, self.p.lastrow),
                     self.mr_place(self.thumb_post_tr()),
                     self.mr_place(self.thumb_post_tl()),
-                    self.parent.key_place(self.sh.web_post_br(), 2, self.p.lastrow),
+                    self.parent.key_place(self.pl.web_post_br(), 2, self.p.lastrow),
 
                 ]
             )
@@ -379,4 +379,4 @@ class OrbylCluster(ca.TrackballClusterBase):
 
 
     def thumb_pcb_plate_cutouts(self):
-        return self.thumb_1x_layout(self.sh.plate_pcb_cutout())
+        return self.thumb_1x_layout(self.pl.plate_pcb_cutout())

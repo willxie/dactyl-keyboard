@@ -1,5 +1,5 @@
 import json
-import os
+from os import path
 import numpy as np
 from dataclasses_json import dataclass_json
 from dataclasses import dataclass

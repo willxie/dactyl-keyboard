@@ -5,7 +5,7 @@ from dataclasses_json import dataclass_json
 from dataclasses import dataclass
 from abc import ABC
 from typing import Any, Sequence, Tuple
-from src.dactyl_manuform import ParametersBase
+# from src.dactyl_manuform import ParametersBase
 
 def debugprint(data):
     pass
@@ -13,7 +13,8 @@ def debugprint(data):
 
 @dataclass_json
 @dataclass
-class ClusterParametersBase(ParametersBase):
+class ClusterParametersBase:
+# class ClusterParametersBase(ParametersBase):
     name: str = 'NONE'
     package: str = 'cluster_abc'
     class_name: str = 'ClusterBase'
@@ -53,12 +54,13 @@ class ClusterBase(ABC):
     parameter_type = ClusterParametersBase
     num_keys = 6
     is_tb = False
+    debug_exports = False
 
     def __init__(self, parent, t_parameters=None):
         self.g = parent.g
         self.p = parent.p
         self.parent = parent
-        self.sh = parent.sh
+        self.pl = parent.pl
 
         if t_parameters is None:
             t_parameters = self.parameter_type()
@@ -128,27 +130,27 @@ class ClusterBase(ABC):
 
     def thumb_post_tr(self):
         debugprint('thumb_post_tr()')
-        return self.g.translate(self.sh.web_post(),
-                         [(self.p.mount_width / 2) - self.p.post_adj, ((self.p.mount_height / 2) + self.sh.pp.double_plate_height) - self.p.post_adj, 0]
-                         )
+        return self.g.translate(self.pl.web_post(),
+                                [(self.p.mount_width / 2) - self.p.post_adj, ((self.p.mount_height / 2) + self.pl.pp.double_plate_height) - self.p.post_adj, 0]
+                                )
 
     def thumb_post_tl(self):
         debugprint('thumb_post_tl()')
-        return self.g.translate(self.sh.web_post(),
-                         [-(self.p.mount_width / 2) + self.p.post_adj, ((self.p.mount_height / 2) + self.sh.pp.double_plate_height) - self.p.post_adj, 0]
-                         )
+        return self.g.translate(self.pl.web_post(),
+                                [-(self.p.mount_width / 2) + self.p.post_adj, ((self.p.mount_height / 2) + self.pl.pp.double_plate_height) - self.p.post_adj, 0]
+                                )
 
     def thumb_post_bl(self):
         debugprint('thumb_post_bl()')
-        return self.g.translate(self.sh.web_post(),
-                         [-(self.p.mount_width / 2) + self.p.post_adj, -((self.p.mount_height / 2) + self.sh.pp.double_plate_height) + self.p.post_adj, 0]
-                         )
+        return self.g.translate(self.pl.web_post(),
+                                [-(self.p.mount_width / 2) + self.p.post_adj, -((self.p.mount_height / 2) + self.pl.pp.double_plate_height) + self.p.post_adj, 0]
+                                )
 
     def thumb_post_br(self):
         debugprint('thumb_post_br()')
-        return self.g.translate(self.sh.web_post(),
-                         [(self.p.mount_width / 2) - self.p.post_adj, -((self.p.mount_height / 2) + self.sh.pp.double_plate_height) + self.p.post_adj, 0]
-                         )
+        return self.g.translate(self.pl.web_post(),
+                                [(self.p.mount_width / 2) - self.p.post_adj, -((self.p.mount_height / 2) + self.pl.pp.double_plate_height) + self.p.post_adj, 0]
+                                )
 
 
     def thumb_1x_layout(self, shape, cap=False):
@@ -158,20 +160,20 @@ class ClusterBase(ABC):
         return shape
 
     def thumbcaps(self):
-        return self.sh.sa_cap(1)
+        return self.pl.sa_cap(1)
 
     def thumb(self):
-        return self.sh.single_plate()
+        return self.pl.single_plate()
 
     def thumb_connectors(self):
-        return self.sh.web_post_tl()
+        return self.pl.web_post_tl()
 
 
     def walls(self, skeleton=False):
-        return self.sh.web_post_tl()
+        return self.pl.web_post_tl()
 
     def connection(self, skeleton=False):
-        return self.sh.web_post_tl()
+        return self.pl.web_post_tl()
 
 
     def screw_positions(self, separate_thumb=True):
@@ -192,4 +194,33 @@ class ClusterBase(ABC):
         return shape
 
     def thumb_pcb_plate_cutouts(self):
-        return self.sh.plate_pcb_cutout()
+        return self.pl.plate_pcb_cutout()
+
+    def screw_insert_holes(self):
+        return self.parent.screw_insert_thumb_shapes(
+            self.p.screw_insert_bottom_radius, self.p.screw_insert_top_radius, self.p.screw_insert_height + .02,
+            offset=-.01
+        )
+
+    def generate_thumb(self):
+        # thumb_shape = thumb()
+        thumb_shape = self.thumb()
+
+        if self.debug_exports:
+             self.g.export_file(shape=thumb_shape, fname=path.join(r"..", "things", r"debug_thumb_shape"))
+        thumb_connector_shape = self.thumb_connectors()
+        if self.debug_exports:
+             self.g.export_file(shape=thumb_connector_shape, fname=path.join(r"..", "things", r"debug_thumb_connector_shape"))
+
+        thumb_wall_shape = self.walls(skeleton=self.p.skeletal)
+        thumb_wall_shape = self.g.union([thumb_wall_shape, *self.parent.screw_insert_outers(thumb=True)])
+        thumb_connection_shape = self.connection(skeleton=self.p.skeletal)
+
+        if self.debug_exports:
+            thumb_test = self.g.union([thumb_shape, thumb_connector_shape, thumb_wall_shape, thumb_connection_shape])
+            self.g.export_file(shape=thumb_test, fname=path.join(r"..", "things", r"debug_thumb_test_{}_shape".format(self.side)))
+
+        thumb_section = self.g.union([thumb_shape, thumb_connector_shape, thumb_wall_shape, thumb_connection_shape])
+        thumb_section = self.g.difference(thumb_section, self.screw_insert_holes())
+
+        return thumb_section

@@ -1,5 +1,5 @@
 import json
-import os
+from os import path
 import numpy as np
 from dataclasses_json import dataclass_json
 from dataclasses import dataclass
@@ -55,7 +55,7 @@ class OLEDBase(ABC):
         self.g = parent.g
         self.p = parent.p
         self.parent = parent
-        self.sh = parent.sh
+        self.sh = parent.pl
 
         if o_parameters is None:
             o_parameters = self.parameter_type()
@@ -151,104 +151,18 @@ class OLEDBase(ABC):
         return hole, shape
 
     def extra_parts(self):
-        pass
+        self.g.export_file(shape=self.oled_mount_frame()[1],
+                fname=path.join(self.p.save_path, self.p.config_name + r"_oled_test"))
 
 
 
 
-
-# Generic class with special parameters.
-# @dataclass_json
-# class OLEDConfiguration:
-#     oled_configuration_name: str = 'BASE'
-#     oled_mount_width: float = 12.5  # whole OLED width
-#     oled_mount_height: float = 39.0  # whole OLED length
-#     oled_mount_rim: float = 2.0
-#     oled_mount_depth: float = 7.0
-#     oled_mount_cut_depth: float = 20.0
-#     oled_mount_location_xyz: Sequence[float] = (-78.0, 20.0, 42.0)  # will be overwritten if center_row is not None
-#     oled_mount_rotation_xyz: Sequence[float] = (12.0, 0.0, -6.0)  # will be overwritten if center_row is not None
-#     oled_left_wall_x_offset_override: float = 24.0
-#     oled_left_wall_z_offset_override: float = 0.0
-#     oled_left_wall_lower_y_offset: float = 12.0
-#     oled_left_wall_lower_z_offset: float = 5.0
-#
-
-# @dataclass_json
-# class OLEDUndercut(OLEDConfiguration):
-#     oled_configuration_name: str = 'UNDERCUT'
-#     # Common parameters
-#     oled_mount_width: float = 15.0
-#     oled_mount_height: float = 35.0
-#     oled_mount_rim: float = 3.0
-#     oled_mount_depth: float = 6.0
-#     oled_mount_cut_depth: float = 20.0
-#     oled_mount_location_xyz: Sequence[float] = (-80.0, 20.0, 45.0)  # will be overwritten if center_row is not None
-#     oled_mount_rotation_xyz: Sequence[float] = (13.0, 0.0, -6.0)  # will be overwritten if center_row is not None
-#     oled_left_wall_x_offset_override: float = 28.0
-#     oled_left_wall_z_offset_override: float = 0.0
-#     oled_left_wall_lower_y_offset: float = 12.0
-#     oled_left_wall_lower_z_offset: float = 5.0
-#     # 'UNDERCUT' Parameters
-#     oled_mount_undercut: float = 1.0
-#     oled_mount_undercut_thickness: float = 2.0
-
-
-# @dataclass_json
-# class OLEDSliding(OLEDConfiguration):
-#     oled_configuration_name: str = 'SLIDING'
-#     # Common parameters
-#     oled_mount_width: float = 12.5  # width of OLED, plus clearance
-#     oled_mount_height: float = 25.0  # length of screen
-#     oled_mount_rim: float = 2.5
-#     oled_mount_depth: float = 8.0
-#     oled_mount_cut_depth: float = 20.0
-#     oled_mount_location_xyz: Sequence[float] = (-78.0, 10.0, 41.0)  # will be overwritten if center_row is not None
-#     oled_mount_rotation_xyz: Sequence[float] = (6.0, 0.0, -3.0)  # will be overwritten if center_row is not None
-#     oled_left_wall_x_offset_override: float = 24.0
-#     oled_left_wall_z_offset_override: float = 0.0
-#     oled_left_wall_lower_y_offset: float = 12.0
-#     oled_left_wall_lower_z_offset: float = 5.0
-#
-#     # 'SLIDING' Parameters
-#     oled_thickness: float = 4.2  # thickness of OLED, plus clearance.  Must include components
-#     oled_edge_overlap_end: float = 6.5  # length from end of viewable screen to end of PCB
-#     oled_edge_overlap_connector: float = 5.5  # length from end of viewable screen to end of PCB on connection side.
-#     oled_edge_overlap_thickness: float = 2.5  # thickness of material over edge of PCB
-#     oled_edge_overlap_clearance: float = 2.5  # Clearance to insert PCB before laying down and sliding.
-#     oled_edge_chamfer: float = 2.0
-
-
-# @dataclass_json
-# class OLEDClip(OLEDConfiguration):
-#     oled_configuration_name: str = 'CLIP'
-#     oled_mount_width: float = 12.5  # whole OLED width
-#     oled_mount_height: float = 39.0  # whole OLED length
-#     oled_mount_rim: float = 2.0
-#     oled_mount_depth: float = 7.0
-#     oled_mount_cut_depth: float = 20.0
-#     oled_mount_location_xyz: Sequence[float] = (-78.0, 20.0, 42.0)  # will be overwritten if center_row is not None
-#     oled_mount_rotation_xyz: Sequence[float] = (12.0, 0.0, -6.0)  # will be overwritten if center_row is not None
-#     oled_left_wall_x_offset_override: float = 24.0
-#     oled_left_wall_z_offset_override: float = 0.0
-#     oled_left_wall_lower_y_offset: float = 12.0
-#     oled_left_wall_lower_z_offset: float = 5.0
-#
-#     # 'CLIP' Parameters
-#     oled_thickness: float = 4.2  # thickness of OLED, plus clearance.  Must include components
-#     oled_mount_bezel_thickness: float = 3.5  # z thickness of clip bezel
-#     oled_mount_bezel_chamfer: float = 2.0  # depth of the 45 degree chamfer
-#     oled_mount_connector_hole: float = 6.0
-#     oled_screen_start_from_conn_end: float = 6.5
-#     oled_screen_length: float = 24.5
-#     oled_screen_width: float = 10.5
-#     oled_clip_thickness: float = 1.5
-#     oled_clip_width: float = 6.0
-#     oled_clip_overhang: float = 1.0
-#     oled_clip_extension: float = 5.0
-#     oled_clip_width_clearance: float = 0.5
-#     oled_clip_undercut: float = 0.5
-#     oled_clip_undercut_thickness: float = 2.5
-#     oled_clip_y_gap: float = .2
-#     oled_clip_z_gap: float = .2
+        # if self.p.oled_mount_type == 'CLIP':
+        #     oled_mount_location_xyz = (0.0, 0.0, -self.p.oled_config.oled_mount_depth / 2)
+        #     oled_mount_rotation_xyz = (0.0, 0.0, 0.0)
+        #     self.g.export_file(shape=self.oled_clip(), fname=path.join(self.p.save_path, self.p.config_name + r"_oled_clip"))
+        #     self.g.export_file(shape=self.oled_clip_mount_frame()[1],
+        #             fname=path.join(self.p.save_path, self.p.config_name + r"_oled_clip_test"))
+        #     self.g.export_file(shape=self.g.union((self.oled_clip_mount_frame()[1], self.oled_clip())),
+        #             fname=path.join(self.p.save_path, self.p.config_name + r"_oled_clip_assy_test"))
 

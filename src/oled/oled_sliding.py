@@ -161,7 +161,3 @@ class OLEDSliding(oa.OLEDBase):
 
         return hole, shape
 
-
-    def extra_parts(self):
-        pass
-

@@ -48,7 +48,7 @@ class ShapeConfiguration:
     tenting_angle: float = pi / 12.0  # or, change this for more precise tenting control
 
     # symmetry states if it is a symmetric or asymmetric bui.  If asymmetric it doubles the generation time.
-    symmetry: str = "symmetric"  # "asymmetric" or "symmetric"
+    symmetric: bool = True # "asymmetric" or "symmetric"
 
     column_style: str = "standard"  # options include :standard, :orthographic, and :fixed
     column_style_gt5: str = "orthographic"
@@ -69,7 +69,7 @@ class ShapeConfiguration:
     oled_config: Any = None   #OLED_LOOKUP[oled_mount_type]()
     controller_mount_config: Any = None
     plate_config: Any = None
-
+    module_configs: Sequence[Any] = ()
 
     ###################################
     ## Bottom Plate Dimensions
@@ -170,69 +170,6 @@ class ShapeConfiguration:
 
 
 
-
-
-
-
-    ###################################
-    ## Trackball in Wall             ##
-    ###################################
-    trackball_in_wall: bool = False  # Separate trackball option, placing it in the OLED area
-    tbiw_ball_center_row: float = 0.2  # up from cornerrow instead of down from top
-    tbiw_translational_offset: Sequence[float] = (0.0, 0.0, 0.0)
-    tbiw_rotation_offset: Sequence[float] = (0.0, 0.0, 0.0)
-    tbiw_left_wall_x_offset_override: float = 50.0
-    tbiw_left_wall_z_offset_override: float = 0.0
-    tbiw_left_wall_lower_x_offset: float = 0.0
-    tbiw_left_wall_lower_y_offset: float = 0.0
-    tbiw_left_wall_lower_z_offset: float = 0.0
-
-    tbiw_oled_center_row: float = .75  # not none, offsets are from this position
-    tbiw_oled_translation_offset: Sequence[float] = (-3.5, 0, 1.5)  # Z offset tweaks are expected depending on curvature and OLED mount choice.
-    tbiw_oled_rotation_offset: Sequence[float] = (0, 0, 0)
-
-    ##########################################################################
-    ## Finger Trackball in Wall EXPERIMENTAL WIP!!!!                        ##
-    ##########################################################################
-    finger_trackball_in_wall: bool = False  # Separate trackball option, placing it in the OLED area
-    tbiw_ball_center_column: float = 0.2  # up from cornerrow instead of down from top
-    tbiw_top_wall_translational_offset: Sequence[float] = (0.0, 0.0, 0.0)
-    tbiw_top_wall_rotation_offset: Sequence[float] = (0.0, 0.0, 0.0)
-    tbiw_top_wall_y_offset_override: float = 50.0
-    tbiw_top_wall_z_offset_override: float = 0.0
-    tbiw_top_wall_extension_cols: float = 4
-
-
-    ###################################
-    ## Trackball General             ##
-    ###################################
-    trackball_modular: bool = False  # Added, creates a hole with space for the lip size listed below.
-    trackball_modular_lip_width: float = 3.0  # width of lip cleared out in ring location
-    trackball_modular_ball_height: float = 3.0  # height of ball from ring , used to create identical position to fixed.
-    trackball_modular_ring_height: float = 10.0  # height mount ring down from ball height. Covers gaps on elevated ball.
-    trackball_modular_clearance: float = 0.5  # height of ball from ring, used to create identical position to fixed.
-
-    ball_side: str = 'both'  # 'left', 'right', or 'both'
-    ball_diameter: float = 34.0
-    ball_wall_thickness: float = 3  # should not be changed unless the import models are changed.
-    ball_gap: float = 1.0
-    trackball_hole_diameter: float = 36.5
-    trackball_hole_height: float = 40
-    trackball_plate_thickness: float = 2
-    trackball_plate_width: float = 2
-    # Removed trackball_rotation, ball_z_offset. and trackball_sensor_rotation and added more flexibility.
-    tb_socket_translation_offset: Sequence[float] = (0, 0, 2.0)  # applied to the socket and sensor, large values will cause web/wall issues.
-    tb_socket_rotation_offset: Sequence[float] = (0, 0, 0)  # applied to the socket and sensor, large values will cause web/wall issues.
-    tb_sensor_translation_offset: Sequence[float] = (0, 0, 0)  # deviation from socket offsets, for fixing generated geometry issues
-    tb_sensor_rotation_offset: Sequence[float] = (0, 0, 0)  # deviation from socket offsets, for changing the sensor roll orientation
-
-
-
-
-
-
-
-
     ####################################
     ## END CONFIGURATION SECTION
     ####################################
@@ -263,7 +200,7 @@ if __name__ == '__main__':
 
     import clusters.default as clust_def
     left_cluster = clust_def.DefaultClusterParameters()
-    # right_cluster = clust_def.DefaultClusterParameters()
+    right_cluster = clust_def.DefaultClusterParameters()
 
     # import clusters.mini as clust_min
     # right_cluster = clust_min.MiniClusterParameters()
@@ -271,8 +208,8 @@ if __name__ == '__main__':
     # import clusters.carbonfet as clust_cf
     # right_cluster = clust_cf.CarbonfetClusterParameters()
     #
-    import clusters.minidox as clust_md
-    right_cluster = clust_md.MinidoxClusterParameters()
+    # import clusters.minidox as clust_md
+    # right_cluster = clust_md.MinidoxClusterParameters()
 
     # import clusters.trackball_cj as clust_tbcj
     # right_cluster = clust_tbcj.TrackballCJClusterParameters()

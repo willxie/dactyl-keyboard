@@ -1,5 +1,5 @@
 import json
-import os
+from os import path
 import numpy as np
 from dataclasses_json import dataclass_json
 from dataclasses import dataclass
@@ -198,3 +198,17 @@ class OLEDClip(oa.OLEDBase):
         shape = self.g.union([shape, clip_leg, self.g.mirror(clip_leg, 'XZ')])
 
         return shape
+
+
+    def extra_parts(self):
+        save_mount_location_xyz = self.op.mount_location_xyz
+        save_mount_rotation_xyz = self.op.mount_rotation_xyz
+        self.op.mount_location_xyz = (0.0, 0.0, -self.p.oled_config.oled_mount_depth / 2)
+        self.op.oled_mount_rotation_xyz = (0.0, 0.0, 0.0)
+        self.g.export_file(shape=self.oled_clip(), fname=path.join(self.p.save_path, self.p.config_name + r"_oled_clip"))
+        self.g.export_file(shape=self.oled_mount_frame()[1],
+                fname=path.join(self.p.save_path, self.p.config_name + r"_oled_test"))
+        self.g.export_file(shape=self.g.union((self.oled_mount_frame()[1], self.oled_clip())),
+                fname=path.join(self.p.save_path, self.p.config_name + r"_oled_assy_test"))
+        self.op.mount_location_xyz = save_mount_location_xyz
+        self.op.mount_rotation_xyz = save_mount_rotation_xyz

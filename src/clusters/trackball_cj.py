@@ -115,12 +115,12 @@ class TrackballCJCluster(ca.TrackballClusterBase):
         return shape
 
     def thumb(self):
-        t = self.thumb_layout(self.sh.single_plate())
+        t = self.thumb_layout(self.pl.single_plate())
         tb = self.track_place(self.tbcj_holder())
         return self.g.union([t, tb])
 
     def thumbcaps(self):
-        t = self.thumb_layout(self.sh.sa_cap(1))
+        t = self.thumb_layout(self.pl.sa_cap(1))
         return t
 
     def thumb_connectors(self):
@@ -130,10 +130,10 @@ class TrackballCJCluster(ca.TrackballClusterBase):
         hulls.append(
             self.g.triangle_hulls(
                 [
-                    self.tl_place(self.sh.web_post_tr()),
-                    self.tl_place(self.sh.web_post_br()),
-                    self.tr_place(self.sh.web_post_tl()),
-                    self.tr_place(self.sh.web_post_bl()),
+                    self.tl_place(self.pl.web_post_tr()),
+                    self.tl_place(self.pl.web_post_br()),
+                    self.tr_place(self.pl.web_post_tl()),
+                    self.tr_place(self.pl.web_post_bl()),
                 ]
             )
         )
@@ -142,10 +142,10 @@ class TrackballCJCluster(ca.TrackballClusterBase):
         hulls.append(
             self.g.triangle_hulls(
                 [
-                    self.bl_place(self.sh.web_post_tr()),
-                    self.bl_place(self.sh.web_post_br()),
-                    self.ml_place(self.sh.web_post_tl()),
-                    self.ml_place(self.sh.web_post_bl()),
+                    self.bl_place(self.pl.web_post_tr()),
+                    self.bl_place(self.pl.web_post_br()),
+                    self.ml_place(self.pl.web_post_tl()),
+                    self.ml_place(self.pl.web_post_bl()),
                 ]
             )
         )
@@ -155,12 +155,12 @@ class TrackballCJCluster(ca.TrackballClusterBase):
         hulls.append(
             self.g.triangle_hulls(
                 [
-                    self.tl_place(self.sh.web_post_tl()),
-                    self.ml_place(self.sh.web_post_tr()),
-                    self.tl_place(self.sh.web_post_bl()),
-                    self.ml_place(self.sh.web_post_br()),
-                    self.tl_place(self.sh.web_post_br()),
-                    self.tr_place(self.sh.web_post_bl()),
+                    self.tl_place(self.pl.web_post_tl()),
+                    self.ml_place(self.pl.web_post_tr()),
+                    self.tl_place(self.pl.web_post_bl()),
+                    self.ml_place(self.pl.web_post_br()),
+                    self.tl_place(self.pl.web_post_br()),
+                    self.tr_place(self.pl.web_post_bl()),
                 ]
             )
         )
@@ -168,20 +168,20 @@ class TrackballCJCluster(ca.TrackballClusterBase):
         hulls.append(
             self.g.triangle_hulls(
                 [
-                    self.tl_place(self.sh.web_post_tl()),
-                    self.parent.key_place(self.sh.web_post_bl(), 0, self.p.cornerrow),
-                    self.tl_place(self.sh.web_post_tr()),
-                    self.parent.key_place(self.sh.web_post_br(), 0, self.p.cornerrow),
-                    self.tr_place(self.sh.web_post_tl()),
-                    self.parent.key_place(self.sh.web_post_bl(), 1, self.p.cornerrow),
-                    self.tr_place(self.sh.web_post_tr()),
-                    self.parent.key_place(self.sh.web_post_br(), 1, self.p.cornerrow),
-                    self.parent.key_place(self.sh.web_post_bl(), 2, self.p.lastrow),
-                    self.tr_place(self.sh.web_post_tr()),
-                    self.parent.key_place(self.sh.web_post_bl(), 2, self.p.lastrow),
-                    self.tr_place(self.sh.web_post_br()),
-                    self.parent.key_place(self.sh.web_post_br(), 2, self.p.lastrow),
-                    self.parent.key_place(self.sh.web_post_bl(), 3, self.p.lastrow),
+                    self.tl_place(self.pl.web_post_tl()),
+                    self.parent.key_place(self.pl.web_post_bl(), 0, self.p.cornerrow),
+                    self.tl_place(self.pl.web_post_tr()),
+                    self.parent.key_place(self.pl.web_post_br(), 0, self.p.cornerrow),
+                    self.tr_place(self.pl.web_post_tl()),
+                    self.parent.key_place(self.pl.web_post_bl(), 1, self.p.cornerrow),
+                    self.tr_place(self.pl.web_post_tr()),
+                    self.parent.key_place(self.pl.web_post_br(), 1, self.p.cornerrow),
+                    self.parent.key_place(self.pl.web_post_bl(), 2, self.p.lastrow),
+                    self.tr_place(self.pl.web_post_tr()),
+                    self.parent.key_place(self.pl.web_post_bl(), 2, self.p.lastrow),
+                    self.tr_place(self.pl.web_post_br()),
+                    self.parent.key_place(self.pl.web_post_br(), 2, self.p.lastrow),
+                    self.parent.key_place(self.pl.web_post_bl(), 3, self.p.lastrow),
                 ]
             )
         )
@@ -190,9 +190,9 @@ class TrackballCJCluster(ca.TrackballClusterBase):
             self.g.triangle_hulls(
                 [
                     self.track_place(self.tbcj_web_post(4)),
-                    self.bl_place(self.sh.web_post_bl()),
+                    self.bl_place(self.pl.web_post_bl()),
                     self.track_place(self.tbcj_web_post(5)),
-                    self.bl_place(self.sh.web_post_br()),
+                    self.bl_place(self.pl.web_post_br()),
                     self.track_place(self.tbcj_web_post(6)),
                 ]
             )
@@ -201,9 +201,9 @@ class TrackballCJCluster(ca.TrackballClusterBase):
         hulls.append(
             self.g.triangle_hulls(
                 [
-                    self.bl_place(self.sh.web_post_br()),
+                    self.bl_place(self.pl.web_post_br()),
                     self.track_place(self.tbcj_web_post(6)),
-                    self.ml_place(self.sh.web_post_bl()),
+                    self.ml_place(self.pl.web_post_bl()),
                 ]
             )
         )
@@ -211,10 +211,10 @@ class TrackballCJCluster(ca.TrackballClusterBase):
         hulls.append(
             self.g.triangle_hulls(
                 [
-                    self.ml_place(self.sh.web_post_bl()),
+                    self.ml_place(self.pl.web_post_bl()),
                     self.track_place(self.tbcj_web_post(6)),
-                    self.ml_place(self.sh.web_post_br()),
-                    self.tr_place(self.sh.web_post_bl()),
+                    self.ml_place(self.pl.web_post_br()),
+                    self.tr_place(self.pl.web_post_bl()),
                 ]
             )
         )
@@ -223,12 +223,12 @@ class TrackballCJCluster(ca.TrackballClusterBase):
             self.g.triangle_hulls(
                 [
                     self.track_place(self.tbcj_web_post(6)),
-                    self.tr_place(self.sh.web_post_bl()),
+                    self.tr_place(self.pl.web_post_bl()),
                     self.track_place(self.tbcj_web_post(7)),
-                    self.tr_place(self.sh.web_post_br()),
+                    self.tr_place(self.pl.web_post_br()),
                     self.track_place(self.tbcj_web_post(0)),
-                    self.tr_place(self.sh.web_post_br()),
-                    self.parent.key_place(self.sh.web_post_bl(), 3, self.p.lastrow),
+                    self.tr_place(self.pl.web_post_br()),
+                    self.parent.key_place(self.pl.web_post_bl(), 3, self.p.lastrow),
                 ]
             )
         )
@@ -240,26 +240,26 @@ class TrackballCJCluster(ca.TrackballClusterBase):
     def walls(self, skeleton=False):
         print('thumb_walls()')
         # thumb, walls
-        shape = self.g.union([self.parent.wall_brace(self.ml_place, -0.3, 1, self.sh.web_post_tr(), self.ml_place, 0, 1, self.sh.web_post_tl())])
+        shape = self.g.union([self.parent.wall_brace(self.ml_place, -0.3, 1, self.pl.web_post_tr(), self.ml_place, 0, 1, self.pl.web_post_tl())])
         shape = self.g.union(
-            [shape, self.parent.wall_brace(self.bl_place, 0, 1, self.sh.web_post_tr(), self.bl_place, 0, 1, self.sh.web_post_tl())])
+            [shape, self.parent.wall_brace(self.bl_place, 0, 1, self.pl.web_post_tr(), self.bl_place, 0, 1, self.pl.web_post_tl())])
         shape = self.g.union(
-            [shape, self.parent.wall_brace(self.bl_place, -1, 0, self.sh.web_post_tl(), self.bl_place, -1, 0, self.sh.web_post_bl())])
+            [shape, self.parent.wall_brace(self.bl_place, -1, 0, self.pl.web_post_tl(), self.bl_place, -1, 0, self.pl.web_post_bl())])
         shape = self.g.union(
-            [shape, self.parent.wall_brace(self.bl_place, -1, 0, self.sh.web_post_tl(), self.bl_place, 0, 1, self.sh.web_post_tl())])
+            [shape, self.parent.wall_brace(self.bl_place, -1, 0, self.pl.web_post_tl(), self.bl_place, 0, 1, self.pl.web_post_tl())])
         shape = self.g.union(
-            [shape, self.parent.wall_brace(self.ml_place, 0, 1, self.sh.web_post_tl(), self.bl_place, 0, 1, self.sh.web_post_tr())])
+            [shape, self.parent.wall_brace(self.ml_place, 0, 1, self.pl.web_post_tl(), self.bl_place, 0, 1, self.pl.web_post_tr())])
 
         corner = self.g.box(1, 1, self.tp.tb_thickness)
 
         points = [
-            (self.bl_place, -1, 0, self.sh.web_post_bl()),
+            (self.bl_place, -1, 0, self.pl.web_post_bl()),
             (self.track_place, 0, -1, self.tbcj_web_post(4)),
             (self.track_place, 0, -1, self.tbcj_web_post(3)),
             (self.track_place, 0, -1, self.tbcj_web_post(2)),
             (self.track_place, 1, -1, self.tbcj_web_post(1)),
             (self.track_place, 1, 0, self.tbcj_web_post(0)),
-            ((lambda sh: self.parent.key_place(sh, 3, self.p.lastrow)), 0, -1, self.sh.web_post_bl()),
+            ((lambda sh: self.parent.key_place(sh, 3, self.p.lastrow)), 0, -1, self.pl.web_post_bl()),
         ]
         for i, _ in enumerate(points[:-1]):
             (pa, dxa, dya, sa) = points[i]
@@ -274,50 +274,50 @@ class TrackballCJCluster(ca.TrackballClusterBase):
         # clunky bit on the top left thumb connection  (normal connectors don't work well)
         shape = self.g.union([self.g.bottom_hull(
             [
-                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1, low_corner=True),
-                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1, low_corner=True),
-                self.ml_place(self.g.translate(self.sh.web_post_tr(), self.parent.wall_locate2(-0.3, 1))),
-                self.ml_place(self.g.translate(self.sh.web_post_tr(), self.parent.wall_locate3(-0.3, 1))),
+                self.parent.left_key_place(self.g.translate(self.pl.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                self.parent.left_key_place(self.g.translate(self.pl.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                self.ml_place(self.g.translate(self.pl.web_post_tr(), self.parent.wall_locate2(-0.3, 1))),
+                self.ml_place(self.g.translate(self.pl.web_post_tr(), self.parent.wall_locate3(-0.3, 1))),
             ]
         )])
 
         shape = self.g.union([shape,
                        self.g.hull_from_shapes(
                            [
-                               self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1, low_corner=True),
-                               self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1, low_corner=True),
-                               self.ml_place(self.g.translate(self.sh.web_post_tr(), self.parent.wall_locate2(-0.3, 1))),
-                               self.ml_place(self.g.translate(self.sh.web_post_tr(), self.parent.wall_locate3(-0.3, 1))),
-                               self.tl_place(self.sh.web_post_tl()),
+                               self.parent.left_key_place(self.g.translate(self.pl.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                               self.parent.left_key_place(self.g.translate(self.pl.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                               self.ml_place(self.g.translate(self.pl.web_post_tr(), self.parent.wall_locate2(-0.3, 1))),
+                               self.ml_place(self.g.translate(self.pl.web_post_tr(), self.parent.wall_locate3(-0.3, 1))),
+                               self.tl_place(self.pl.web_post_tl()),
                            ]
                        )
                        ])  # )
 
         shape = self.g.union([shape, self.g.hull_from_shapes(
             [
-                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1, low_corner=True),
-                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1, low_corner=True),
-                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1, low_corner=True),
-                self.tl_place(self.sh.web_post_tl()),
+                self.parent.left_key_place(self.g.translate(self.pl.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                self.parent.left_key_place(self.g.translate(self.pl.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                self.parent.left_key_place(self.g.translate(self.pl.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                self.tl_place(self.pl.web_post_tl()),
             ]
         )])
 
         shape = self.g.union([shape, self.g.hull_from_shapes(
             [
-                self.parent.left_key_place(self.sh.web_post(), self.p.cornerrow, -1, low_corner=True),
-                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1, low_corner=True),
-                self.parent.key_place(self.sh.web_post_bl(), 0, self.p.cornerrow),
-                self.tl_place(self.sh.web_post_tl()),
+                self.parent.left_key_place(self.pl.web_post(), self.p.cornerrow, -1, low_corner=True),
+                self.parent.left_key_place(self.g.translate(self.pl.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                self.parent.key_place(self.pl.web_post_bl(), 0, self.p.cornerrow),
+                self.tl_place(self.pl.web_post_tl()),
             ]
         )])
 
         shape = self.g.union([shape, self.g.hull_from_shapes(
             [
-                self.ml_place(self.sh.web_post_tr()),
-                self.ml_place(self.g.translate(self.sh.web_post_tr(), self.parent.wall_locate1(-0.3, 1))),
-                self.ml_place(self.g.translate(self.sh.web_post_tr(), self.parent.wall_locate2(-0.3, 1))),
-                self.ml_place(self.g.translate(self.sh.web_post_tr(), self.parent.wall_locate3(-0.3, 1))),
-                self.tl_place(self.sh.web_post_tl()),
+                self.ml_place(self.pl.web_post_tr()),
+                self.ml_place(self.g.translate(self.pl.web_post_tr(), self.parent.wall_locate1(-0.3, 1))),
+                self.ml_place(self.g.translate(self.pl.web_post_tr(), self.parent.wall_locate2(-0.3, 1))),
+                self.ml_place(self.g.translate(self.pl.web_post_tr(), self.parent.wall_locate3(-0.3, 1))),
+                self.tl_place(self.pl.web_post_tl()),
             ]
         )])
 

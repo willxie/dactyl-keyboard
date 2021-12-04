@@ -69,39 +69,39 @@ class MinidoxCluster(ca.ClusterBase):
         ])
 
     def thumbcaps(self):
-        t1 = self.thumb_1x_layout(self.sh.sa_cap(1))
+        t1 = self.thumb_1x_layout(self.pl.sa_cap(1))
         return t1
 
     def thumb(self):
         print('thumb()')
-        shape = self.thumb_fx_layout(self.g.rotate(self.sh.single_plate(), [0.0, 0.0, -90]))
-        shape = self.g.union([shape, self.thumb_fx_layout(self.sh.adjustable_plate(self.tp.minidox_Usize))])
+        shape = self.thumb_fx_layout(self.g.rotate(self.pl.single_plate(), [0.0, 0.0, -90]))
+        shape = self.g.union([shape, self.thumb_fx_layout(self.pl.adjustable_plate(self.tp.minidox_Usize))])
 
         return shape
 
     def thumb_post_tr(self):
         debugprint('thumb_post_tr()')
-        return self.g.translate(self.sh.web_post(),
-                         [(self.p.mount_width / 2) - self.p.post_adj, ((self.p.mount_height/2) + self.sh.adjustable_plate_size(self.tp.minidox_Usize)) - self.p.post_adj, 0]
-                         )
+        return self.g.translate(self.pl.web_post(),
+                                [(self.p.mount_width / 2) - self.p.post_adj, ((self.p.mount_height/2) + self.pl.adjustable_plate_size(self.tp.minidox_Usize)) - self.p.post_adj, 0]
+                                )
 
     def thumb_post_tl(self):
         debugprint('thumb_post_tl()')
-        return self.g.translate(self.sh.web_post(),
-                         [-(self.p.mount_width / 2) + self.p.post_adj, ((self.p.mount_height/2) + self.sh.adjustable_plate_size(self.tp.minidox_Usize)) - self.p.post_adj, 0]
-                         )
+        return self.g.translate(self.pl.web_post(),
+                                [-(self.p.mount_width / 2) + self.p.post_adj, ((self.p.mount_height/2) + self.pl.adjustable_plate_size(self.tp.minidox_Usize)) - self.p.post_adj, 0]
+                                )
 
     def thumb_post_bl(self):
         debugprint('thumb_post_bl()')
-        return self.g.translate(self.sh.web_post(),
-                         [-(self.p.mount_width / 2) + self.p.post_adj, -((self.p.mount_height/2) + self.sh.adjustable_plate_size(self.tp.minidox_Usize)) + self.p.post_adj, 0]
-                         )
+        return self.g.translate(self.pl.web_post(),
+                                [-(self.p.mount_width / 2) + self.p.post_adj, -((self.p.mount_height/2) + self.pl.adjustable_plate_size(self.tp.minidox_Usize)) + self.p.post_adj, 0]
+                                )
 
     def thumb_post_br(self):
         debugprint('thumb_post_br()')
-        return self.g.translate(self.sh.web_post(),
-                         [(self.p.mount_width / 2) - self.p.post_adj, -((self.p.mount_height/2) + self.sh.adjustable_plate_size(self.tp.minidox_Usize)) + self.p.post_adj, 0]
-                         )
+        return self.g.translate(self.pl.web_post(),
+                                [(self.p.mount_width / 2) - self.p.post_adj, -((self.p.mount_height/2) + self.pl.adjustable_plate_size(self.tp.minidox_Usize)) + self.p.post_adj, 0]
+                                )
 
     def thumb_connectors(self):
         hulls = []
@@ -135,19 +135,19 @@ class MinidoxCluster(ca.ClusterBase):
             self.g.triangle_hulls(
                 [
                     self.tl_place(self.thumb_post_tl()),
-                    self.parent.key_place(self.sh.web_post_bl(), 0, self.p.cornerrow),
+                    self.parent.key_place(self.pl.web_post_bl(), 0, self.p.cornerrow),
                     self.tl_place(self.thumb_post_tr()),
-                    self.parent.key_place(self.sh.web_post_br(), 0, self.p.cornerrow),
+                    self.parent.key_place(self.pl.web_post_br(), 0, self.p.cornerrow),
                     self.tr_place(self.thumb_post_tl()),
-                    self.parent.key_place(self.sh.web_post_bl(), 1, self.p.cornerrow),
+                    self.parent.key_place(self.pl.web_post_bl(), 1, self.p.cornerrow),
                     self.tr_place(self.thumb_post_tr()),
-                    self.parent.key_place(self.sh.web_post_br(), 1, self.p.cornerrow),
-                    self.parent.key_place(self.sh.web_post_bl(), 2, self.p.lastrow),
+                    self.parent.key_place(self.pl.web_post_br(), 1, self.p.cornerrow),
+                    self.parent.key_place(self.pl.web_post_bl(), 2, self.p.lastrow),
                     self.tr_place(self.thumb_post_tr()),
-                    self.parent.key_place(self.sh.web_post_bl(), 2, self.p.lastrow),
+                    self.parent.key_place(self.pl.web_post_bl(), 2, self.p.lastrow),
                     self.tr_place(self.thumb_post_br()),
-                    self.parent.key_place(self.sh.web_post_br(), 2, self.p.lastrow),
-                    self.parent.key_place(self.sh.web_post_bl(), 3, self.p.lastrow),
+                    self.parent.key_place(self.pl.web_post_br(), 2, self.p.lastrow),
+                    self.parent.key_place(self.pl.web_post_bl(), 3, self.p.lastrow),
                 ]
             )
         )
@@ -168,7 +168,7 @@ class MinidoxCluster(ca.ClusterBase):
         shape = self.g.union([shape, self.parent.wall_brace(self.ml_place, -1, 0, self.thumb_post_tl(), self.ml_place, 0, 1, self.thumb_post_tl())])
         # thumb, tweeners
         shape = self.g.union([shape, self.parent.wall_brace(self.ml_place, 0, 1, self.thumb_post_tr(), self.ml_place, 0, 1, self.thumb_post_tl())])
-        shape = self.g.union([shape, self.parent.wall_brace(self.tr_place, 0, -1, self.thumb_post_br(), (lambda sh: self.parent.key_place(sh, 3, self.p.lastrow)), 0, -1, self.sh.web_post_bl())])
+        shape = self.g.union([shape, self.parent.wall_brace(self.tr_place, 0, -1, self.thumb_post_br(), (lambda sh: self.parent.key_place(sh, 3, self.p.lastrow)), 0, -1, self.pl.web_post_bl())])
 
         return shape
 
@@ -178,8 +178,8 @@ class MinidoxCluster(ca.ClusterBase):
         # clunky bit on the top left thumb connection  (normal connectors don't work well)
         shape = self.g.union([self.g.bottom_hull(
             [
-                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1, low_corner=True),
-                self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                self.parent.left_key_place(self.g.translate(self.pl.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                self.parent.left_key_place(self.g.translate(self.pl.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1, low_corner=True),
                 self.ml_place(self.g.translate(self.thumb_post_tr(), self.parent.wall_locate2(-0.3, 1))),
                 self.ml_place(self.g.translate(self.thumb_post_tr(), self.parent.wall_locate3(-0.3, 1))),
             ]
@@ -188,8 +188,8 @@ class MinidoxCluster(ca.ClusterBase):
         shape = self.g.union([shape,
                        self.g.hull_from_shapes(
                            [
-                               self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1, low_corner=True),
-                               self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                               self.parent.left_key_place(self.g.translate(self.pl.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                               self.parent.left_key_place(self.g.translate(self.pl.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1, low_corner=True),
                                self.ml_place(self.g.translate(self.thumb_post_tr(), self.parent.wall_locate2(-0.3, 1))),
                                self.ml_place(self.g.translate(self.thumb_post_tr(), self.parent.wall_locate3(-0.3, 1))),
                                self.tl_place(self.thumb_post_tl()),
@@ -199,10 +199,10 @@ class MinidoxCluster(ca.ClusterBase):
         shape = self.g.union([shape,
                        self.g.hull_from_shapes(
                            [
-                               self.parent.left_key_place(self.sh.web_post(), self.p.cornerrow, -1, low_corner=True),
-                               self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1, low_corner=True),
-                               self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1, low_corner=True),
-                               self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                               self.parent.left_key_place(self.pl.web_post(), self.p.cornerrow, -1, low_corner=True),
+                               self.parent.left_key_place(self.g.translate(self.pl.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                               self.parent.left_key_place(self.g.translate(self.pl.web_post(), self.parent.wall_locate2(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                               self.parent.left_key_place(self.g.translate(self.pl.web_post(), self.parent.wall_locate3(-1, 0)), self.p.cornerrow, -1, low_corner=True),
                                self.tl_place(self.thumb_post_tl()),
                            ]
                        )])
@@ -210,9 +210,9 @@ class MinidoxCluster(ca.ClusterBase):
         shape = self.g.union([shape,
                        self.g.hull_from_shapes(
                            [
-                               self.parent.left_key_place(self.sh.web_post(), self.p.cornerrow, -1, low_corner=True),
-                               self.parent.left_key_place(self.g.translate(self.sh.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1, low_corner=True),
-                               self.parent.key_place(self.sh.web_post_bl(), 0, self.p.cornerrow),
+                               self.parent.left_key_place(self.pl.web_post(), self.p.cornerrow, -1, low_corner=True),
+                               self.parent.left_key_place(self.g.translate(self.pl.web_post(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1, low_corner=True),
+                               self.parent.key_place(self.pl.web_post_bl(), 0, self.p.cornerrow),
                                # self.parent.key_place(self.g.translate(self.sh.web_post_bl(), self.parent.wall_locate1(-1, 0)), self.p.cornerrow, -1, low_corner=True),
                                self.tl_place(self.thumb_post_tl()),
                            ]
@@ -233,7 +233,7 @@ class MinidoxCluster(ca.ClusterBase):
 
 
     def thumb_pcb_plate_cutouts(self):
-        shape = self.thumb_fx_layout(self.sh.plate_pcb_cutout())
-        shape = self.g.union([shape, self.thumb_fx_layout(self.sh.plate_pcb_cutout())])
+        shape = self.thumb_fx_layout(self.pl.plate_pcb_cutout())
+        shape = self.g.union([shape, self.thumb_fx_layout(self.pl.plate_pcb_cutout())])
         #shape = self.g.add([shape, minidox_thumb_fx_layout(self.sh.plate_pcb_cutout())])
         return shape
