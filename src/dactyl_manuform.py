@@ -94,7 +94,7 @@ if nrows > 5:
 centerrow = nrows - centerrow_offset
 
 lastrow = nrows - 1
-if reduced_outer_keys:
+if reduced_outer_cols>0 or reduced_inner_cols>0:
     cornerrow = lastrow - 1
 else:
     cornerrow = lastrow
@@ -510,7 +510,7 @@ def key_holes(side="right"):
     holes = []
     for column in range(ncols):
         for row in range(nrows):
-            if (column in [2, 3]) or (not row == lastrow) or (not reduced_outer_keys):
+            if (reduced_inner_cols <= column < (ncols - reduced_outer_cols)) or (not row == lastrow):
                 holes.append(key_place(single_plate(side=side), column, row))
 
     shape = union(holes)
@@ -595,7 +595,7 @@ def connectors():
     debugprint('connectors()')
     hulls = []
     for column in range(ncols - 1):
-        if (column in [2]) or (not reduced_outer_keys):
+        if reduced_inner_cols <= column < (ncols - reduced_outer_cols-1):
             iterrows = lastrow+1
         else:
             iterrows = lastrow
@@ -609,7 +609,7 @@ def connectors():
             hulls.append(triangle_hulls(places))
 
     for column in range(ncols):
-        if (column in [2, 3]) or (not reduced_outer_keys):
+        if reduced_inner_cols <= column < (ncols - reduced_outer_cols):
             iterrows = lastrow
         else:
             iterrows = cornerrow
@@ -622,7 +622,7 @@ def connectors():
             hulls.append(triangle_hulls(places))
 
     for column in range(ncols - 1):
-        if (column in [2]) or (not reduced_outer_keys):
+        if (reduced_inner_cols <= column < (ncols - reduced_outer_cols-1)):
             iterrows = lastrow
         else:
             iterrows = cornerrow
@@ -634,21 +634,21 @@ def connectors():
             places.append(key_place(web_post_tl(), column + 1, row + 1))
             hulls.append(triangle_hulls(places))
 
-        if reduced_outer_keys:
-            if column == 1:
-                places = []
-                places.append(key_place(web_post_bl(), column + 1, iterrows))
-                places.append(key_place(web_post_br(), column, iterrows))
-                places.append(key_place(web_post_tl(), column + 1, iterrows + 1))
-                places.append(key_place(web_post_bl(), column + 1, iterrows + 1))
-                hulls.append(triangle_hulls(places))
-            if column == 3:
-                places = []
-                places.append(key_place(web_post_br(), column, iterrows))
-                places.append(key_place(web_post_bl(), column + 1, iterrows))
-                places.append(key_place(web_post_tr(), column, iterrows + 1))
-                places.append(key_place(web_post_br(), column, iterrows + 1))
-                hulls.append(triangle_hulls(places))
+
+        if column == (reduced_inner_cols-1):
+            places = []
+            places.append(key_place(web_post_bl(), column + 1, iterrows))
+            places.append(key_place(web_post_br(), column, iterrows))
+            places.append(key_place(web_post_tl(), column + 1, iterrows + 1))
+            places.append(key_place(web_post_bl(), column + 1, iterrows + 1))
+            hulls.append(triangle_hulls(places))
+        if column == (ncols - reduced_outer_cols - 1):
+            places = []
+            places.append(key_place(web_post_br(), column, iterrows))
+            places.append(key_place(web_post_bl(), column + 1, iterrows))
+            places.append(key_place(web_post_tr(), column, iterrows + 1))
+            places.append(key_place(web_post_br(), column, iterrows + 1))
+            hulls.append(triangle_hulls(places))
 
 
     return union(hulls)
@@ -662,7 +662,9 @@ def connectors():
 
 def thumborigin():
     # debugprint('thumborigin()')
-    origin = key_position([mount_width / 2, -(mount_height / 2), 0], 1, cornerrow)
+
+    corner = cornerrow if reduced_inner_cols > 0 else lastrow
+    origin = key_position([mount_width / 2, -(mount_height / 2), 0], 1, corner)
 
     for i in range(len(origin)):
         origin[i] = origin[i] + thumb_offsets[i]
@@ -1143,9 +1145,14 @@ def default_thumb_connectors():
 
 
 def mini_thumb_tr_place(shape):
-    shape = rotate(shape, [14, -15, 10])
-    shape = translate(shape, thumborigin())
-    shape = translate(shape, [-15, -10, 5])
+    if mini_index_key:
+        shape = rotate(shape, [-25, 25, 0])
+        shape = translate(shape, thumborigin())
+        shape = translate(shape, [-12.5, -10, 2])
+    else:
+        shape = rotate(shape, [14, -15, 10])
+        shape = translate(shape, thumborigin())
+        shape = translate(shape, [-15, -10, 5])
     return shape
 
 
@@ -2394,12 +2401,14 @@ def right_wall(skeleton=False):
 
     shape = None
 
+    corner = cornerrow if reduced_outer_cols > 0 else lastrow
+
     shape = union([shape, key_wall_brace(
         lastcol, y, 1, 0, web_post_tr(), lastcol, y, 1, 0, web_post_br(),
         skeleton=skeleton,
     )])
 
-    for i in range(cornerrow):
+    for i in range(corner):
         y = i + 1
         shape = union([shape, key_wall_brace(
             lastcol, y - 1, 1, 0, web_post_br(), lastcol, y, 1, 0, web_post_tr(),
@@ -2415,7 +2424,7 @@ def right_wall(skeleton=False):
     shape = union([
         shape,
         key_wall_brace(
-            lastcol, cornerrow, 0, -1, web_post_br(), lastcol, cornerrow, 1, 0, web_post_br(),
+            lastcol, corner, 0, -1, web_post_br(), lastcol, corner, 1, 0, web_post_br(),
             skeleton=skeleton
         ),
     ])
@@ -2436,14 +2445,15 @@ def left_wall(side='right', skeleton=False):
         skeleton=skeleton,
     )])
 
-    # for i in range(lastrow):
-    for i in range(cornerrow+1):
+    corner = cornerrow if reduced_inner_cols > 0 else lastrow
+
+    for i in range(corner+1):
         y = i
-        low = (y == (cornerrow))
+        low = (y == (corner))
         temp_shape1 = wall_brace(
             (lambda sh: left_key_place(sh, y, 1, side=side)), -1, 0, web_post(),
             (lambda sh: left_key_place(sh, y, -1, low_corner=low, side=side)), -1, 0, web_post(),
-        skeleton=skeleton and (y < (cornerrow)),
+        skeleton=skeleton and (y < (corner)),
         )
         shape = union([shape, temp_shape1])
 
@@ -2456,13 +2466,13 @@ def left_wall(side='right', skeleton=False):
 
         shape = union([shape, temp_shape2])
 
-    for i in range(cornerrow):
+    for i in range(corner):
         y = i + 1
-        low = (y == (cornerrow))
+        low = (y == (corner))
         temp_shape1 = wall_brace(
             (lambda sh: left_key_place(sh, y - 1, -1, side=side)), -1, 0, web_post(),
             (lambda sh: left_key_place(sh, y, 1, side=side)), -1, 0, web_post(),
-            skeleton=skeleton and (y < (cornerrow)),
+            skeleton=skeleton and (y < (corner)),
         )
         shape = union([shape, temp_shape1])
 
@@ -2482,26 +2492,84 @@ def front_wall(skeleton=False):
     print('front_wall()')
     shape = None
 
-    shape = union([shape,key_wall_brace(
-        3, lastrow, 0, -1, web_post_bl(), 3, lastrow, 0.5, -1, web_post_br()
-    )])
-    shape = union([shape,key_wall_brace(
-        3, lastrow, 0.5, -1, web_post_br(), 4, cornerrow, .5, -1, web_post_bl()
-    )])
-    shape = union([shape,key_wall_brace(
-        4, cornerrow, .5, -1, web_post_bl(), 4, cornerrow, 0, -1, web_post_br()
-    )])
+    # shape = union([shape,key_wall_brace(
+    #     3, lastrow, 0, -1, web_post_bl(), 3, lastrow, 0.5, -1, web_post_br()
+    # )])
+    # shape = union([shape,key_wall_brace(
+    #     3, lastrow, 0.5, -1, web_post_br(), 4, cornerrow, .5, -1, web_post_bl()
+    # )])
+    # shape = union([shape,key_wall_brace(
+    #     4, cornerrow, .5, -1, web_post_bl(), 4, cornerrow, 0, -1, web_post_br()
+    # )])
 
-    for i in range(ncols - 5):
-        x = i + 5
+    # for i in range(ncols - 5):
+    #     x = i + 5
+    #
+    #     shape = union([shape,key_wall_brace(
+    #         x, cornerrow, 0, -1, web_post_bl(), x, cornerrow, 0, -1, web_post_br()
+    #     )])
+    #
+    #     shape = union([shape, key_wall_brace(
+    #         x, cornerrow, 0, -1, web_post_bl(), x - 1, cornerrow, 0, -1, web_post_br()
+    #     )])
 
-        shape = union([shape,key_wall_brace(
-            x, cornerrow, 0, -1, web_post_bl(), x, cornerrow, 0, -1, web_post_br()
-        )])
+    # corner = lastrow if 4 < (ncols - reduced_outer_cols) else cornerrow
+    corner = cornerrow
+    if reduced_outer_cols>0:
+        offset_col = ncols - reduced_outer_cols
+    else:
+        offset_col = 99
 
-        shape = union([shape, key_wall_brace(
-            x, cornerrow, 0, -1, web_post_bl(), x - 1, cornerrow, 0, -1, web_post_br()
-        )])
+    for i in range(ncols - 3):
+        x = i + 3
+        print("col {}".format(x))
+        if x < (offset_col - 1):
+            print("pre-offset")
+            if x > 3:
+                shape = union([shape, key_wall_brace(
+                    x-1, lastrow, 0, -1, web_post_br(), x, lastrow, 0, -1, web_post_bl()
+                )])
+            shape = union([shape, key_wall_brace(
+                x, lastrow, 0, -1, web_post_bl(), x, lastrow, 0, -1, web_post_br()
+            )])
+        elif x < (offset_col):
+            print("offset setup")
+            if x > 3:
+                shape = union([shape, key_wall_brace(
+                    x-1, lastrow, 0, -1, web_post_br(), x, lastrow, 0, -1, web_post_bl()
+                )])
+            shape = union([shape, key_wall_brace(
+                x, lastrow, 0, -1, web_post_bl(), x, lastrow, 0.5, -1, web_post_br()
+            )])
+
+        elif x == (offset_col):
+            print("offset")
+            shape = union([shape, key_wall_brace(
+                x - 1, lastrow, 0.5, -1, web_post_br(), x, cornerrow, .5, -1, web_post_bl()
+            )])
+            shape = union([shape, key_wall_brace(
+                x, cornerrow, .5, -1, web_post_bl(), x, cornerrow, 0, -1, web_post_br()
+            )])
+
+        elif x == (offset_col + 1):
+            print("offset completion")
+            shape = union([shape, key_wall_brace(
+                x, cornerrow, 0, -1, web_post_bl(), x - 1, cornerrow, 0, -1, web_post_br()
+            )])
+            shape = union([shape, key_wall_brace(
+                x, cornerrow, 0, -1, web_post_bl(), x, cornerrow, 0, -1, web_post_br()
+            )])
+
+
+        else:
+            print("post offset")
+            shape = union([shape, key_wall_brace(
+                x, cornerrow, 0, -1, web_post_bl(), x - 1, corner, 0, -1, web_post_br()
+            )])
+            shape = union([shape, key_wall_brace(
+                x, cornerrow, 0, -1, web_post_bl(), x, corner, 0, -1, web_post_br()
+            )])
+
 
     return shape
 
