@@ -67,16 +67,16 @@ class OLEDBase(ABC):
 
     def set_overrides(self):
         if self.op.left_wall_lower_y_offset is not None:
-            self.p.left_wall_lower_y_offset = self.op.left_wall_lower_y_offset
+            self.p.left_wall_ext_lower_y_offset = self.op.left_wall_lower_y_offset
 
         if self.op.left_wall_lower_z_offset is not None:
-            self.p.left_wall_lower_z_offset = self.op.left_wall_lower_z_offset
+            self.p.left_wall_ext_lower_z_offset = self.op.left_wall_lower_z_offset
 
         if self.op.left_wall_x_offset is not None:
-            self.p.left_wall_x_offset = self.op.left_wall_x_offset
+            self.p.left_wall_ext_x_offset = self.op.left_wall_x_offset
 
         if self.op.left_wall_z_offset is not None:
-            self.p.left_wall_z_offset = self.op.left_wall_z_offset
+            self.p.left_wall_ext_z_offset = self.op.left_wall_z_offset
 
 
     def process_parameters(self):
@@ -96,7 +96,7 @@ class OLEDBase(ABC):
 
             mount_location_xyz = np.array(self.op.mount_location_xyz)
             mount_location_xyz = (np.array(base_pt1) + np.array(base_pt2)) / 2. + np.array(
-                ((-self.p.left_wall_x_offset / 2), 0, 0)) + np.array(self.op.translation_offset)
+                ((-self.p.left_wall_ext_x_offset / 2), 0, 0)) + np.array(self.op.translation_offset)
 
             mount_location_xyz[2] = (mount_location_xyz[2] + base_pt0[2]) / 2
             self.op.mount_location_xyz = mount_location_xyz
@@ -126,7 +126,7 @@ class OLEDBase(ABC):
             )
 
             oled_mount_location_xyz = (np.array(base_pt1) + np.array(base_pt2)) / 2. + np.array(
-                ((-self.p.left_wall_x_offset / 2), 0, 0)) + np.array(self.op.translation_offset)
+                ((-self.p.left_wall_ext_x_offset / 2), 0, 0)) + np.array(self.op.translation_offset)
             oled_mount_location_xyz[2] = (oled_mount_location_xyz[2] + base_pt0[2]) / 2
 
             angle_x = np.arctan2(base_pt1[2] - base_pt2[2], base_pt1[1] - base_pt2[1])

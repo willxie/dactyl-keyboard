@@ -168,7 +168,7 @@ class HolePlateParameters:
     sa_length: float = 18.5
     sa_double_length: float = 37.5
 
-    plate_rim: float = 1.5 + 0.5
+    plate_rim: float = 2.0
 
     hotswap: bool = False
 
@@ -184,8 +184,8 @@ class HolePlateParameters:
     ###################################
     plate_holes: bool = False
     plate_holes_xy_offset: Sequence[float] = (0.0, 0.0)
-    plate_holes_width: float = 14.3
-    plate_holes_height: float = 14.3
+    plate_holes_width: float = 15.0
+    plate_holes_height: float = 15.0
     plate_holes_diameter: float = 1.6
     plate_holes_depth: float = 20.0
 

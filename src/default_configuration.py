@@ -116,11 +116,15 @@ class ShapeConfiguration:
     wall_z_offset: float = 15  # length of the first downward_sloping part of the wall
     wall_x_offset: float = 5  # offset in the x and/or y direction for the first downward_sloping part of the wall (negative)
     wall_y_offset: float = 6  # offset in the x and/or y direction for the first downward_sloping part of the wall (negative)
-    left_wall_x_offset: float = 12  # specific values for the left side due to the minimal wall.
-    left_wall_z_offset: float = 3  # specific values for the left side due to the minimal wall.
-    left_wall_lower_x_offset: float = 0  # specific values for the lower left corner.
-    left_wall_lower_y_offset: float = 0  # specific values for the lower left corner.
-    left_wall_lower_z_offset: float = 0
+    back_wall_y_offset: float = 6  # specific values for the left side due to the minimal wall.
+    back_wall_z_offset: float = 15  # specific values for the left side due to the minimal wall.
+
+    left_wall_ext_x_offset: float = 12  # specific values for the left side due to the minimal wall.
+    left_wall_ext_z_offset: float = 3  # specific values for the left side due to the minimal wall.
+    left_wall_ext_lower_x_offset: float = 0  # specific values for the lower left corner.
+    left_wall_ext_lower_y_offset: float = 0  # specific values for the lower left corner.
+    left_wall_ext_lower_z_offset: float = 0
+
     wall_thickness: float = 4.5  # wall thickness parameter used on upper/mid stage of the wall
     wall_base_y_thickness: float = 4.5  # wall thickness at the lower stage
     wall_base_x_thickness: float = 4.5  # wall thickness at the lower stage
@@ -192,7 +196,7 @@ class ShapeConfiguration:
 
         if self.plate_config is None:
             from shapes import plates
-            self.plate_config = plates.NotchPlateParameters()
+            self.plate_config = plates.NotchPlateParameters(plate_holes=True, plate_pcb_clear=True)
 
 
 if __name__ == '__main__':
@@ -232,6 +236,8 @@ if __name__ == '__main__':
     # ctrl = controllers.PCBMountControllerParameters()
 
     config = ShapeConfiguration(
+        back_wall_y_offset=10,  # specific values for the left side due to the minimal wall.
+        back_wall_z_offset=3,  # specific values for the left side due to the minimal wall.
         right_cluster=right_cluster,
         left_cluster=left_cluster,
         oled_config=oled,

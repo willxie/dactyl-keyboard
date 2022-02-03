@@ -277,7 +277,7 @@ class DactylBase:
             shape = translate_fn(
                 shape, [-(column - self.p.centercol) * column_x_delta_actual, 0, column_z_delta]
             )
-            shape = translate_fn(shape, self.p.column_offset(column))
+            shape = translate_fn(shape, self.column_offset(column))
 
         elif column_style == "fixed":
             shape = rotate_y_fn(shape, self.p.fixed_angles[column])
@@ -286,7 +286,7 @@ class DactylBase:
             shape = rotate_x_fn(shape, self.p.alpha * (self.p.centerrow - row))
             shape = translate_fn(shape, [0, 0, self.p.row_radius + self.p.fixed_z[column]])
             shape = rotate_y_fn(shape, self.p.fixed_tenting)
-            shape = translate_fn(shape, [0, self.p.column_offset(column)[1], 0])
+            shape = translate_fn(shape, [0, self.column_offset(column)[1], 0])
 
         else:
             shape = translate_fn(shape, [0, 0, -self.p.row_radius])
@@ -450,33 +450,17 @@ class DactylBase:
         pos = np.array(
             self.key_position([-self.p.mount_width * 0.5, direction * self.p.mount_height * 0.5, 0], 0, row)
         )
-        # if self.p.trackball_in_wall and (self.side == self.p.ball_side or self.p.ball_side == 'both'):
-        #
-        #     if low_corner:
-        #         x_offset = self.p.tbiw_left_wall_lower_x_offset
-        #         y_offset = self.p.tbiw_left_wall_lower_y_offset
-        #         z_offset = self.p.tbiw_left_wall_lower_z_offset
-        #     else:
-        #         x_offset = 0.0
-        #         y_offset = 0.0
-        #         z_offset = 0.0
-        #
-        #     return list(pos - np.array([
-        #         self.p.tbiw_left_wall_x_offset_override - x_offset,
-        #         -y_offset,
-        #         self.p.tbiw_left_wall_z_offset_override + z_offset
-        #     ]))
 
         if low_corner:
-            x_offset = self.p.left_wall_lower_x_offset
-            y_offset = self.p.left_wall_lower_y_offset
-            z_offset = self.p.left_wall_lower_z_offset
+            x_offset = self.p.left_wall_ext_lower_x_offset
+            y_offset = self.p.left_wall_ext_lower_y_offset
+            z_offset = self.p.left_wall_ext_lower_z_offset
         else:
             x_offset = 0.0
             y_offset = 0.0
             z_offset = 0.0
 
-        return list(pos - np.array([self.p.left_wall_x_offset - x_offset, -y_offset, self.p.left_wall_z_offset + z_offset]))
+        return list(pos - np.array([self.p.left_wall_ext_x_offset - x_offset, -y_offset, self.p.left_wall_ext_z_offset + z_offset]))
 
     def left_key_place(self, shape, row, direction, low_corner=False):
         debugprint("left_key_place()")
@@ -485,58 +469,104 @@ class DactylBase:
 
     def wall_locate1(self, dx, dy):
         debugprint("wall_locate1()")
-        return [dx * self.p.wall_thickness, dy * self.p.wall_thickness, -1]
+#        return [dx * self.p.wall_thickness, dy * self.p.wall_thickness, -1]
+        return [dx * self.p.wall_thickness, dy * self.p.wall_thickness, 0]
 
-    def wall_locate2(self, dx, dy):
+    def wall_locate2(self, dx, dy, offsets=None):
         debugprint("wall_locate2()")
-        return [dx * self.p.wall_x_offset, dy * self.p.wall_y_offset, -self.p.wall_z_offset]
-
-    def wall_locate3(self, dx, dy, back=False):
-        debugprint("wall_locate3()")
-        if back:
-            return [
-                dx * (self.p.wall_x_offset + self.p.wall_base_x_thickness),
-                dy * (self.p.wall_y_offset + self.p.wall_base_back_thickness),
-                -self.p.wall_z_offset,
-            ]
+        if offsets is None:
+            return [dx * self.p.wall_x_offset, dy * self.p.wall_y_offset, -self.p.wall_z_offset]
         else:
+            return [
+                dx * offsets[0], dy * offsets[1], -offsets[2],
+            ]
+
+    def wall_locate3(self, dx, dy, offsets=None):
+        debugprint("wall_locate3()")
+        if offsets is None:
             return [
                 dx * (self.p.wall_x_offset + self.p.wall_base_x_thickness),
                 dy * (self.p.wall_y_offset + self.p.wall_base_y_thickness),
                 -self.p.wall_z_offset,
             ]
+        else:
+            return [
+                dx * (offsets[0] + self.p.wall_base_x_thickness),
+                dy * (offsets[1] + self.p.wall_base_y_thickness),
+                -offsets[2],
+            ]
 
-    def wall_brace(self, place1, dx1, dy1, post1, place2, dx2, dy2, post2, back=False, skeleton=False,
+
+    def wall_brace(self, place1, dx1, dy1, post1, place2, dx2, dy2, post2, wall=None, wall2=None, skeleton=False,
                    skel_bottom=False):
         debugprint("wall_brace()")
         hulls = []
+        offsets12 = (
+            self.p.wall_x_offset, self.p.wall_y_offset, self.p.wall_z_offset
+        )
+        offsets13 = (
+            self.p.wall_x_offset, self.p.wall_y_offset, self.p.wall_z_offset
+        )
+        offsets22 = (
+            self.p.wall_x_offset, self.p.wall_y_offset, self.p.wall_z_offset
+        )
+        offsets23 = (
+            self.p.wall_x_offset, self.p.wall_y_offset, self.p.wall_z_offset
+        )
+        if wall in ['back']:
+            offsets12 = (
+                self.p.wall_x_offset,
+                self.p.back_wall_y_offset,
+                self.p.back_wall_z_offset
+            )
+            offsets13 = (
+                self.p.wall_x_offset,
+                self.p.back_wall_y_offset + self.p.wall_base_back_thickness-self.p.wall_base_y_thickness,
+                self.p.back_wall_z_offset
+            )
+
+        if wall2 is None:
+            offsets22 = offsets12
+            offsets23 = offsets13
+        elif wall2 in ['back']:
+            offsets22 = (
+                self.p.wall_x_offset,
+                self.p.back_wall_y_offset,
+                self.p.back_wall_z_offset
+            )
+            offsets23 = (
+                self.p.wall_x_offset,
+                self.p.back_wall_y_offset + self.p.wall_base_back_thickness-self.p.wall_base_y_thickness,
+                self.p.back_wall_z_offset
+            )
+
 
         hulls.append(place1(post1))
         if not skeleton:
             hulls.append(place1(self.g.translate(post1, self.wall_locate1(dx1, dy1))))
-            hulls.append(place1(self.g.translate(post1, self.wall_locate2(dx1, dy1))))
+            hulls.append(place1(self.g.translate(post1, self.wall_locate2(dx1, dy1, offsets12))))
         if not skeleton or skel_bottom:
-            hulls.append(place1(self.g.translate(post1, self.wall_locate3(dx1, dy1, back))))
+            hulls.append(place1(self.g.translate(post1, self.wall_locate3(dx1, dy1, offsets13))))
 
         hulls.append(place2(post2))
         if not skeleton:
             hulls.append(place2(self.g.translate(post2, self.wall_locate1(dx2, dy2))))
-            hulls.append(place2(self.g.translate(post2, self.wall_locate2(dx2, dy2))))
+            hulls.append(place2(self.g.translate(post2, self.wall_locate2(dx2, dy2, offsets22))))
 
         if not skeleton or skel_bottom:
-            hulls.append(place2(self.g.translate(post2, self.wall_locate3(dx2, dy2, back))))
+            hulls.append(place2(self.g.translate(post2, self.wall_locate3(dx2, dy2, offsets23))))
 
         shape1 = self.g.hull_from_shapes(hulls)
 
         hulls = []
         if not skeleton:
-            hulls.append(place1(self.g.translate(post1, self.wall_locate2(dx1, dy1))))
+            hulls.append(place1(self.g.translate(post1, self.wall_locate2(dx1, dy1, offsets12))))
         if not skeleton or skel_bottom:
-            hulls.append(place1(self.g.translate(post1, self.wall_locate3(dx1, dy1, back))))
+            hulls.append(place1(self.g.translate(post1, self.wall_locate3(dx1, dy1, offsets13))))
         if not skeleton:
-            hulls.append(place2(self.g.translate(post2, self.wall_locate2(dx2, dy2))))
+            hulls.append(place2(self.g.translate(post2, self.wall_locate2(dx2, dy2, offsets22))))
         if not skeleton or skel_bottom:
-            hulls.append(place2(self.g.translate(post2, self.wall_locate3(dx2, dy2, back))))
+            hulls.append(place2(self.g.translate(post2, self.wall_locate3(dx2, dy2, offsets23))))
 
         if len(hulls) > 0:
             shape2 = self.g.bottom_hull(hulls)
@@ -545,7 +575,7 @@ class DactylBase:
 
         return shape1
 
-    def key_wall_brace(self, x1, y1, dx1, dy1, post1, x2, y2, dx2, dy2, post2, back=False, skeleton=False,
+    def key_wall_brace(self, x1, y1, dx1, dy1, post1, x2, y2, dx2, dy2, post2, wall=None, wall2=None, skeleton=False,
                        skel_bottom=False):
         debugprint("key_wall_brace()")
         return self.wall_brace(
@@ -557,7 +587,8 @@ class DactylBase:
             dx2,
             dy2,
             post2,
-            back,
+            wall=wall,
+            wall2=wall2,
             skeleton=skeleton,
             skel_bottom=False,
         )
@@ -567,30 +598,29 @@ class DactylBase:
         x = 0
         shape = None
         shape = self.g.union([shape, self.key_wall_brace(
-            x, 0, 0, 1, self.pl.web_post_tl(), x, 0, 0, 1, self.pl.web_post_tr(), back=True,
+            x, 0, 0, 1, self.pl.web_post_tl(),
+            x, 0, 0, 1, self.pl.web_post_tr(), wall='back',
         )])
         for i in range(self.p.ncols - 1):
             x = i + 1
             shape = self.g.union([shape, self.key_wall_brace(
-                x, 0, 0, 1, self.pl.web_post_tl(), x, 0, 0, 1, self.pl.web_post_tr(), back=True,
+                x, 0, 0, 1, self.pl.web_post_tl(),
+                x, 0, 0, 1, self.pl.web_post_tr(), wall='back',
             )])
 
             skelly = skeleton and not x == 1
             shape = self.g.union([shape, self.key_wall_brace(
-                x, 0, 0, 1, self.pl.web_post_tl(), x - 1, 0, 0, 1, self.pl.web_post_tr(), back=True,
+                x, 0, 0, 1, self.pl.web_post_tl(),
+                x - 1, 0, 0, 1, self.pl.web_post_tr(), wall='back',
                 skeleton=skelly, skel_bottom=True,
             )])
 
-        shape = self.g.union([shape, self.key_wall_brace(
-            self.p.lastcol, 0, 0, 1, self.pl.web_post_tr(), self.p.lastcol, 0, 1, 0, self.pl.web_post_tr(), back=True,
-            skeleton=skeleton, skel_bottom=True,
-        )])
         if not skeleton:
-            shape = self.g.union([shape,
-                           self.key_wall_brace(
-                               self.p.lastcol, 0, 0, 1, self.pl.web_post_tr(), self.p.lastcol, 0, 1, 0, self.pl.web_post_tr()
-                           )
-                           ])
+            shape = self.g.union([shape,  self.key_wall_brace(
+                self.p.lastcol, 0, 0, 1, self.pl.web_post_tr(),
+                self.p.lastcol, 0, 1, 0, self.pl.web_post_tr(),
+                wall='back', wall2='right'
+            )])
         return shape
 
     def right_wall(self, skeleton=False):
@@ -600,19 +630,22 @@ class DactylBase:
         shape = None
 
         shape = self.g.union([shape, self.key_wall_brace(
-            self.p.lastcol, y, 1, 0, self.pl.web_post_tr(), self.p.lastcol, y, 1, 0, self.pl.web_post_br(),
+            self.p.lastcol, y, 1, 0, self.pl.web_post_tr(),
+            self.p.lastcol, y, 1, 0, self.pl.web_post_br(),
             skeleton=skeleton,
         )])
 
         for i in range(self.p.cornerrow):
             y = i + 1
             shape = self.g.union([shape, self.key_wall_brace(
-                self.p.lastcol, y - 1, 1, 0, self.pl.web_post_br(), self.p.lastcol, y, 1, 0, self.pl.web_post_tr(),
+                self.p.lastcol, y - 1, 1, 0, self.pl.web_post_br(),
+                self.p.lastcol, y, 1, 0, self.pl.web_post_tr(),
                 skeleton=skeleton,
             )])
 
             shape = self.g.union([shape, self.key_wall_brace(
-                self.p.lastcol, y, 1, 0, self.pl.web_post_tr(), self.p.lastcol, y, 1, 0, self.pl.web_post_br(),
+                self.p.lastcol, y, 1, 0, self.pl.web_post_tr(),
+                self.p.lastcol, y, 1, 0, self.pl.web_post_br(),
                 skeleton=skeleton,
             )])
             # STRANGE PARTIAL OFFSET
@@ -633,11 +666,13 @@ class DactylBase:
         shape = self.g.union([self.wall_brace(
             (lambda sh: self.key_place(sh, 0, 0)), 0, 1, self.pl.web_post_tl(),
             (lambda sh: self.left_key_place(sh, 0, 1)), 0, 1, self.pl.web_post(),
+            wall='back',
         )])
 
         shape = self.g.union([shape, self.wall_brace(
             (lambda sh: self.left_key_place(sh, 0, 1)), 0, 1, self.pl.web_post(),
             (lambda sh: self.left_key_place(sh, 0, 1)), -1, 0, self.pl.web_post(),
+            wall='back', wall2='left',
             skeleton=skeleton,
         )])
 
@@ -688,7 +723,7 @@ class DactylBase:
 
         shape = self.g.union([shape, self.key_wall_brace(
             3, self.p.lastrow, 0, -1, self.pl.web_post_bl(),
-            3, self.p.lastrow, 0.5, -1, self.pl.web_post_br()
+            3, self.p.lastrow, 0.5, -1, self.pl.web_post_br(), wall='front'
         )])
 
         shape = self.g.union([shape, self.key_wall_brace(
@@ -823,7 +858,7 @@ class DactylBase:
             self.g.translate(self.screw_insert(0, 0, bottom_radius, top_radius, height),
                              (0, 0, offset)),
             self.g.translate(self.screw_insert(0, self.p.cornerrow, bottom_radius, top_radius, height),
-                             (0, self.p.left_wall_lower_y_offset, offset)),
+                             (0, self.p.left_wall_ext_lower_y_offset, offset)),
             self.g.translate(self.screw_insert(3, self.p.lastrow, bottom_radius, top_radius, height),
                              (0, 0, offset)),
             self.g.translate(self.screw_insert(3, 0, bottom_radius, top_radius, height),
