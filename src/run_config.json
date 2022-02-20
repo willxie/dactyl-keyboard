@@ -14,7 +14,8 @@
     "symmetry": "symmetric",
     "column_style_gt5": "orthographic",
     "column_style": "standard",
-    "reduced_outer_keys": true,
+    "reduced_inner_cols": 2,
+    "reduced_outer_cols": 0,
     "thumb_offsets": [
         6,
         -3,
@@ -29,6 +30,7 @@
     "thumb_style": "DEFAULT",
     "default_1U_cluster": true,
     "minidox_Usize": 1.6,
+    "mini_index_key": true,
     "default_thumb_screw_xy_locations": [
         [
             -21,

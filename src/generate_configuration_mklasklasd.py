@@ -21,11 +21,11 @@ shape_config = {
     'save_dir': '.',
     'config_name':  "DM",
 
-    'show_caps': 'MX',
+    'show_caps': False,
     'show_pcbs': False, #only runs if caps are shown, easist place to initially inject geometry
 
-    'nrows':  5, #5,  # key rows
-    'ncols':  6, #6,  # key columns
+    'nrows':  4, #5,  # key rows
+    'ncols':  5, #6,  # key columns
 
     'alpha':  pi / 12.0,  # curvature of the columns
     'beta':  pi / 36.0,  # curvature of the rows
@@ -40,7 +40,6 @@ shape_config = {
     'column_style':  "standard",  # options include :standard, :orthographic, and :fixed
     'reduced_inner_cols': 2,  #currently supports 0 or 2 due to thumb cluster attachment
     'reduced_outer_cols': 0,
-
 
     'thumb_offsets':  [6, -3, 7],
     'keyboard_z_offset':  (
@@ -62,14 +61,12 @@ shape_config = {
     ##############################
 
     # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key, 'TRACKBALL_ORBYL', 'TRACKBALL_CJ'
-    'thumb_style': 'DEFAULT',
+    'thumb_style': 'MINI',
     'default_1U_cluster': True, # only used with default, makes top right thumb cluster key 1U
     # Thumb key size.  May need slight oversizing, check w/ caps.  Additional spacing will be automatically added for larger keys.
     'minidox_Usize': 1.6,
     # Thumb plate rotations, anything other than 90 degree increments WILL NOT WORK.
-
     'mini_index_key': True,
-
     # Screw locations and extra screw locations for separable thumb, all from thumb origin
     # Pulled out of hardcoding as drastic changes to the geometry may require fixes to the screw mounts.
     # First screw in separable should be similar to the standard location as it will receive the same modifiers.
@@ -330,7 +327,7 @@ shape_config = {
             'oled_mount_rotation_xyz': (12.0, 0.0, -6.0), # will be overwritten if oled_center_row is not None
             'oled_left_wall_x_offset_override': 24.0,
             'oled_left_wall_z_offset_override': 0.0,
-            'oled_left_wall_lower_y_offset': 12.0,
+            'oled_left_wall_lower_y_offset': 5.0,
             'oled_left_wall_lower_z_offset': 5.0,
 
             # 'CLIP' Parameters
@@ -504,6 +501,6 @@ def save_config():
 if __name__ == '__main__':
     save_config()
 
-    ## HERE FOR QUICK TESTING, SHOULD BE COMMENTED ON COMMIT
-    # from dactyl_manuform import *
-    # run()
+    # HERE FOR QUICK TESTING, SHOULD BE COMMENTED ON COMMIT
+    from dactyl_manuform import *
+    run()
