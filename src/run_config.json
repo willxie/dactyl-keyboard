@@ -2,7 +2,7 @@
     "ENGINE": "solid",
     "save_dir": ".",
     "config_name": "DM",
-    "show_caps": false,
+    "show_caps": "MX",
     "show_pcbs": false,
     "nrows": 5,
     "ncols": 6,
