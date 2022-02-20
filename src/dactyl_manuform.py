@@ -330,8 +330,13 @@ def trackball_ball(segments=100, side="right"):
 ## SA Keycaps ##
 ################
 
-
-
+def keycap(*args, **kwargs):
+    if show_caps == 'CHOC':
+        return choc_cap(*args, **kwargs)
+    elif show_caps == 'MX':
+        return sa_cap(*args, **kwargs)
+    else:
+        return sa_cap(*args, **kwargs)
 
 def sa_cap(Usize=1):
     # MODIFIED TO NOT HAVE THE ROTATION.  NEEDS ROTATION DURING ASSEMBLY
@@ -378,6 +383,40 @@ def sa_cap(Usize=1):
         key_cap = add([key_cap, key_pcb()])
 
     return key_cap
+
+
+def choc_cap(Usize=1):
+    # MODIFIED TO NOT HAVE THE ROTATION.  NEEDS ROTATION DURING ASSEMBLY
+    # sa_length = 18.25
+
+    if Usize == 1:
+        bl2 = 18.0/2
+        bw2 = 17.5/2
+        bt = 2
+        pl2 = 15.0/2
+        pw2 = 14.5/2
+        pt = 1.5
+        gap = 1.5
+
+    k1 = polyline([(bw2, bl2), (bw2, -bl2), (-bw2, -bl2), (-bw2, bl2), (bw2, bl2)])
+    k1 = extrude_poly(outer_poly=k1, height=0.1)
+    k1 = translate(k1, (0, 0, 0.05))
+    k2 = polyline([(bw2, bl2), (bw2, -bl2), (-bw2, -bl2), (-bw2, bl2), (bw2, bl2)])
+    k2 = extrude_poly(outer_poly=k2, height=0.1)
+    k2 = translate(k2, (0, 0, 0.05+bt))
+    k3 = polyline([(pw2, pl2), (pw2, -pl2), (-pw2, -pl2), (-pw2, pl2), (pw2, pl2)])
+    k3 = extrude_poly(outer_poly=k3, height=0.1)
+    k3 = translate(k3, (0, 0, 0.05+bt+pt))
+    key_cap = hull_from_shapes((k1, k2, k3))
+
+    key_cap = translate(key_cap, (0, 0, 2.8 + plate_thickness))
+
+    if show_pcbs:
+        key_cap = add([key_cap, key_pcb()])
+
+    return key_cap
+
+
 
 def key_pcb():
     shape = box(pcb_width, pcb_height, pcb_thickness)
@@ -523,7 +562,7 @@ def plate_pcb_cutouts(side="right"):
     cutouts = []
     for column in range(ncols):
         for row in range(nrows):
-            if (column in [2, 3]) or (not row == lastrow):
+            if (reduced_inner_cols <= column < (ncols - reduced_outer_cols)) or (not row == lastrow):
                 cutouts.append(key_place(plate_pcb_cutout(side=side), column, row))
 
     # cutouts = union(cutouts)
@@ -531,15 +570,16 @@ def plate_pcb_cutouts(side="right"):
     return cutouts
 
 
-def caps():
+def caps(cap_type="MX"):
     caps = None
+
     for column in range(ncols):
         for row in range(nrows):
-            if (column in [2, 3]) or (not row == lastrow):
+            if (reduced_inner_cols <= column < (ncols - reduced_outer_cols)) or (not row == lastrow):
                 if caps is None:
-                    caps = key_place(sa_cap(), column, row)
+                    caps = key_place(keycap(), column, row)
                 else:
-                    caps = add([caps, key_place(sa_cap(), column, row)])
+                    caps = add([caps, key_place(keycap(), column, row)])
 
     return caps
 
@@ -935,9 +975,9 @@ def thumb_pcb_plate_cutouts(side='right', style_override=None):
         return default_thumb_pcb_plate_cutouts(side)
 
 def default_thumbcaps():
-    t1 = default_thumb_1x_layout(sa_cap(1), cap=True)
+    t1 = default_thumb_1x_layout(keycap(1), cap=True)
     if not default_1U_cluster:
-        t1.add(default_thumb_15x_layout(sa_cap(1.5), cap=True))
+        t1.add(default_thumb_15x_layout(keycap(1.5), cap=True))
     return t1
 
 
@@ -1200,8 +1240,8 @@ def mini_thumb_15x_layout(shape):
 
 
 def mini_thumbcaps():
-    t1 = mini_thumb_1x_layout(sa_cap(1))
-    t15 = mini_thumb_15x_layout(rotate(sa_cap(1), [0, 0, rad2deg(pi / 2)]))
+    t1 = mini_thumb_1x_layout(keycap(1))
+    t15 = mini_thumb_15x_layout(rotate(keycap(1), [0, 0, rad2deg(pi / 2)]))
     return t1.add(t15)
 
 
@@ -1381,8 +1421,8 @@ def minidox_thumb_fx_layout(shape):
     ])
 
 def minidox_thumbcaps():
-    t1 = minidox_thumb_1x_layout(sa_cap(1))
-    # t1.add(minidox_thumb_15x_layout(rotate(sa_cap(1), [0, 0, rad2deg(pi / 2)])))
+    t1 = minidox_thumb_1x_layout(keycap(1))
+    # t1.add(minidox_thumb_15x_layout(rotate(keycap(1), [0, 0, rad2deg(pi / 2)])))
     return t1
 
 
@@ -1550,8 +1590,8 @@ def carbonfet_thumb_15x_layout(shape, plate=True):
 
 
 def carbonfet_thumbcaps():
-    t1 = carbonfet_thumb_1x_layout(sa_cap(1))
-    t15 = carbonfet_thumb_15x_layout(rotate(sa_cap(1.5), [0, 0, rad2deg(pi / 2)]))
+    t1 = carbonfet_thumb_1x_layout(keycap(1))
+    t15 = carbonfet_thumb_15x_layout(rotate(keycap(1.5), [0, 0, rad2deg(pi / 2)]))
     return t1.add(t15)
 
 
@@ -1811,9 +1851,9 @@ def trackball_layout(shape):
 
 
 def tbjs_thumbcaps():
-    t1 = tbjs_thumb_1x_layout(sa_cap(1))
-    # t1 = tbjs_thumb_fx_layout(sa_cap(1))
-    # t1.add(tbjs_thumb_15x_layout(rotate(sa_cap(1), [0, 0, rad2deg(pi / 2)])))
+    t1 = tbjs_thumb_1x_layout(keycap(1))
+    # t1 = tbjs_thumb_fx_layout(keycap(1))
+    # t1.add(tbjs_thumb_15x_layout(rotate(keycap(1), [0, 0, rad2deg(pi / 2)])))
     return t1
 
 
@@ -2092,7 +2132,7 @@ def tbcj_thumb_pcb_plate_cutouts(side="right"):
     return t
 
 def tbcj_thumbcaps():
-    t = tbcj_thumb_layout(sa_cap(1))
+    t = tbcj_thumb_layout(keycap(1))
     return t
 
 
