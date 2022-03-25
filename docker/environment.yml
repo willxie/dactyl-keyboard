@@ -5,26 +5,7 @@ channels:
   - defaults
 dependencies:
   - python>=3.6
-  - ipython
-  - ocp=7.5.1
-  - pyparsing
-  - sphinx=3.2.1
-  - sphinx_rtd_theme
-  - sphinx-autodoc-typehints
-  - black=19.10b0
-  - mypy
-  - codecov
-  - pytest
-  - pytest-cov
-  - ezdxf
-  - ipython
-  - typing_extensions
-  - nptyping
-  - nlopt
-  - path
+  - cadquery=2
   - pip
-  - numpy=1
-  - scipy=1
-  - cadquery=master
   - pip:
     - solidpython
