@@ -11,7 +11,7 @@ r2d = 180 / pi
 shape_config = {
 
     'ENGINE': 'solid',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
-    # 'ENGINE': 'cadquery',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
+    'ENGINE': 'cadquery',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
 
 
     ######################
@@ -22,7 +22,7 @@ shape_config = {
     'config_name':  "DM",
 
     'show_caps': '',
-    # 'show_caps': 'MX',
+    'show_caps': 'MX',
     'show_pcbs': True, # only runs if caps are shown, easist place to initially inject geometry
 
     'nrows':  5, #5,  # key rows
@@ -51,10 +51,10 @@ shape_config = {
 
 
     # TODO tweak
-    'extra_width': 2.5,  # extra space between the base of keys# original= 2
-    'extra_height': 1.0,  # original= 0.5
-    # 'extra_width': 2.0,  # extra space between the base of keys# original= 2
-    # 'extra_height': 0.5,  # original= 0.5
+    # 'extra_width': 2.5,  # extra space between the base of keys# original= 2
+    # 'extra_height': 1.0,  # original= 0.5
+    'extra_width': 2.0,  # extra space between the base of keys# original= 2
+    'extra_height': 0.5,  # original= 0.5
 
 
     'web_thickness': 4.0 + 1.1,
@@ -68,13 +68,15 @@ shape_config = {
 
     # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key, 'TRACKBALL_ORBYL', 'TRACKBALL_CJ'
     # 'thumb_style': 'MINIDOX',
-    'thumb_style': 'DEFAULT',
+    # 'thumb_style': 'CARBONFET',
+    # 'thumb_style': 'DEFAULT',
+    'thumb_style': 'MINI',
     'default_1U_cluster': True, # only used with default, makes top right thumb cluster key 1U
     # Thumb key size.  May need slight oversizing, check w/ caps.  Additional spacing will be automatically added for larger keys.
     'minidox_Usize': 1.6,
     # Thumb plate rotations, anything other than 90 degree increments WILL NOT WORK.
 
-    'mini_index_key': True,
+    'mini_index_key': False,
 
     # Screw locations and extra screw locations for separable thumb, all from thumb origin
     # Pulled out of hardcoding as drastic changes to the geometry may require fixes to the screw mounts.
@@ -100,7 +102,7 @@ shape_config = {
     'thumb_plate_bl_rotation': 0.0,  # Bottom right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
     ##############################
     # EXPERIMENTAL
-    'separable_thumb': False,  #creates a separable thumb section with additional screws to hold it down.  Only attached at base.
+    'separable_thumb': True,  #creates a separable thumb section with additional screws to hold it down.  Only attached at base.
     ##############################
 
     ###################################
@@ -198,7 +200,7 @@ shape_config = {
     'first_1_5U_row': 0,
     'last_1_5U_row': 5,
 
-    'skeletal': False,
+    'skeletal': True,
     ##############################
 
 
@@ -240,8 +242,8 @@ shape_config = {
     # 'HS_NUB' = hot swap underside with nubs.
     # 'HS_UNDERCUT' = hot swap underside with undercut. Does not generate properly.  Hot swap step needs to be modified.
     # 'HS_NOTCH' = hot swap underside with notch.  Does not generate properly.  Hot swap step needs to be modified.
-    # 'plate_style':  'NUB',
-    'plate_style': 'NOTCH',
+    'plate_style':  'NUB',
+    # 'plate_style': 'NOTCH',
 
     'hole_keyswitch_height':  14.0,
     'hole_keyswitch_width':  14.0,
@@ -361,15 +363,15 @@ shape_config = {
     'screws_offset': 'INSIDE', # 'OUTSIDE', 'INSIDE', 'ORIGINAL'
 
     # TODO change insert diameter and height based on heat inserts I have
-    'screw_insert_height': 3.8,
+    # 'screw_insert_height': 6.25,
+    'screw_insert_height': 6.25,
 
-    'screw_insert_bottom_radius': 5.31 / 2,  #Designed for inserts
-    'screw_insert_top_radius': 5.1 / 2,  #Designed for inserts
+    'screw_insert_bottom_radius': 4.8 / 2,  #Designed for inserts
+    'screw_insert_top_radius': 4.99 / 2,  #Designed for inserts
 
-    # 'screw_insert_bottom_radius': 2.5 / 2,  # Designed for self tapping
-    # 'screw_insert_top_radius': 2.5 / 2,  # Designed for self tapping
-
-    'screw_insert_outer_radius': 4.25,  # Common to keep interface to base
+    # TODO for skeleton
+    # 'screw_insert_outer_radius': 4.25,  # Common to keep interface to base
+    'screw_insert_outer_radius': 0,  # Common to keep interface to base
 
     # Does anyone even use these?  I think they just get in the way.
     'wire_post_height': 7,
@@ -440,7 +442,7 @@ shape_config = {
     'plate_holes_width': 19.05 - 2,
     'plate_holes_height': 19.05 - 2,
     'plate_holes_diameter': 1.6,
-    'plate_holes_depth': 5.0,
+    'plate_holes_depth': 4.0,
 
     ###################################
     ## EXPERIMENTAL
@@ -452,9 +454,10 @@ shape_config = {
     ###################################
     ## SHOW PCB FOR FIT CHECK
     ###################################
-    'pcb_width': 19.05,
-    'pcb_height': 19.05,
-    'pcb_thickness': 1.6,
+    'pcb_width': 19.05 + 0.5, # Add buffer for easier cutting
+    'pcb_height': 19.05 + 0.5,
+    'pcb_thickness': 1.6 + 0.5,
+    # 'pcb_thickness': 2.0,
     'pcb_hole_diameter': 2,
     'pcb_hole_pattern_width': 14.3,
     'pcb_hole_pattern_height': 14.3,
