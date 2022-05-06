@@ -76,7 +76,7 @@ else:
 ####################################################
 
 
-debug_exports = False 
+debug_exports = False
 debug_trace = False
 
 def debugprint(info):
@@ -252,21 +252,41 @@ def single_plate(cylinder_segments=100, side="right"):
         x_off = plate_holes_xy_offset[0]
         y_off = plate_holes_xy_offset[1]
         holes = [
+            # # TOP
+            # translate(
+            #     cylinder(radius=plate_holes_diameter/2, height=plate_holes_depth+.01),
+            #     (x_off+half_width, y_off+half_height, plate_holes_depth/2-.01)
+            # ),
+            # translate(
+            #     cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth+.01),
+            #     (x_off-half_width, y_off+half_height, plate_holes_depth/2-.01)
+            # ),
+            # # Bottom
+            # translate(
+            #     cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth+.01),
+            #     (x_off-half_width, y_off-half_height, plate_holes_depth/2-.01)
+            # ),
+            # translate(
+            #     cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth+.01),
+            #     (x_off+half_width, y_off-half_height, plate_holes_depth/2-.01)
+            # ),
+            # Sides
             translate(
                 cylinder(radius=plate_holes_diameter/2, height=plate_holes_depth+.01),
-                (x_off+half_width, y_off+half_height, plate_holes_depth/2-.01)
+                (x_off+half_width, y_off, plate_holes_depth/2-.01)
             ),
             translate(
                 cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth+.01),
-                (x_off-half_width, y_off+half_height, plate_holes_depth/2-.01)
+                (x_off-half_width, y_off, plate_holes_depth/2-.01)
+            ),
+            # Top, Bottom
+            translate(
+                cylinder(radius=plate_holes_diameter/2, height=plate_holes_depth+.01),
+                (x_off - 1.016, y_off+half_height, plate_holes_depth/2-.01)
             ),
             translate(
                 cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth+.01),
-                (x_off-half_width, y_off-half_height, plate_holes_depth/2-.01)
-            ),
-            translate(
-                cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth+.01),
-                (x_off+half_width, y_off-half_height, plate_holes_depth/2-.01)
+                (x_off - 1.016 , y_off-half_height, plate_holes_depth/2-.01)
             ),
         ]
         plate = difference(plate, holes)
@@ -935,7 +955,7 @@ def thumb_connectors(side='right', style_override=None):
         return minidox_thumb_connectors()
     elif _thumb_style == "CARBONFET":
         return carbonfet_thumb_connectors()
-      
+
     elif "TRACKBALL" in _thumb_style:
         if (side == ball_side or ball_side == 'both'):
             if _thumb_style == "TRACKBALL_ORBYL":
@@ -944,7 +964,7 @@ def thumb_connectors(side='right', style_override=None):
                 return tbcj_thumb_connectors()
         else:
             return thumb_connectors(side, style_override=other_thumb)
-          
+
     else:
         return default_thumb_connectors()
 
@@ -2062,7 +2082,7 @@ def tbcj_thumb_layout(shape):
 
 #def oct_corner(i, radius, shape):
 #    i = (i+1)%8
-#    
+#
 #    points_x = [1, 2, 2, 1, -1, -2, -2, -1]
 #    points_y = [2, 1, -1, -2, -2, -1, 1, 2]
 #
@@ -2075,7 +2095,7 @@ def oct_corner(i, diameter, shape):
 
     r = radius
     m = radius * math.tan(math.pi / 8)
-    
+
     points_x = [m, r, r, m, -m, -r, -r, -m]
     points_y = [r, m, -m, -r, -r, -m, m, r]
 
@@ -2653,7 +2673,7 @@ def thumb_connection(side='right', style_override=None, skeleton=False):
         return minidox_thumb_connection(side=side, skeleton=skeleton)
     elif _thumb_style == "CARBONFET":
         return carbonfet_thumb_connection(side=side, skeleton=skeleton)
-      
+
     elif "TRACKBALL" in _thumb_style:
         if (side == ball_side or ball_side == 'both'):
             if _thumb_style == "TRACKBALL_ORBYL":
