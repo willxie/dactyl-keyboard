@@ -51,10 +51,10 @@ shape_config = {
 
 
     # TODO tweak
-    # 'extra_width': 2.5,  # extra space between the base of keys# original= 2
-    # 'extra_height': 1.0,  # original= 0.5
-    'extra_width': 2.0,  # extra space between the base of keys# original= 2
-    'extra_height': 0.5,  # original= 0.5
+    'extra_width': 2.5,  # extra space between the base of keys# original= 2
+    'extra_height': 1.0,  # original= 0.5
+    # 'extra_width': 2.0,  # extra space between the base of keys# original= 2
+    # 'extra_height': 0.5,  # original= 0.5
 
 
     'web_thickness': 4.0 + 1.1,
@@ -437,8 +437,6 @@ shape_config = {
     ###################################
     'plate_holes':  True,
     'plate_holes_xy_offset': (0.0, 0.0),
-    # 'plate_holes_width': 14.3,
-    # 'plate_holes_height': 14.3,
     'plate_holes_width': 19.05 - 2,
     'plate_holes_height': 19.05 - 2,
     'plate_holes_diameter': 1.6,

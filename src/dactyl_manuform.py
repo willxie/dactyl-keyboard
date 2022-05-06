@@ -252,24 +252,6 @@ def single_plate(cylinder_segments=100, side="right"):
         x_off = plate_holes_xy_offset[0]
         y_off = plate_holes_xy_offset[1]
         holes = [
-            # # TOP
-            # translate(
-            #     cylinder(radius=plate_holes_diameter/2, height=plate_holes_depth+.01),
-            #     (x_off+half_width, y_off+half_height, plate_holes_depth/2-.01)
-            # ),
-            # translate(
-            #     cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth+.01),
-            #     (x_off-half_width, y_off+half_height, plate_holes_depth/2-.01)
-            # ),
-            # # Bottom
-            # translate(
-            #     cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth+.01),
-            #     (x_off-half_width, y_off-half_height, plate_holes_depth/2-.01)
-            # ),
-            # translate(
-            #     cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth+.01),
-            #     (x_off+half_width, y_off-half_height, plate_holes_depth/2-.01)
-            # ),
             # Sides
             translate(
                 cylinder(radius=plate_holes_diameter/2, height=plate_holes_depth+.01),
