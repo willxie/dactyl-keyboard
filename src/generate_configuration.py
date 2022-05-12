@@ -22,19 +22,17 @@ shape_config = {
     'config_name':  "DM",
 
     'show_caps': '',
-    # 'show_caps': 'MX',
+    'show_caps': 'MX',
     'show_pcbs': True, # only runs if caps are shown, easist place to initially inject geometry
 
     'nrows':  5, #5,  # key rows
-    'ncols':  5, #6,  # key columns
+    'ncols':  6, #6,  # key columns
 
-    # TODO tweak
-    'alpha': 25.0 / 360 * (2 * pi),  # curvature of the columns default 15 degree
+    'alpha': 20.0 / 360 * (2 * pi),  # curvature of the columns default 15 degree
     'beta':  5.0 / 360 * (2 * pi),  # curvature of the rows default: 5 degree
-    # TODO tweak
     'centercol':  1,  # controls left_right tilt / tenting (higher number is more tenting)
     'centerrow_offset':  3,  # rows from max, controls front_back tilt
-    'tenting_angle':  15.0 / 360 * (2 * pi),  # or, change this for more precise tenting control
+    'tenting_angle':  30.0 / 360 * (2 * pi),  # or, change this for more precise tenting control
 
     # symmetry states if it is a symmetric or asymmetric bui.  If asymmetric it doubles the generation time.
     'symmetry':  "symmetric",  # "asymmetric" or "symmetric"
@@ -42,18 +40,15 @@ shape_config = {
     'column_style_gt5':  "orthographic",
     'column_style':  "standard",  # options include :standard, :orthographic, and :fixed
     'reduced_inner_cols': 2,  #currently supports 0 or 2 due to thumb cluster attachment
-    'reduced_outer_cols': 1,
+    'reduced_outer_cols': 2,
 
-    'thumb_offsets':  [6, -3, 7],
+    'thumb_offsets':  [6 * 1.0, -3 * 1.0, 7 * 1.0],
     'keyboard_z_offset':  (
-        9  # controls overall height# original=9 with centercol=3# use 16 for centercol=2
+        28  # controls overall height# original=9 with centercol=3# use 16 for centercol=2
     ),
 
 
-    # TODO tweak
-    # 'extra_width': 2.5,  # extra space between the base of keys# original= 2
-    # 'extra_height': 1.0,  # original= 0.5
-    'extra_width': 1.0,  # extra space between the base of keys# original= 2
+    'extra_width': 1.5,  # extra space between the base of keys# original= 2
     'extra_height': 0.2,  # original= 0.5
 
 
@@ -361,7 +356,6 @@ shape_config = {
     'screws_offset': 'INSIDE', # 'OUTSIDE', 'INSIDE', 'ORIGINAL'
 
     # TODO change insert diameter and height based on heat inserts I have
-    # 'screw_insert_height': 6.25,
     'screw_insert_height': 6.25,
 
     'screw_insert_bottom_radius': 4.8 / 2,  #Designed for inserts
@@ -452,10 +446,9 @@ shape_config = {
     ###################################
     ## SHOW PCB FOR FIT CHECK
     ###################################
-    'pcb_width': 19.05 + 0.5, # Add buffer for easier cutting
-    'pcb_height': 19.05 + 0.5,
-    'pcb_thickness': 1.6 + 0.5,
-    # 'pcb_thickness': 2.0,
+    'pcb_width': 19.05 + 0.1, # Add buffer for easier cutting
+    'pcb_height': 19.05 + 0.1,
+    'pcb_thickness': 1.6 + 0.1,
     'pcb_hole_diameter': 2,
     'pcb_hole_pattern_width': 14.3,
     'pcb_hole_pattern_height': 14.3,
