@@ -225,13 +225,13 @@ def single_plate(cylinder_segments=100, side="right"):
                 keyswitch_height + 2 * clip_undercut,
                 mount_thickness
             )
-            undercut = union([undercut,
-                box(
-                    keyswitch_width + 2 * clip_undercut,
-                    notch_width,
-                    mount_thickness
-                )
-            ])
+            # undercut = union([undercut,
+            #     box(
+            #         keyswitch_width + 2 * clip_undercut,
+            #         notch_width,
+            #         mount_thickness
+            #     )
+            # ])
 
         undercut = translate(undercut, (0.0, 0.0, -clip_thickness + mount_thickness / 2.0))
 
@@ -1187,7 +1187,7 @@ def default_thumb_connectors():
 # MINI THUMB CLUSTER
 ############################
 
-
+# top right, Space key
 def mini_thumb_tr_place(shape):
     if mini_index_key:
         shape = rotate(shape, [-25, 25, 0])
@@ -1196,35 +1196,42 @@ def mini_thumb_tr_place(shape):
     else:
         shape = rotate(shape, [14, -15, 10])
         shape = translate(shape, thumborigin())
-        shape = translate(shape, [-15, -10, 5])
+        shape = translate(shape, [-15, -10, 5 - 2.0])
     return shape
 
 
+# Top mid
 def mini_thumb_tl_place(shape):
     shape = rotate(shape, [10, -23, 25])
     shape = translate(shape, thumborigin())
-    shape = translate(shape, [-35, -16, -2])
+    scale = 0.96
+    shape = translate(shape, [-35 * scale, -16 * scale, (-2 - 2.0) * scale])
     return shape
 
 
+# Bottom mid
 def mini_thumb_mr_place(shape):
     shape = rotate(shape, [10, -23, 25])
     shape = translate(shape, thumborigin())
-    shape = translate(shape, [-23, -34, -6])
+    scale = 0.95
+    shape = translate(shape, [-23*scale, -34*scale, (-6 - 2.0) *scale])
     return shape
 
 
+# Bottom left
 def mini_thumb_br_place(shape):
     shape = rotate(shape, [6, -34, 35])
     shape = translate(shape, thumborigin())
-    shape = translate(shape, [-39, -43, -16])
+    scale = 0.93
+    shape = translate(shape, [-39*scale, -43*scale, (-16 - 2.0) *scale])
     return shape
 
-
+# Top left
 def mini_thumb_bl_place(shape):
     shape = rotate(shape, [6, -32, 35])
     shape = translate(shape, thumborigin())
-    shape = translate(shape, [-51, -25, -11.5])
+    scale = 0.95
+    shape = translate(shape, [-51*scale, -25*scale, (-11.5 - 2.0)*scale])
     return shape
 
 

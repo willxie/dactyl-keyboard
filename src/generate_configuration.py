@@ -11,7 +11,7 @@ r2d = 180 / pi
 shape_config = {
 
     'ENGINE': 'solid',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
-    'ENGINE': 'cadquery',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
+    # 'ENGINE': 'cadquery',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
 
 
     ######################
@@ -22,17 +22,17 @@ shape_config = {
     'config_name':  "DM",
 
     'show_caps': '',
-    'show_caps': 'MX',
+    # 'show_caps': 'MX',
     'show_pcbs': True, # only runs if caps are shown, easist place to initially inject geometry
 
     'nrows':  5, #5,  # key rows
-    'ncols':  6, #6,  # key columns
+    'ncols':  5, #6,  # key columns
 
     # TODO tweak
-    'alpha':  pi / 12.0,  # curvature of the columns
-    'beta':  pi / 36.0,  # curvature of the rows
+    'alpha': 25.0 / 360 * (2 * pi),  # curvature of the columns default 15 degree
+    'beta':  5.0 / 360 * (2 * pi),  # curvature of the rows default: 5 degree
     # TODO tweak
-    'centercol':  5,  # controls left_right tilt / tenting (higher number is more tenting)
+    'centercol':  1,  # controls left_right tilt / tenting (higher number is more tenting)
     'centerrow_offset':  3,  # rows from max, controls front_back tilt
     'tenting_angle':  15.0 / 360 * (2 * pi),  # or, change this for more precise tenting control
 
@@ -42,19 +42,19 @@ shape_config = {
     'column_style_gt5':  "orthographic",
     'column_style':  "standard",  # options include :standard, :orthographic, and :fixed
     'reduced_inner_cols': 2,  #currently supports 0 or 2 due to thumb cluster attachment
-    'reduced_outer_cols': 2,
+    'reduced_outer_cols': 1,
 
     'thumb_offsets':  [6, -3, 7],
     'keyboard_z_offset':  (
-        7  # controls overall height# original=9 with centercol=3# use 16 for centercol=2
+        9  # controls overall height# original=9 with centercol=3# use 16 for centercol=2
     ),
 
 
     # TODO tweak
     # 'extra_width': 2.5,  # extra space between the base of keys# original= 2
     # 'extra_height': 1.0,  # original= 0.5
-    'extra_width': 2.0,  # extra space between the base of keys# original= 2
-    'extra_height': 0.5,  # original= 0.5
+    'extra_width': 1.0,  # extra space between the base of keys# original= 2
+    'extra_height': 0.2,  # original= 0.5
 
 
     'web_thickness': 4.0 + 1.1,
@@ -68,14 +68,13 @@ shape_config = {
 
     # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key, 'TRACKBALL_ORBYL', 'TRACKBALL_CJ'
     # 'thumb_style': 'MINIDOX',
-    # 'thumb_style': 'CARBONFET',
     # 'thumb_style': 'DEFAULT',
     'thumb_style': 'MINI',
+
     'default_1U_cluster': True, # only used with default, makes top right thumb cluster key 1U
     # Thumb key size.  May need slight oversizing, check w/ caps.  Additional spacing will be automatically added for larger keys.
     'minidox_Usize': 1.6,
     # Thumb plate rotations, anything other than 90 degree increments WILL NOT WORK.
-
     'mini_index_key': False,
 
     # Screw locations and extra screw locations for separable thumb, all from thumb origin
@@ -102,7 +101,7 @@ shape_config = {
     'thumb_plate_bl_rotation': 0.0,  # Bottom right plate rotation tweaks as thumb cluster is crowded for hot swap, etc.
     ##############################
     # EXPERIMENTAL
-    'separable_thumb': True,  #creates a separable thumb section with additional screws to hold it down.  Only attached at base.
+    'separable_thumb': False,  #creates a separable thumb section with additional screws to hold it down.  Only attached at base.
     ##############################
 
     ###################################
@@ -242,8 +241,7 @@ shape_config = {
     # 'HS_NUB' = hot swap underside with nubs.
     # 'HS_UNDERCUT' = hot swap underside with undercut. Does not generate properly.  Hot swap step needs to be modified.
     # 'HS_NOTCH' = hot swap underside with notch.  Does not generate properly.  Hot swap step needs to be modified.
-    'plate_style':  'NUB',
-    # 'plate_style': 'NOTCH',
+    'plate_style': 'NOTCH',
 
     'hole_keyswitch_height':  14.0,
     'hole_keyswitch_width':  14.0,
@@ -262,8 +260,8 @@ shape_config = {
 
     'plate_rim': 1.5 + 0.5,
     # Undercut style dimensions
-    'clip_thickness':  1.1,
-    'clip_undercut':  1.0,
+    'clip_thickness':  1.2,
+    'clip_undercut':  0.8,
     'undercut_transition':  .2,  # NOT FUNCTIONAL WITH OPENSCAD, ONLY WORKS WITH CADQUERY
 
     # Custom plate step file
@@ -439,9 +437,9 @@ shape_config = {
     ###################################
     'plate_holes':  True,
     'plate_holes_xy_offset': (0.0, 0.0),
-    'plate_holes_width': 19.05 - 2,
-    'plate_holes_height': 19.05 - 2,
-    'plate_holes_diameter': 1.6,
+    'plate_holes_width': 19.05 - 2 + 0.2,
+    'plate_holes_height': 19.05 - 2 + 0.2,
+    'plate_holes_diameter': 1.4,
     'plate_holes_depth': 4.0,
 
     ###################################
@@ -469,8 +467,8 @@ shape_config = {
     'column_offsets':  [
         [0, 0, 0],
         [0, 0, 0],
-        [0, 2.82, -4.5],
-        [0, 0, 0],
+        [0, 2.82, -3.5],
+        [0, 0, -1],
         [0, -12, 5.64],
         [0, -12, 5.64],
         [0, -12, 5.64],# NOT USED IN MOST FORMATS (7th column)

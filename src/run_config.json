@@ -1,29 +1,29 @@
 {
-    "ENGINE": "cadquery",
+    "ENGINE": "solid",
     "save_dir": ".",
     "config_name": "DM",
-    "show_caps": "MX",
+    "show_caps": "",
     "show_pcbs": true,
     "nrows": 5,
-    "ncols": 6,
-    "alpha": 0.26179916666666664,
+    "ncols": 5,
+    "alpha": 0.43633194444444445,
     "beta": 0.08726638888888888,
-    "centercol": 5,
+    "centercol": 1,
     "centerrow_offset": 3,
     "tenting_angle": 0.26179916666666664,
     "symmetry": "symmetric",
     "column_style_gt5": "orthographic",
     "column_style": "standard",
     "reduced_inner_cols": 2,
-    "reduced_outer_cols": 2,
+    "reduced_outer_cols": 1,
     "thumb_offsets": [
         6,
         -3,
         7
     ],
-    "keyboard_z_offset": 7,
-    "extra_width": 2.0,
-    "extra_height": 0.5,
+    "keyboard_z_offset": 9,
+    "extra_width": 1.0,
+    "extra_height": 0.2,
     "web_thickness": 5.1,
     "post_size": 0.1,
     "post_adj": 0,
@@ -149,7 +149,7 @@
     "thumb_plate_ml_rotation": 0.0,
     "thumb_plate_br_rotation": 0.0,
     "thumb_plate_bl_rotation": 0.0,
-    "separable_thumb": true,
+    "separable_thumb": false,
     "trackball_in_wall": false,
     "tbiw_ball_center_row": 0.2,
     "tbiw_translational_offset": [
@@ -321,7 +321,7 @@
         17.5
     ],
     "fixed_tenting": 0.0,
-    "plate_style": "NUB",
+    "plate_style": "NOTCH",
     "hole_keyswitch_height": 14.0,
     "hole_keyswitch_width": 14.0,
     "nub_keyswitch_height": 14.4,
@@ -334,8 +334,8 @@
     "sa_double_length": 37.5,
     "plate_thickness": 5.1,
     "plate_rim": 2.0,
-    "clip_thickness": 1.1,
-    "clip_undercut": 1.0,
+    "clip_thickness": 1.2,
+    "clip_undercut": 0.8,
     "undercut_transition": 0.2,
     "plate_file": null,
     "plate_offset": 0.0,
@@ -513,9 +513,9 @@
         0.0,
         0.0
     ],
-    "plate_holes_width": 17.05,
-    "plate_holes_height": 17.05,
-    "plate_holes_diameter": 1.6,
+    "plate_holes_width": 17.25,
+    "plate_holes_height": 17.25,
+    "plate_holes_diameter": 1.4,
     "plate_holes_depth": 4.0,
     "plate_pcb_clear": false,
     "plate_pcb_size": [
@@ -530,7 +530,7 @@
     ],
     "pcb_width": 19.55,
     "pcb_height": 19.55,
-    "pcb_thickness": 2.0,
+    "pcb_thickness": 2.1,
     "pcb_hole_diameter": 2,
     "pcb_hole_pattern_width": 14.3,
     "pcb_hole_pattern_height": 14.3,
@@ -548,12 +548,12 @@
         [
             0,
             2.82,
-            -4.5
+            -3.5
         ],
         [
             0,
             0,
-            0
+            -1
         ],
         [
             0,
