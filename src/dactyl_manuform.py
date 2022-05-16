@@ -58,6 +58,7 @@ else:
     save_path = path.join(r"..", "things", save_dir)
     parts_path = path.join(r"..", r"..", "src", "parts")
 
+
 ###############################################
 # END EXTREMELY UGLY BOOTSTRAP
 ###############################################
@@ -246,32 +247,10 @@ def single_plate(cylinder_segments=100, side="right"):
         plate = union([plate, socket])
 
 
-    if plate_holes:
-        half_width = plate_holes_width/2.
-        half_height = plate_holes_height/2.
-        x_off = plate_holes_xy_offset[0]
-        y_off = plate_holes_xy_offset[1]
-        holes = [
-            # Sides
-            translate(
-                cylinder(radius=plate_holes_diameter/2, height=plate_holes_depth+.01),
-                (x_off+half_width, y_off, plate_holes_depth/2-.01)
-            ),
-            translate(
-                cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth+.01),
-                (x_off-half_width, y_off, plate_holes_depth/2-.01)
-            ),
-            # Top, Bottom
-            translate(
-                cylinder(radius=plate_holes_diameter/2, height=plate_holes_depth+.01),
-                (x_off - 1.016, y_off+half_height, plate_holes_depth/2-.01)
-            ),
-            translate(
-                cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth+.01),
-                (x_off - 1.016 , y_off-half_height, plate_holes_depth/2-.01)
-            ),
-        ]
-        plate = difference(plate, holes)
+    # if plate_holes:
+    #     holes = gen_plate_holes()
+    #     plate = difference(plate, [holes])
+
 
     if side == "left":
         plate = mirror(plate, 'YZ')
@@ -383,6 +362,9 @@ def sa_cap(Usize=1):
 
     if show_pcbs:
         key_cap = add([key_cap, key_pcb()])
+        key_cap = add([key_cap, gen_plate_holes()])
+
+
 
     return key_cap
 
@@ -434,6 +416,39 @@ def key_pcb():
     shape = difference(shape, holes)
 
     return shape
+
+
+def gen_plate_holes():
+    half_width = plate_holes_width/2.
+    half_height = plate_holes_height/2.
+    x_off = plate_holes_xy_offset[0]
+    y_off = plate_holes_xy_offset[1]
+    holes = [
+        # Sides
+        translate(
+            cylinder(radius=plate_holes_diameter/2, height=plate_holes_depth*2+.01),
+            (x_off+half_width, y_off, -plate_holes_depth/2-.01)
+        ),
+        translate(
+            cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth*2+.01),
+            (x_off-half_width, y_off, -plate_holes_depth/2-.01)
+        ),
+        # Top, Bottom
+        translate(
+            cylinder(radius=plate_holes_diameter/2, height=plate_holes_depth*2+.01),
+            (x_off + 1.016, (y_off+half_height+0.05), -plate_holes_depth/2-.01)
+        ),
+        translate(
+            cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth*2+.01),
+            (x_off + 1.016 , y_off-(half_height+0.05), -plate_holes_depth/2-.01)
+        ),
+    ]
+    import functools
+    shape = functools.reduce(lambda a, b: union([a, b]), holes)
+
+    return shape
+
+
 
 #########################
 ## Placement Functions ##
@@ -1194,9 +1209,10 @@ def mini_thumb_tr_place(shape):
         shape = translate(shape, thumborigin())
         shape = translate(shape, [-12.5, -10, 2])
     else:
-        shape = rotate(shape, [14, -15, 10])
+        shape = rotate(shape, [14, -12, 15])
         shape = translate(shape, thumborigin())
-        shape = translate(shape, [-15, -10, 5 - 2.0])
+        scale = 1.4
+        shape = translate(shape, [-15* scale, -8* scale, (3.5 - 2.0) * scale])
     return shape
 
 
@@ -1204,7 +1220,7 @@ def mini_thumb_tr_place(shape):
 def mini_thumb_tl_place(shape):
     shape = rotate(shape, [10, -23, 25])
     shape = translate(shape, thumborigin())
-    scale = 0.96
+    scale = 1.12
     shape = translate(shape, [-35 * scale, -16 * scale, (-2 - 2.0) * scale])
     return shape
 
@@ -1213,8 +1229,8 @@ def mini_thumb_tl_place(shape):
 def mini_thumb_mr_place(shape):
     shape = rotate(shape, [10, -23, 25])
     shape = translate(shape, thumborigin())
-    scale = 0.95
-    shape = translate(shape, [-23*scale, -34*scale, (-6 - 2.0) *scale])
+    scale = 1.120
+    shape = translate(shape, [-25*scale, -31*scale, (-6 - 2.0) *scale])
     return shape
 
 
@@ -1222,15 +1238,16 @@ def mini_thumb_mr_place(shape):
 def mini_thumb_br_place(shape):
     shape = rotate(shape, [6, -34, 35])
     shape = translate(shape, thumborigin())
-    scale = 0.93
-    shape = translate(shape, [-39*scale, -43*scale, (-16 - 2.0) *scale])
+    scale = 1.0
+    shape = translate(shape, [-42.5*scale, -42*scale, (-16 - 2.0) *scale])
+
     return shape
 
 # Top left
 def mini_thumb_bl_place(shape):
     shape = rotate(shape, [6, -32, 35])
     shape = translate(shape, thumborigin())
-    scale = 0.95
+    scale = 1.06
     shape = translate(shape, [-51*scale, -25*scale, (-11.5 - 2.0)*scale])
     return shape
 
@@ -1252,7 +1269,7 @@ def mini_thumb_15x_layout(shape):
 
 def mini_thumbcaps():
     t1 = mini_thumb_1x_layout(keycap(1))
-    t15 = mini_thumb_15x_layout(rotate(keycap(1), [0, 0, rad2deg(pi / 2)]))
+    t15 = mini_thumb_15x_layout(rotate(keycap(1), [0, 0, 0]))
     return t1.add(t15)
 
 
@@ -3836,13 +3853,14 @@ def screw_insert_shape(bottom_radius, top_radius, height):
 def screw_insert(column, row, bottom_radius, top_radius, height, side='right'):
     debugprint('screw_insert()')
     shift_right = column == lastcol
+    shift_right_corner = (column == lastcol) and (row == cornerrow)
     shift_left = column == 0
     shift_up = (not (shift_right or shift_left)) and (row == 0)
     shift_down = (not (shift_right or shift_left)) and (row >= lastrow)
 
     if screws_offset == 'INSIDE':
         # debugprint('Shift Inside')
-        shift_left_adjust = wall_base_x_thickness
+        shift_left_adjust = wall_base_x_thickness + 1
         shift_right_adjust = -wall_base_x_thickness/2
         shift_down_adjust = -wall_base_y_thickness/2
         shift_up_adjust = -wall_base_y_thickness/3
@@ -3878,12 +3896,21 @@ def screw_insert(column, row, bottom_radius, top_radius, height, side='right'):
             np.array(left_key_position(row, 0, side=side)) + np.array(wall_locate3(-1, 0)) + np.array((shift_left_adjust,0,0))
         )
     else:
+        # shift_right
         position = key_position(
             list(np.array(wall_locate2(1, 0)) + np.array([(mount_height / 2), 0, 0]) + np.array((shift_right_adjust,0,0))
                  ),
             column,
             row,
         )
+        if shift_right_corner:
+            # This screw is too close to the switch plate, need some additional moving around.
+            position = key_position(
+                list(np.array(wall_locate2(1, 0)) + np.array([(mount_height / 2), 0, 0]) + np.array((shift_right_adjust-2,-7.5,0))
+                     ),
+                column,
+                row,
+            )
 
 
     shape = screw_insert_shape(bottom_radius, top_radius, height)
@@ -3955,7 +3982,7 @@ def screw_insert_all_shapes(bottom_radius, top_radius, height, offset=0, side='r
         translate(screw_insert(3, lastrow, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
         translate(screw_insert(3, 0, bottom_radius, top_radius, height, side=side), (0,0, offset)),
         translate(screw_insert(lastcol, 0, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
-        translate(screw_insert(lastcol, cornerrow, bottom_radius, top_radius, height, side=side), (0, 0, offset)),
+        translate(screw_insert(lastcol, cornerrow, bottom_radius, top_radius, height, side=side), (0, -0, offset)),
         # translate(screw_insert_thumb(bottom_radius, top_radius, height), (0, 0, offset)),
     )
 
@@ -4191,10 +4218,6 @@ def model_side(side="right"):
 
             if show_caps:
                 main_shape = add([main_shape, ball])
-
-
-
-
 
     if show_caps:
         main_shape = add([main_shape, caps()])

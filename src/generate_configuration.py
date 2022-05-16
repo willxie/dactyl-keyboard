@@ -11,7 +11,7 @@ r2d = 180 / pi
 shape_config = {
 
     'ENGINE': 'solid',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
-    # 'ENGINE': 'cadquery',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
+    'ENGINE': 'cadquery',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
 
 
     ######################
@@ -77,7 +77,7 @@ shape_config = {
     # First screw in separable should be similar to the standard location as it will receive the same modifiers.
     'default_thumb_screw_xy_locations': [[-21, -58]],
     'default_separable_thumb_screw_xy_locations': [[-21, -58]],
-    'mini_thumb_screw_xy_locations': [[-29, -52]],
+    'mini_thumb_screw_xy_locations': [[-35, -52]],
     'mini_separable_thumb_screw_xy_locations': [[-29, -52], [-62, 10], [12, -25]],
     'minidox_thumb_screw_xy_locations': [[-37, -34]],
     'minidox_separable_thumb_screw_xy_locations': [[-37, -34], [-62, 12], [10, -25]],
@@ -194,7 +194,7 @@ shape_config = {
     'first_1_5U_row': 0,
     'last_1_5U_row': 5,
 
-    'skeletal': True,
+    'skeletal': False,
     ##############################
 
 
@@ -362,8 +362,8 @@ shape_config = {
     'screw_insert_top_radius': 4.99 / 2,  #Designed for inserts
 
     # TODO for skeleton
-    # 'screw_insert_outer_radius': 4.25,  # Common to keep interface to base
-    'screw_insert_outer_radius': 0,  # Common to keep interface to base
+    'screw_insert_outer_radius': 4.25,  # Common to keep interface to base
+    # 'screw_insert_outer_radius': 0,  # Common to keep interface to base
 
     # Does anyone even use these?  I think they just get in the way.
     'wire_post_height': 7,
@@ -431,8 +431,8 @@ shape_config = {
     ###################################
     'plate_holes':  True,
     'plate_holes_xy_offset': (0.0, 0.0),
-    'plate_holes_width': 19.05 - 2 + 0.2,
-    'plate_holes_height': 19.05 - 2 + 0.2,
+    'plate_holes_width': 19.05 - (1.27*2) + 1.4 + 0.2, # Ameoba width - screw distance + screw diameter + slack
+    'plate_holes_height': 19.05 - (1.27*2) + 1.4 + 0.2,
     'plate_holes_diameter': 1.4,
     'plate_holes_depth': 4.0,
 
