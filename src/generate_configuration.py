@@ -11,7 +11,7 @@ r2d = 180 / pi
 shape_config = {
 
     'ENGINE': 'solid',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
-    # 'ENGINE': 'cadquery',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
+    'ENGINE': 'cadquery',  # 'solid' = solid python / OpenSCAD, 'cadquery' = cadquery / OpenCascade
 
 
     ######################
@@ -21,17 +21,18 @@ shape_config = {
     'save_dir': '.',
     'config_name':  "DM",
 
+    'show_caps': '',
     'show_caps': 'MX',
-    'show_pcbs': False, #only runs if caps are shown, easist place to initially inject geometry
+    'show_pcbs': True, # only runs if caps are shown, easist place to initially inject geometry
 
     'nrows':  5, #5,  # key rows
     'ncols':  6, #6,  # key columns
 
-    'alpha':  pi / 12.0,  # curvature of the columns
-    'beta':  pi / 36.0,  # curvature of the rows
-    'centercol':  3,  # controls left_right tilt / tenting (higher number is more tenting)
+    'alpha': 20.0 / 360 * (2 * pi),  # curvature of the columns default 15 degree
+    'beta':  5.0 / 360 * (2 * pi),  # curvature of the rows default: 5 degree
+    'centercol':  1,  # controls left_right tilt / tenting (higher number is more tenting)
     'centerrow_offset':  3,  # rows from max, controls front_back tilt
-    'tenting_angle':  pi / 12.0,  # or, change this for more precise tenting control
+    'tenting_angle':  30.0 / 360 * (2 * pi),  # or, change this for more precise tenting control
 
     # symmetry states if it is a symmetric or asymmetric bui.  If asymmetric it doubles the generation time.
     'symmetry':  "symmetric",  # "asymmetric" or "symmetric"
@@ -39,17 +40,16 @@ shape_config = {
     'column_style_gt5':  "orthographic",
     'column_style':  "standard",  # options include :standard, :orthographic, and :fixed
     'reduced_inner_cols': 2,  #currently supports 0 or 2 due to thumb cluster attachment
-    'reduced_outer_cols': 0,
+    'reduced_outer_cols': 2,
 
-
-    'thumb_offsets':  [6, -3, 7],
+    'thumb_offsets':  [6 * 1.0, -3 * 1.0, 7 * 1.0],
     'keyboard_z_offset':  (
-        11  # controls overall height# original=9 with centercol=3# use 16 for centercol=2
+        28  # controls overall height# original=9 with centercol=3# use 16 for centercol=2
     ),
 
 
-    'extra_width': 2.5,  # extra space between the base of keys# original= 2
-    'extra_height': 1.0,  # original= 0.5
+    'extra_width': 1.5,  # extra space between the base of keys# original= 2
+    'extra_height': 0.2,  # original= 0.5
 
 
     'web_thickness': 4.0 + 1.1,
@@ -62,20 +62,22 @@ shape_config = {
     ##############################
 
     # 'DEFAULT' 6-key, 'MINI' 5-key, 'CARBONFET' 6-key, 'MINIDOX' 3-key, 'TRACKBALL_ORBYL', 'TRACKBALL_CJ'
-    'thumb_style': 'DEFAULT',
+    # 'thumb_style': 'MINIDOX',
+    # 'thumb_style': 'DEFAULT',
+    'thumb_style': 'MINI',
+
     'default_1U_cluster': True, # only used with default, makes top right thumb cluster key 1U
     # Thumb key size.  May need slight oversizing, check w/ caps.  Additional spacing will be automatically added for larger keys.
     'minidox_Usize': 1.6,
     # Thumb plate rotations, anything other than 90 degree increments WILL NOT WORK.
-
-    'mini_index_key': True,
+    'mini_index_key': False,
 
     # Screw locations and extra screw locations for separable thumb, all from thumb origin
     # Pulled out of hardcoding as drastic changes to the geometry may require fixes to the screw mounts.
     # First screw in separable should be similar to the standard location as it will receive the same modifiers.
     'default_thumb_screw_xy_locations': [[-21, -58]],
     'default_separable_thumb_screw_xy_locations': [[-21, -58]],
-    'mini_thumb_screw_xy_locations': [[-29, -52]],
+    'mini_thumb_screw_xy_locations': [[-35, -52]],
     'mini_separable_thumb_screw_xy_locations': [[-29, -52], [-62, 10], [12, -25]],
     'minidox_thumb_screw_xy_locations': [[-37, -34]],
     'minidox_separable_thumb_screw_xy_locations': [[-37, -34], [-62, 12], [10, -25]],
@@ -196,7 +198,6 @@ shape_config = {
     ##############################
 
 
-
     'wall_z_offset':  15,  # length of the first downward_sloping part of the wall
     'wall_x_offset':  5,  # offset in the x and/or y direction for the first downward_sloping part of the wall (negative)
     'wall_y_offset':  6,  # offset in the x and/or y direction for the first downward_sloping part of the wall (negative)
@@ -235,7 +236,6 @@ shape_config = {
     # 'HS_NUB' = hot swap underside with nubs.
     # 'HS_UNDERCUT' = hot swap underside with undercut. Does not generate properly.  Hot swap step needs to be modified.
     # 'HS_NOTCH' = hot swap underside with notch.  Does not generate properly.  Hot swap step needs to be modified.
-    # 'plate_style':  'NUB',
     'plate_style': 'NOTCH',
 
     'hole_keyswitch_height':  14.0,
@@ -255,8 +255,8 @@ shape_config = {
 
     'plate_rim': 1.5 + 0.5,
     # Undercut style dimensions
-    'clip_thickness':  1.1,
-    'clip_undercut':  1.0,
+    'clip_thickness':  1.2,
+    'clip_undercut':  0.8,
     'undercut_transition':  .2,  # NOT FUNCTIONAL WITH OPENSCAD, ONLY WORKS WITH CADQUERY
 
     # Custom plate step file
@@ -273,7 +273,7 @@ shape_config = {
     # 'SLIDING' = Features to slide the OLED in place and use a pin or block to secure from underneath.
     # 'CLIP' = Features to set the OLED in a frame a snap a bezel down to hold it in place.
 
-    'oled_mount_type':  'CLIP',
+    'oled_mount_type':  'NONE',
     'oled_center_row': 1.25, # if not None, this will override the oled_mount_location_xyz and oled_mount_rotation_xyz settings
     'oled_translation_offset': (0, 0, 4), # Z offset tweaks are expected depending on curvature and OLED mount choice.
     'oled_rotation_offset': (0, 0, 0),
@@ -355,15 +355,15 @@ shape_config = {
 
     'screws_offset': 'INSIDE', # 'OUTSIDE', 'INSIDE', 'ORIGINAL'
 
-    'screw_insert_height': 3.8,
+    # TODO change insert diameter and height based on heat inserts I have
+    'screw_insert_height': 6.25,
 
-    # 'screw_insert_bottom_radius': 5.31 / 2,  #Designed for inserts
-    # 'screw_insert_top_radius': 5.1 / 2,  #Designed for inserts
+    'screw_insert_bottom_radius': 4.8 / 2,  #Designed for inserts
+    'screw_insert_top_radius': 4.99 / 2,  #Designed for inserts
 
-    'screw_insert_bottom_radius': 2.5 / 2,  # Designed for self tapping
-    'screw_insert_top_radius': 2.5 / 2,  # Designed for self tapping
-
+    # TODO for skeleton
     'screw_insert_outer_radius': 4.25,  # Common to keep interface to base
+    # 'screw_insert_outer_radius': 0,  # Common to keep interface to base
 
     # Does anyone even use these?  I think they just get in the way.
     'wire_post_height': 7,
@@ -431,10 +431,10 @@ shape_config = {
     ###################################
     'plate_holes':  True,
     'plate_holes_xy_offset': (0.0, 0.0),
-    'plate_holes_width': 14.3,
-    'plate_holes_height': 14.3,
-    'plate_holes_diameter': 1.6,
-    'plate_holes_depth': 20.0,
+    'plate_holes_width': 19.05 - (1.27*2) + 1.4 + 0.2, # Ameoba width - screw distance + screw diameter + slack
+    'plate_holes_height': 19.05 - (1.27*2) + 1.4 + 0.2,
+    'plate_holes_diameter': 1.4,
+    'plate_holes_depth': 4.0,
 
     ###################################
     ## EXPERIMENTAL
@@ -446,9 +446,9 @@ shape_config = {
     ###################################
     ## SHOW PCB FOR FIT CHECK
     ###################################
-    'pcb_width': 18.0,
-    'pcb_height': 18.0,
-    'pcb_thickness': 1.5,
+    'pcb_width': 19.05 + 0.1, # Add buffer for easier cutting
+    'pcb_height': 19.05 + 0.1,
+    'pcb_thickness': 1.6 + 0.1,
     'pcb_hole_diameter': 2,
     'pcb_hole_pattern_width': 14.3,
     'pcb_hole_pattern_height': 14.3,
@@ -460,11 +460,11 @@ shape_config = {
     'column_offsets':  [
         [0, 0, 0],
         [0, 0, 0],
-        [0, 2.82, -4.5],
-        [0, 0, 0],
-        [0, -6, 5],# REDUCED STAGGER
-        [0, -6, 5],# REDUCED STAGGER
-        [0, -6, 5],# NOT USED IN MOST FORMATS (7th column)
+        [0, 2.82, -3.5],
+        [0, 0, -1],
+        [0, -12, 5.64],
+        [0, -12, 5.64],
+        [0, -12, 5.64],# NOT USED IN MOST FORMATS (7th column)
     ],
 
 }
@@ -474,7 +474,7 @@ shape_config = {
     ####################################
 
 def save_config():
-    # Check to see if the user has specified an alternate config
+    # Check to see if the user has specified an alternate config(pi / 12.0) * 1
     opts, args = getopt.getopt(sys.argv[1:], "", ["config=", "update="])
     got_opts = False
     for opt, arg in opts:
